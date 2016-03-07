@@ -7,6 +7,7 @@ output: pdf_document
 # Generación y visualización de datos
 
 ```{r}
+set.seed(3141592)
 simula_unif <- function(N, dim, rango){
   lista <- matrix(runif(N*dim, min =  rango[1], max = rango[2]), dim, N)
   return(lista)
@@ -78,15 +79,15 @@ f_1 <- function(X){
   return((X[1] - 10)^2 + (X[2] - 20)^2 - 400)
 }
 
-etiqueta_1 = apply(lista_unif, 2, function(X) f_1(X) > 0)
+etiqueta_1 = apply(lista_unif, 2, function(X) sign(f_1(X)))
 
 x <- seq(-50,50,length=1000)
 y <- seq(-50,50,length=1000)
 z <- outer(x,y,function(x,y) (x - 10)^2 + (y - 20)^2 - 400)
 
 contour(x,y,z, levels=0, main=expression((x-10)^2 + (y-20)^2 - 400))
-points(lista_unif[1,etiqueta_1], lista_unif[2,etiqueta_1])
-points(lista_unif[1,!etiqueta_1], lista_unif[2,!etiqueta_1],col=2)
+points(lista_unif[1,etiqueta_1==1], lista_unif[2,etiqueta_1==1])
+points(lista_unif[1,etiqueta_1==-1], lista_unif[2,etiqueta_1==-1],col=2)
 ```
 
 ```{r}
@@ -221,7 +222,6 @@ points(lista_unif[1,etiqueta_mod_4==-1], lista_unif[2,etiqueta_mod_4==-1],col=2)
 # Ajuste del algoritmo Perceptron
 
 ```{r}
-
 ajusta_PLA <- function(datos, label, max_iter, vini){
   sol <- vini
   iter <- 0
@@ -243,28 +243,62 @@ ajusta_PLA <- function(datos, label, max_iter, vini){
   }
   
   sol <- sol/sol[2]
-  return(sol)
+  
+  if(finished){
+    errors <- 0
+  }
+  else{
+    signes <- apply(datos, 2, function(x){ 
+      x <- c(x,1)
+      return(sign(crossprod(x,sol)))})
+    v <- signes != label
+    errors <- length(v[v])
+  }
+  return(c(sol,errors, iter))
 }
 
+sol_pla <- ajusta_PLA(lista_unif,etiqueta, 7000,rep(0,3))
+```
 
+Representación de ejecución del algoritmo PLA 
+```{r}
 plot.new()
 plot.window(xlim=c(-50,50), ylim=c(-50,50))
 axis(1)
 axis(2)
 box()
 title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-
-
-sol_pla <- ajusta_PLA(lista_unif,etiqueta, 5000,rep(0,3))
-
-```
-
-```{r}
 points(lista_unif[1,etiqueta==-1], lista_unif[2,etiqueta==-1], col = 2)
 points(lista_unif[1,etiqueta==1], lista_unif[2,etiqueta==1])
 
 abline(-sol_pla[3], -sol_pla[1], col = 4)
 abline(b, a, col=3) 
+```
+
+Cálculo de la media para 10 ejecuciones del PLA con el vector (0,0,0) y vectores aleatorios:
+```{r}
+iterations <- numeric()
+length(iterations) <- 10
+
+iterations[1] <- ajusta_PLA(lista_unif,etiqueta, 10000,rep(0,3))[5]
+
+for(i in 2:10){
+  v_ini <- runif(3)
+  print(v_ini)
+  iterations[i] <- ajusta_PLA(lista_unif,etiqueta, 10000, v_ini)[5]
+}
+
+print(c("Media de iteraciones ", mean(iterations)))
+```
+
+Conteo de errores
+```{r}
+errores_10 <- ajusta_PLA(lista_unif,etiqueta_mod, 10,rep(0,3))[4]
+print(errores_10)
+errores_100 <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3))[4]
+print(errores_100)
+errores_1000 <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3))[4]
+print(errores_1000)
 ```
 
 
