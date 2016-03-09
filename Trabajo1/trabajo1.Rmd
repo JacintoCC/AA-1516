@@ -222,42 +222,41 @@ points(lista_unif[1,etiqueta_mod_4==-1], lista_unif[2,etiqueta_mod_4==-1],col=2)
 # Ajuste del algoritmo Perceptron
 
 ```{r}
-ajusta_PLA <- function(datos, label, max_iter, vini){
+
+ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
   sol <- vini
   iter <- 0
-  finished <- FALSE
-  last_change <- -1
+  changed <- TRUE
   
-  while ( iter < max_iter && !finished){
-    i <- iter%%length(label) +1
-    x <- c(datos[,i],1)
-    if( sign( crossprod(x,sol)) != label[i]){
-      sol <- sol + label[i] * x
-      last_change <- i
-    }
-    else{
-      finished <- (i == last_change)
-    }
+  if(draw_iterations){
+    plot.new()
+    plot.window(xlim=c(-50,50), ylim=c(-50,50))
+    axis(1)
+    axis(2)
+    box()
+    title(main="Iteraciones PLA", ylab = "Y", xlab = "X")
+  }
+
+  while ( iter < max_iter && changed){
     
+    changed <- FALSE
+    for( inner_iter in 1:ncol(datos) ){
+      x <- c(datos[,inner_iter],1)
+      
+      if( sign(crossprod(x,sol)) != label[inner_iter]){
+        sol <- sol + label[inner_iter] * x
+        changed <- TRUE
+      }
+    }
+    if(draw_iterations) abline(-sol[3]/sol[2], -sol[1]/sol[2], col=iter)
     iter <- iter+1
   }
+  sol <- sol/sol[length(sol)-1]
   
-  sol <- sol/sol[2]
-  
-  if(finished){
-    errors <- 0
-  }
-  else{
-    signes <- apply(datos, 2, function(x){ 
-      x <- c(x,1)
-      return(sign(crossprod(x,sol)))})
-    v <- signes != label
-    errors <- length(v[v])
-  }
-  return(c(sol,errors, iter))
+  return( list( hiperplane = sol, iterations = iter))
 }
 
-sol_pla <- ajusta_PLA(lista_unif,etiqueta, 7000,rep(0,3))
+sol_pla <- ajusta_PLA(lista_unif,etiqueta, 7000,rep(0,3))$hiperplane
 ```
 
 Representación de ejecución del algoritmo PLA 
@@ -280,27 +279,164 @@ Cálculo de la media para 10 ejecuciones del PLA con el vector (0,0,0) y vectore
 iterations <- numeric()
 length(iterations) <- 10
 
-iterations[1] <- ajusta_PLA(lista_unif,etiqueta, 10000,rep(0,3))[5]
+iterations[1] <- ajusta_PLA(lista_unif,etiqueta, 10000,rep(0,3))$iterations
 
 for(i in 2:10){
   v_ini <- runif(3)
-  print(v_ini)
-  iterations[i] <- ajusta_PLA(lista_unif,etiqueta, 10000, v_ini)[5]
+  iterations[i] <- ajusta_PLA(lista_unif,etiqueta, 10000, v_ini)$iterations
 }
 
 print(c("Media de iteraciones ", mean(iterations)))
 ```
 
-Conteo de errores
 ```{r}
-errores_10 <- ajusta_PLA(lista_unif,etiqueta_mod, 10,rep(0,3))[4]
-print(errores_10)
-errores_100 <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3))[4]
-print(errores_100)
-errores_1000 <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3))[4]
-print(errores_1000)
+count_errors <- function(f, datos, label){
+  #Conteo de errores
+  signes <- apply(datos, 2, function(x) return(sign(f(c(x,1)))))
+  v <- signes != label
+  return(length(v[v]))
+}
+```
+
+```{r}
+hiperplane_to_function <- function( vec ){
+  f <- function(x){
+    return( crossprod(vec,x) )
+  }
+  
+  return(f)
+}
 ```
 
 
+Conteo de errores
+```{r}
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 10,rep(0,3))$hiperplane
+count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
 
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3))$hiperplane
+count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
+
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3))$hiperplane
+count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
+```
+
+Conteo de errores función cuadrática
+```{r}
+sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 10,rep(0,3))$hiperplane
+count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
+
+sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 100,rep(0,3))$hiperplane
+count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
+
+sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 1000,rep(0,3))$hiperplane
+count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
+```
+
+
+Muestra de iteraciones
+```{r}
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 10,rep(0,3), TRUE)$hiperplane
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3), TRUE)$hiperplane
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
+```
+
+Algoritmo PLA Modificado
+```{r}
+ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
+  sol <- vini
+  iter <- 0
+  changed <- TRUE
+  
+  if(draw_iterations){
+    plot.new()
+    plot.window(xlim=c(-50,50), ylim=c(-50,50))
+    axis(1)
+    axis(2)
+    box()
+    title(main="Iteraciones PLA", ylab = "Y", xlab = "X")
+  }
+
+  while ( iter < max_iter && changed){
+    current_errors <- count_errors(hiperplane_to_function(sol), datos, label )
+    current_sol <- sol
+    changed <- FALSE
+    for( inner_iter in 1:ncol(datos) ){
+      x <- c(datos[,inner_iter],1)
+      
+      if( sign(crossprod(x,sol)) != label[inner_iter]){
+        current_sol <- current_sol + label[inner_iter] * x
+        changed <- TRUE
+      }
+    }
+    
+    if( current_errors >= count_errors(hiperplane_to_function(sol), datos, label )){
+      sol <- current_sol
+    }
+    
+    if(draw_iterations) abline(-sol[3]/sol[2], -sol[1]/sol[2], col=iter)
+    iter <- iter+1
+  }
+  sol <- sol/sol[length(sol)-1]
+  
+  return( list( hiperplane = sol, iterations = iter))
+}
+```
+
+Evaluación funciones cuadráticas
+```{r}
+plot.new()
+plot.window(xlim=c(-50,50), ylim=c(-50,50))
+axis(1)
+axis(2)
+box()
+title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
+points(lista_unif[1,etiqueta_1==-1], lista_unif[2,etiqueta_1==-1], col = 2)
+points(lista_unif[1,etiqueta_1==1], lista_unif[2,etiqueta_1==1])
+
+sol_cuadratic_1 <- ajusta_PLA_MOD(lista_unif, etiqueta_1, 1000, rep(0,3))$hiperplane
+abline(-sol_cuadratic_1[3], -sol_cuadratic_1[1], col = 4)
+```
+
+```{r}
+plot.new()
+plot.window(xlim=c(-50,50), ylim=c(-50,50))
+axis(1)
+axis(2)
+box()
+title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
+points(lista_unif[1,etiqueta_2==-1], lista_unif[2,etiqueta_2==-1], col = 2)
+points(lista_unif[1,etiqueta_2==1], lista_unif[2,etiqueta_2==1])
+
+sol_cuadratic_2 <- ajusta_PLA_MOD(lista_unif, etiqueta_2, 1000, rep(0,3))$hiperplane
+abline(-sol_cuadratic_2[3], -sol_cuadratic_2[1], col = 4)
+```
+
+```{r}
+plot.new()
+plot.window(xlim=c(-50,50), ylim=c(-50,50))
+axis(1)
+axis(2)
+box()
+title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
+points(lista_unif[1,etiqueta_3==-1], lista_unif[2,etiqueta_3==-1], col = 2)
+points(lista_unif[1,etiqueta_3==1], lista_unif[2,etiqueta_3==1])
+
+sol_cuadratic_3 <- ajusta_PLA_MOD(lista_unif, etiqueta_3, 1000, rep(0,3))$hiperplane
+abline(-sol_cuadratic_3[3], -sol_cuadratic_3[1], col = 4)
+```
+
+```{r}
+plot.new()
+plot.window(xlim=c(-50,50), ylim=c(-50,50))
+axis(1)
+axis(2)
+box()
+title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
+points(lista_unif[1,etiqueta_4==-1], lista_unif[2,etiqueta_4==-1], col = 2)
+points(lista_unif[1,etiqueta_4==1], lista_unif[2,etiqueta_4==1])
+
+sol_cuadratic_4 <- ajusta_PLA_MOD(lista_unif, etiqueta_4, 1000, rep(0,3))$hiperplane
+abline(-sol_cuadratic_4[3], -sol_cuadratic_4[1], col = 4)
+```
 

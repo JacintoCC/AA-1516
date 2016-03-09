@@ -1,0 +1,115 @@
+\documentclass[11pt,leqno]{article}
+\usepackage[spanish,activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage[pdftex]{hyperref} 
+
+\title{Aprendizaje Autom\'atico. Cuestiones optativas}
+\author{Jacinto Carrasco Castillo}
+
+\providecommand{\norm}[1]{\lVert#1\rVert}
+\theoremstyle{definition}
+\begin{document}
+\maketitle
+
+\newtheorem{cuestion}{Cuestión}
+\newtheorem{solucion}{Solución}
+
+\subsection{El algoritmo Perceptron}
+\begin{cuestion}
+Probar que PLA finalmente converge a un separador linear en el caso de datos
+separables. Los siguientes pasos le guiarán a través de la demostración. Sea $w^\star$
+un conjunto óptimo de pesos (uno que separa los datos). La idea esencial en esta
+demostración es mostrar que los pesos $w(t)$ del PLA se alinean cada vez más con
+$w^\star$ conforme el número de iteraciones avanza. Por simplicidad suponemos $w(0) = 0$
+
+\begin{enumerate}[a]
+\item Sea $\rho = \min_{1 \leq n \leq N}$ y $y_n (w^{\star T} x_n )$. Mostrar que $\rho > 0$
+\item Mostrar que $w^T(t) w^\star \geq w^T(t-1)w^\star + \rho$ y concluir que $w^T(t) w^\star \geq t\rho$
+\item Mostrar que $\norm{w(t)}^2 \leq \norm{w(t - 1)}^2 + \norm{x(t - 1)}^2$ .
+\item Mostrar por inducción que  $\norm{w(t)}^2 \leq tR^2$ donde $R = \max_{1 \leq n \leq N} \norm{x_n}$
+\item using $(b)$ y $(d)$, mostrar que
+\[ \frac{w(t)}{\norm{w(t)}} w^\star \geq \sqrt{t} \frac{\rho}{R}\]
+y por tanto probar que
+\[ t \leq \frac{R^2 \norm{w^\star}^2}{\rho^2} \]
+\end{enumerate}
+\end{cuestion}
+
+\begin{solucion} 
+Seguiremos los pasos sugeridos para realizar el ejercicio:
+\begin{enumerate}[a]
+\item $w^\star$ separa todos los datos, esto es, $\forall n=1, \dots,N,$ $\texttt{sign(}w^{\star T}x_n) = y_n$. Entonces, tanto si la etiqueta es $1$ o $-1$, se cumple $y_n ( w^{\star T} x_n) > 0 \Leftrightarrow \rho = \min_{1, \dots, N} y_n ( w^{\star T} x_n) > 0$
+\item Usaremos inducción para $w^T(t) w^\star \geq tp$: \\
+Para $t=0, w^T(0)w^\star \geq 0 $. Suponemos entonces que para $t-1, \ w^T(t-1) w^\star \geq (t-1)\rho$. Lo probaremos ahora para $t$:\\
+$w^T(t) w^\star =$ (usando el apartado $(a)$) $=[w^T(t-1) + y(t)x^T(t)] w^\star \geq w^T(t-1)w^\star + \rho=$ (usando inducción) $=t\rho$
+\end{enumerate}
+\item Si escribimos la norma al cuadrado de $w(t)$ como $w^T(t)w(t)$ y usando la definición de $w(t)$ como el ajuste en una iteración, tenemos
+\[ \norm{w(t)}^2 \leq \norm{w(t-1)}^2 + 2 w^T(t-1) ( y(t-1)x(t-1) ) + \norm{x(t-1)}^2 \leq \]
+usando la ayuda sugerida, pues al no estar bien clasificado el dato $x(t-1)$, $y(t-1)w^T(t-1)x(t-1) \leq 0$, y por ser $y(t-1) = \pm 1$ nos queda:
+\[ \leq \norm{w(t)}^2 \leq \norm{w(t - 1)}^2 + \norm{x(t - 1)}^2 \]
+
+\item $\norm{w(t)}^2 \leq tR$, para $t=0$ es directo. Supuesto para $t-1$,
+\[ \norm{w(t)}^2 = [\text{ por el apartado } (c)] = \norm{w(t-1)}^2 + \norm{x(t - 1)}^2 \leq [\text{ por ser $R$ el dato con norma máxima }] \]
+\[ \norm{w(t-1)}^2 + R^2 \leq [\text{ por inducción }] R^2 + (t-1)R^2 = R^2 \]
+
+\item $\frac{w^T(t)}{\norm{w(t)}} w^\star \geq \frac{w^T(t)w^\star}{\sqrt{t}R} = \sqrt{t} \frac{\rho}{R} \Rightarrow$
+\[  \sqrt{t} = \frac{w^T(t)w^\star R}{\rho \norm{w(t)}} \]
+Elevando al cuadrado:
+\[ t \leq \frac{R^2 \norm{w^\star}}{\rho^2} \]
+\end{solucion}
+
+\subsection{Factibilidad del aprendizaje}
+\begin{cuestion}
+Supongamos que tenemos un conjunto de datos $\mathcal{D}$ de $25$ ejemplos extraídos de una función desconocida $f: X \rightarrow Y$, donde $X = \mathbb{R}$ e $Y = {-1, +1}$. Para aprender $f$ usamos un conjunto simple de hipótesis $\mathcal{H} = {h_1 , h_2 }$ donde $h_1$ es la función constante igual a $+1$ y $h_2$ la función constante igual a $-1$.\\
+Consideramos dos algoritmos de aprendizaje, S(smart) y C(crazy). S elige la hipótesis
+que mejor ajusta los datos y C elige deliberadamente la otra hipótesis. Vamos a estudiar cómo estos algoritmos se comportan fuera de la muestra desde un punto de vista determinístico y probabilístico. Suponga en el caso probabilístico que hay una distribución de probabilidad sobre $X$ , y sea $P[f(x) = +1] = p$
+\begin{enumerate}[a]
+\item ¿Puede S producir una hipótesis que garantice mejor comportamiento que la aleatoria sobre cualquier punto fuera de la muestra?
+\item Asumir desde ahora que todos los ejemplos en $\mathcal{D}$ tienen $y_n = +1$. ¿Es posible que la hipótesis que produce C sea mejor que la hipótesis que produce S?
+\end{enumerate}
+\end{cuestion}
+
+\begin{solucion}
+\begin{enumerate}[a]
+\item No es posible garantizar nada, puesto que la hipótesis que haría S será el valor de la etiqueta que presente un mayor número de individuos en la muestra. Sin embargo, podríamos haber tomado las muestras en una región del espacio de búsqueda donde predominaran puntos de una clase, y sin embargo  la distribución general se podría asemejara más a una distribución aleatoria.
+\item Claro, puesto que, como en el apartado anterior, podríamos haber tomado sólo los 25 puntos con una de las etiquetas.
+\end{enumerate}
+\end{solucion}
+
+\subsection{Error y Ruido}
+\begin{cuestion}
+Considerar un modelo (i.e. un recipiente de bolas) que define una hipótesis $h$ cuya probabilidad de error es $\mu$ como aproximación de una determinada función determinística $f$ ( tanto $h$ como $f$ son binarias). Si usamos la misma $h$ para aproximar una versión ruidosa de $f$ dada por
+\[ P( y|x) = 
+\left\lbrace \begin{array}{ll}
+ \lambda & y=f(x) \\
+ 1-\lambda & y \neq f(x) \end{array} \right.\]
+\begin{enumerate}[a]
+\item ¿Cuál es la probabilidad de error que comete $h$ al aproximar $y$?
+\item ¿Para qué valor de $\lambda$ será $h$ independiente de $\mu$?
+\end{enumerate}
+\end{cuestion}
+
+\begin{solucion}
+\begin{enumerate}[a]
+\item Por el enunciado, sabemos que $\mu = E(h) = P[ h(x)\neq f(x) ]$. Ahora queremos calcular $P[ h(x)\neq y ]$. Para que se de esto, tenemos que tener en cuenta que $f$ es ahora una vesión con ruido, con lo que se tienen que cumplir dos cosas, o bien que falle la hipótesis como aproximación de $f$ (probabilidad $\mu$) y se tenga $y=f(x)$ (probabilidad $\lambda$), o bien que acierte $h$ (probabilidad $1-\mu$) y falle la condición $y=f(x)$. Se ha de notar que si si falla $h$ y $y \neq f(x)$ no podremos asegurar que sea un fallo, pues se podría dar $h(x)=y$ por casualidad. Para cada caso, los sucesos que lo componen son independientes, luego la probabilidad de la intersección es la multiplicación, y como los dos casos también son disjuntos, la probabilidad de la unión es la suma de las probabilidades. Entonces:
+\[ P[h(x) \neq y] = (1-\mu)(1-\lambda) + \mu \lambda = 2 \mu \lambda -\lambda - \mu + 1\]
+\item Para decir que es independiente de $\mu$, en la expresión anterior no puede aparecer $\mu$, es decir, tenemos que encontrar $\lambda$ para $ 2 \mu \lambda - \mu = 0$, que fácilmente vemos que $\lambda = \frac{1}{2}$. Nos queda por tanto $\[ P[h(x) \neq y] = \frac{1}{2}$
+\end{enumerate}
+\end{solucion}
+
+\subsection{Función de crecimiento y punto de ruptura}
+\begin{cuestion}
+Calcular la función de crecimiento $m_H$ para el modelo de aprendizaje construido
+por dos circulos concéntricos en $\mathbb{R^2}$ . Especificamente, $H$ contiene las funciones que
+toman valor $+1$ en $a^2 ≤ x_1^2 + x_2^2 ≤ b^2$ y $−1$ en el resto.
+\end{cuestion}
+
+\begin{solucion}
+En primer lugar pensamos en cómo son las funciones de $H$, y vemos que los espacios donde queremos ubicar los puntos con etiqueta $1$ son coronas circulares centradas en el origen, o bien una circunferencia centrada en el origen. En segundo lugar, sobre cómo situar los puntos para maximizar el número de dicotomías que realiza nuestra clase $H$ de funciones. Descartamos las situaciones de puntos en los que dos puntos tienen la misma norma (distancia al centro), pues podríamos realizar una asignación donde estos dos puntos tengan distintos valores, y no podríamos realizar esta dicotomía. Esto hace pensar que la pri
+\end{solucion}
+
+\end{document}
