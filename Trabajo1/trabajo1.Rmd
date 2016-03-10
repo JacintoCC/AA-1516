@@ -63,15 +63,19 @@ f <- function(X){
 
 etiqueta = apply(lista_unif, 2, function(X) sign(f(X)))
 
-plot.new()
-plot.window(xlim=c(-50,50), ylim=c(-50,50))
-axis(1)
-axis(2)
-box()
+
+draw_function <- function(interval_x, interval_y, f, levels = 0, col = 0, add = FALSE){
+  x <- seq(interval_x[1],interval_x[2],length=1000)
+  y <- seq(interval_y[1],interval_y[2],length=1000)
+  z <- outer(x,y, f)
+
+  contour(x,y,z, levels=0, main=expression(f), col = col, add = add)
+}
+
+
+draw_function(c(-50,50), c(-50,50),function(x,y) return(y - a*x -b))
 title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,etiqueta==-1], lista_unif[2,etiqueta==-1], col = 2)
-points(lista_unif[1,etiqueta==1], lista_unif[2,etiqueta==1])
-abline(b,a)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta+3))
 ```
 
 ```{r}
@@ -81,13 +85,8 @@ f_1 <- function(X){
 
 etiqueta_1 = apply(lista_unif, 2, function(X) sign(f_1(X)))
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) (x - 10)^2 + (y - 20)^2 - 400)
-
-contour(x,y,z, levels=0, main=expression((x-10)^2 + (y-20)^2 - 400))
-points(lista_unif[1,etiqueta_1==1], lista_unif[2,etiqueta_1==1])
-points(lista_unif[1,etiqueta_1==-1], lista_unif[2,etiqueta_1==-1],col=2)
+draw_function(c(-50,50), c(-50,50), function(x,y) (x - 10)^2 + (y - 20)^2 - 400)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_1+3))
 ```
 
 ```{r}
@@ -97,13 +96,8 @@ f_2 <- function(X){
 
 etiqueta_2 = apply(lista_unif, 2, function(X) sign(f_2(X)))
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) 0.5*(x + 10)^2 + (y - 20)^2 - 400)
-
-contour(x,y,z, levels=0, main=expression(0.5(x + 10)^2 + (y - 20)^2 - 400))
-points(lista_unif[1,etiqueta_2==1], lista_unif[2,etiqueta_2==1])
-points(lista_unif[1,etiqueta_2==-1], lista_unif[2,etiqueta_2==-1],col=2)
+draw_function(c(-50,50), c(-50,50),function(x,y) 0.5*(x + 10)^2 + (y - 20)^2 - 400)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_2+3))
 ```
 
 ```{r}
@@ -113,13 +107,8 @@ f_3 <- function(X){
 
 etiqueta_3 = apply(lista_unif, 2, function(X) sign(f_3(X)))
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) 0.5*(x - 10)^2 - (y + 20)^2 - 400)
-
-contour(x,y,z, levels=0, main=expression( 0.5*(x - 10)^2 - (y + 20)^2 - 400))
-points(lista_unif[1,etiqueta_3==1], lista_unif[2,etiqueta_3==1])
-points(lista_unif[1,etiqueta_3==-1], lista_unif[2,etiqueta_3==-1],col=2)
+draw_function(c(-50,50), c(-50,50), function(x,y) 0.5*(x - 10)^2 - (y + 20)^2 - 400)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_3+3))
 ```
 
 ```{r}
@@ -129,29 +118,24 @@ f_4 <- function(X){
 
 etiqueta_4 = apply(lista_unif, 2, function(X) sign(f_4(X)))
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) y - 20*x^2 - 5*x + 3)
-
-contour(x,y,z, levels=0, main=expression(y - 20*x^2 - 5*x + 3))
-points(lista_unif[1,etiqueta_4==1], lista_unif[2,etiqueta_4==1])
-points(lista_unif[1,etiqueta_4==-1], lista_unif[2,etiqueta_4==-1],col=2)
+draw_function(c(-50,50), c(-50,50),function(x,y) y - 20*x^2 - 5*x + 3)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_4+3))
 ```
 
 ```{r}
 modify_rnd_bool_subvector <- function(v, perc = 0.1){
   mod_v <- v
-  
+
   if( length(which(v == 1)) >= 10){
     to_change <- sample(which(v == 1), 0.1*length(which(v == 1)) )
     mod_v[to_change] = -1
   }
-  
+
   if( length(which(v == -1)) >= 10){
     to_change <- sample(which(v == -1), 0.1*length(which(v == -1)) )
     mod_v[to_change] = 1
   }
-  
+
   return(mod_v)
 }
 ```
@@ -159,63 +143,37 @@ modify_rnd_bool_subvector <- function(v, perc = 0.1){
 ```{r}
 etiqueta_mod <- modify_rnd_bool_subvector(etiqueta)
 
-plot.new()
-plot.window(xlim=c(-50,50), ylim=c(-50,50))
-axis(1)
-axis(2)
-box()
-title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,etiqueta_mod==1], lista_unif[2,etiqueta_mod==1])
-points(lista_unif[1,etiqueta_mod==-1], lista_unif[2,etiqueta_mod==-1],col=2)
-abline(b,a)
+draw_function(c(-50,50), c(-50,50), function(x,y) y-a*x-b)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod+3))
 ```
 
 ```{r}
 etiqueta_mod_1 <- modify_rnd_bool_subvector(etiqueta_1)
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) (x - 10)^2 + (y - 20)^2 - 400)
-
-contour(x,y,z, levels=0, main=expression((x-10)^2 + (y-20)^2 - 400))
-points(lista_unif[1,etiqueta_mod_1==1], lista_unif[2,etiqueta_mod_1==1])
-points(lista_unif[1,etiqueta_mod_1==-1], lista_unif[2,etiqueta_mod_1==-1],col=2)
+draw_function(c(-50,50), c(-50,50),function(x,y) (x - 10)^2 + (y - 20)^2 - 400)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_1+3))
 ```
 
 ```{r}
 etiqueta_mod_2 <- modify_rnd_bool_subvector(etiqueta_2)
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) 0.5*(x + 10)^2 + (y - 20)^2 - 400)
-
-contour(x,y,z, levels=0, main=expression(0.5(x + 10)^2 + (y - 20)^2 - 400))
-points(lista_unif[1,etiqueta_mod_2==1], lista_unif[2,etiqueta_mod_2==1])
-points(lista_unif[1,etiqueta_mod_2==-1], lista_unif[2,etiqueta_mod_2==-1],col=2)
+draw_function(c(-50,50), c(-50,50),function(x,y) 0.5*(x + 10)^2 + (y - 20)^2 - 400)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_2+3))
 ```
 
 ```{r}
 etiqueta_mod_3 <- modify_rnd_bool_subvector(etiqueta_3)
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) 0.5*(x - 10)^2 - (y + 20)^2 - 400)
-
-contour(x,y,z, levels=0, main=expression( 0.5*(x - 10)^2 - (y + 20)^2 - 400))
+draw_function(c(-50,50), c(-50,50),function(x,y) 0.5*(x - 10)^2 - (y + 20)^2 - 400)
 points(lista_unif[1,etiqueta_mod_3==1], lista_unif[2,etiqueta_mod_3==1])
-points(lista_unif[1,etiqueta_mod_3==-1], lista_unif[2,etiqueta_mod_3==-1],col=2)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_3+3))
 ```
 
 ```{r}
 etiqueta_mod_4 <- modify_rnd_bool_subvector(etiqueta_4)
 
-x <- seq(-50,50,length=1000)
-y <- seq(-50,50,length=1000)
-z <- outer(x,y,function(x,y) y - 20*x^2 - 5*x + 3)
-
-contour(x,y,z, levels=0, main=expression(y - 20*x^2 - 5*x + 3))
-points(lista_unif[1,etiqueta_mod_4==1], lista_unif[2,etiqueta_mod_4==1])
-points(lista_unif[1,etiqueta_mod_4==-1], lista_unif[2,etiqueta_mod_4==-1],col=2)
+draw_function(c(-50,50), c(-50,50),function(x,y) y - 20*x^2 - 5*x + 3)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_4+3))
 ```
 
 
@@ -223,55 +181,47 @@ points(lista_unif[1,etiqueta_mod_4==-1], lista_unif[2,etiqueta_mod_4==-1],col=2)
 
 ```{r}
 
-ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
+ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE, col = 0){
   sol <- vini
   iter <- 0
   changed <- TRUE
-  
-  if(draw_iterations){
-    plot.new()
-    plot.window(xlim=c(-50,50), ylim=c(-50,50))
-    axis(1)
-    axis(2)
-    box()
-    title(main="Iteraciones PLA", ylab = "Y", xlab = "X")
-  }
 
   while ( iter < max_iter && changed){
-    
+
     changed <- FALSE
     for( inner_iter in 1:ncol(datos) ){
       x <- c(datos[,inner_iter],1)
-      
+
       if( sign(crossprod(x,sol)) != label[inner_iter]){
         sol <- sol + label[inner_iter] * x
         changed <- TRUE
       }
     }
-    if(draw_iterations) abline(-sol[3]/sol[2], -sol[1]/sol[2], col=iter)
+    if(draw_iterations){
+      if(iter < 10) name = paste('000', iter, 'plot.png', sep='')
+      else if(iter < 100) name = paste('00', iter, 'plot.png', sep='')
+      else name = paste('0', iter, 'plot.png', sep='')
+      png(name)
+      draw_function(c(-50,50), c(-50,50), function(x,y) y +sol[1]/sol[2]*x 
+                    +sol[3]/sol[2], col = 4)
+      points(lista_unif[1,], lista_unif[2,], col = (label+3))
+      dev.off()
+    }
     iter <- iter+1
   }
   sol <- sol/sol[length(sol)-1]
-  
+
   return( list( hiperplane = sol, iterations = iter))
 }
 
 sol_pla <- ajusta_PLA(lista_unif,etiqueta, 7000,rep(0,3))$hiperplane
 ```
 
-Representación de ejecución del algoritmo PLA 
+Representación de ejecución del algoritmo PLA
 ```{r}
-plot.new()
-plot.window(xlim=c(-50,50), ylim=c(-50,50))
-axis(1)
-axis(2)
-box()
-title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,etiqueta==-1], lista_unif[2,etiqueta==-1], col = 2)
-points(lista_unif[1,etiqueta==1], lista_unif[2,etiqueta==1])
-
-abline(-sol_pla[3], -sol_pla[1], col = 4)
-abline(b, a, col=3) 
+draw_function(c(-50,50), c(-50,50), function(x,y) y+sol_pla[1]*x+sol_pla[3], col = 4)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta+3))
+abline(b, a, col=3)
 ```
 
 Cálculo de la media para 10 ejecuciones del PLA con el vector (0,0,0) y vectores aleatorios:
@@ -303,7 +253,7 @@ hiperplane_to_function <- function( vec ){
   f <- function(x){
     return( crossprod(vec,x) )
   }
-  
+
   return(f)
 }
 ```
@@ -333,110 +283,94 @@ sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 1000,rep(0,3))$hiperplane
 count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
 ```
 
-
-Muestra de iteraciones
-```{r}
-sol <- ajusta_PLA(lista_unif,etiqueta_mod, 10,rep(0,3), TRUE)$hiperplane
-sol <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3), TRUE)$hiperplane
-sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
-```
-
 Algoritmo PLA Modificado
 ```{r}
 ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
   sol <- vini
   iter <- 0
   changed <- TRUE
-  
-  if(draw_iterations){
-    plot.new()
-    plot.window(xlim=c(-50,50), ylim=c(-50,50))
-    axis(1)
-    axis(2)
-    box()
-    title(main="Iteraciones PLA", ylab = "Y", xlab = "X")
-  }
+  current_sol <- sol
 
   while ( iter < max_iter && changed){
     current_errors <- count_errors(hiperplane_to_function(sol), datos, label )
-    current_sol <- sol
     changed <- FALSE
+    
     for( inner_iter in 1:ncol(datos) ){
       x <- c(datos[,inner_iter],1)
-      
-      if( sign(crossprod(x,sol)) != label[inner_iter]){
+
+      if( sign(crossprod(x,current_sol)) != label[inner_iter]){
         current_sol <- current_sol + label[inner_iter] * x
         changed <- TRUE
       }
     }
     
-    if( current_errors >= count_errors(hiperplane_to_function(sol), datos, label )){
+    if(draw_iterations){
+      if(iter < 10) name = paste('000', iter, 'plot.png', sep='')
+      else if(iter < 100) name = paste('00', iter, 'plot.png', sep='')
+      else name = paste('0', iter, 'plot.png', sep='')
+      png(name)
+      draw_function(c(-50,50), c(-50,50), 
+                    function(x,y) y +sol[1]/sol[2]*x +sol[3]/sol[2], col = 4)
+      draw_function(c(-50,50), c(-50,50), 
+                    function(x,y) y +current_sol[1]/current_sol[2]*x +current_sol[3]/current_sol[2], col = 5, add=TRUE)
+      points(lista_unif[1,], lista_unif[2,], col = (label+3))
+      dev.off()
+    }
+    
+    if( current_errors >= count_errors(hiperplane_to_function(current_sol),
+                                       datos, label )){
       sol <- current_sol
     }
     
-    if(draw_iterations) abline(-sol[3]/sol[2], -sol[1]/sol[2], col=iter)
     iter <- iter+1
   }
   sol <- sol/sol[length(sol)-1]
-  
+
   return( list( hiperplane = sol, iterations = iter))
 }
 ```
 
+
 Evaluación funciones cuadráticas
 ```{r}
-plot.new()
-plot.window(xlim=c(-50,50), ylim=c(-50,50))
-axis(1)
-axis(2)
-box()
-title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,etiqueta_1==-1], lista_unif[2,etiqueta_1==-1], col = 2)
-points(lista_unif[1,etiqueta_1==1], lista_unif[2,etiqueta_1==1])
-
 sol_cuadratic_1 <- ajusta_PLA_MOD(lista_unif, etiqueta_1, 1000, rep(0,3))$hiperplane
-abline(-sol_cuadratic_1[3], -sol_cuadratic_1[1], col = 4)
+
+draw_function(c(-50,50), c(-50,50), function(x,y)
+  y +sol_cuadratic_1[1]*x +sol_cuadratic_1[3], col = 4)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_1+3))
 ```
 
 ```{r}
-plot.new()
-plot.window(xlim=c(-50,50), ylim=c(-50,50))
-axis(1)
-axis(2)
-box()
-title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,etiqueta_2==-1], lista_unif[2,etiqueta_2==-1], col = 2)
-points(lista_unif[1,etiqueta_2==1], lista_unif[2,etiqueta_2==1])
-
 sol_cuadratic_2 <- ajusta_PLA_MOD(lista_unif, etiqueta_2, 1000, rep(0,3))$hiperplane
-abline(-sol_cuadratic_2[3], -sol_cuadratic_2[1], col = 4)
+
+draw_function(c(-50,50), c(-50,50), function(x,y)
+  y +sol_cuadratic_2[1]*x +sol_cuadratic_2[3], col = 4)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_2+3))
 ```
 
 ```{r}
-plot.new()
-plot.window(xlim=c(-50,50), ylim=c(-50,50))
-axis(1)
-axis(2)
-box()
-title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,etiqueta_3==-1], lista_unif[2,etiqueta_3==-1], col = 2)
-points(lista_unif[1,etiqueta_3==1], lista_unif[2,etiqueta_3==1])
-
 sol_cuadratic_3 <- ajusta_PLA_MOD(lista_unif, etiqueta_3, 1000, rep(0,3))$hiperplane
-abline(-sol_cuadratic_3[3], -sol_cuadratic_3[1], col = 4)
+
+draw_function(c(-50,50), c(-50,50), function(x,y)
+  y +sol_cuadratic_3[1]*x +sol_cuadratic_3[3], col = 4)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_3+3))
 ```
 
 ```{r}
-plot.new()
-plot.window(xlim=c(-50,50), ylim=c(-50,50))
-axis(1)
-axis(2)
-box()
-title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,etiqueta_4==-1], lista_unif[2,etiqueta_4==-1], col = 2)
-points(lista_unif[1,etiqueta_4==1], lista_unif[2,etiqueta_4==1])
+sol_cuadratic_4 <- ajusta_PLA_MOD(lista_unif, etiqueta_3, 1000, rep(0,3))$hiperplane
 
-sol_cuadratic_4 <- ajusta_PLA_MOD(lista_unif, etiqueta_4, 1000, rep(0,3))$hiperplane
-abline(-sol_cuadratic_4[3], -sol_cuadratic_4[1], col = 4)
+draw_function(c(-50,50), c(-50,50), function(x,y)
+  y +sol_cuadratic_4[1]*x +sol_cuadratic_4[3], col = 4)
+points(lista_unif[1,], lista_unif[2,], col = (etiqueta_4+3))
 ```
+
+
+###Drawing iterations
+```{r}
+#sol <- ajusta_PLA(lista_unif,etiqueta, 1000,rep(0,3), TRUE)$hiperplane
+#sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
+#sol <- ajusta_PLA_MOD(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
+```
+
+
 
