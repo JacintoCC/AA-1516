@@ -97,7 +97,8 @@ Considerar un modelo (i.e. un recipiente de bolas) que define una hipótesis $h$
 \begin{enumerate}[a]
 \item Por el enunciado, sabemos que $\mu = E(h) = P[ h(x)\neq f(x) ]$. Ahora queremos calcular $P[ h(x)\neq y ]$. Para que se de esto, tenemos que tener en cuenta que $f$ es ahora una vesión con ruido, con lo que se tienen que cumplir dos cosas, o bien que falle la hipótesis como aproximación de $f$ (probabilidad $\mu$) y se tenga $y=f(x)$ (probabilidad $\lambda$), o bien que acierte $h$ (probabilidad $1-\mu$) y falle la condición $y=f(x)$. Se ha de notar que si si falla $h$ y $y \neq f(x)$ no podremos asegurar que sea un fallo, pues se podría dar $h(x)=y$ por casualidad. Para cada caso, los sucesos que lo componen son independientes, luego la probabilidad de la intersección es la multiplicación, y como los dos casos también son disjuntos, la probabilidad de la unión es la suma de las probabilidades. Entonces:
 \[ P[h(x) \neq y] = (1-\mu)(1-\lambda) + \mu \lambda = 2 \mu \lambda -\lambda - \mu + 1\]
-\item Para decir que es independiente de $\mu$, en la expresión anterior no puede aparecer $\mu$, es decir, tenemos que encontrar $\lambda$ para $ 2 \mu \lambda - \mu = 0$, que fácilmente vemos que $\lambda = \frac{1}{2}$. Nos queda por tanto $\[ P[h(x) \neq y] = \frac{1}{2}$
+\item Para decir que es independiente de $\mu$, en la expresión anterior no puede aparecer $\mu$, es decir, tenemos que encontrar $\lambda$ para $ 2 \mu \lambda - \mu = 0$, 
+que fácilmente vemos que $\lambda = \frac{1}{2}$. Nos queda por tanto $ P[h(x) \neq y] = \frac{1}{2}$
 \end{enumerate}
 \end{solucion}
 
@@ -105,11 +106,20 @@ Considerar un modelo (i.e. un recipiente de bolas) que define una hipótesis $h$
 \begin{cuestion}
 Calcular la función de crecimiento $m_H$ para el modelo de aprendizaje construido
 por dos circulos concéntricos en $\mathbb{R^2}$ . Especificamente, $H$ contiene las funciones que
-toman valor $+1$ en $a^2 ≤ x_1^2 + x_2^2 ≤ b^2$ y $−1$ en el resto.
+toman valor $+1$ en $a^2 \leq x_1^2 + x_2^2 \leq b^2$ y $-1$ en el resto.
 \end{cuestion}
 
 \begin{solucion}
-En primer lugar pensamos en cómo son las funciones de $H$, y vemos que los espacios donde queremos ubicar los puntos con etiqueta $1$ son coronas circulares centradas en el origen, o bien una circunferencia centrada en el origen. En segundo lugar, sobre cómo situar los puntos para maximizar el número de dicotomías que realiza nuestra clase $H$ de funciones. Descartamos las situaciones de puntos en los que dos puntos tienen la misma norma (distancia al centro), pues podríamos realizar una asignación donde estos dos puntos tengan distintos valores, y no podríamos realizar esta dicotomía. Esto hace pensar que la pri
+En primer lugar pensamos en cómo son las funciones de $H$, y vemos que los espacios donde queremos ubicar los puntos con etiqueta $1$ son coronas circulares centradas en el origen, o bien una circunferencia centrada en el origen. En segundo lugar, sobre cómo situar los puntos para maximizar el número de dicotomías que realiza nuestra clase $H$ de funciones. Descartamos las situaciones de puntos en los que dos puntos tienen la misma norma (distancia al centro), pues podríamos realizar una asignación donde estos dos puntos tengan distintos valores, y no podríamos realizar esta dicotomía. Iremos poniendo el valor de $m_H(n)$ según el número de puntos.
+\begin{enumerate}
+\item $n = 2$. Situamos los puntos por ejemplo en $(1,0), (2,0)$. Es obvio ver que si los dos puntos son de la misma clase, las coronas que tengan a ambos puntos fuera ($a>2$ o $b<1$) o ambos puntos dentro ($a<1<2<b$), nos valdrán. Si las clases de los puntos son distintas, ajustaremos $a$ y $b$ para ello. Por tanto, $m_H(2) = 4$
+\item $n = 3$. En este caso, si tenemos tres puntos alineados, hay una situación que no podemos separar, y es cuando queremos poner etiqueta positiva en el primer y el tercer punto en distancia. Por tanto,  $m_H(3) = 7$
+\end{enumerate}
+Si lo pensamos bien, es únicamente la distancia al origen lo que cuenta, es decir, podemos ordenar los puntos según su distancia y la asignación será de $+1$ a un intervalo de ellos (los que caen dentro de la corona) y $-1$ a los que caen fuera, luego es un problema análogo al ejemplo visto ayer en clase de los intervalos, y
+\[ m_H(n) = \left( \begin{array}{c}
+N+1 \\
+2
+\end{array} \right) + 1 = \frac{N^2+N}{2} +1\]
 \end{solucion}
 
 \end{document}
