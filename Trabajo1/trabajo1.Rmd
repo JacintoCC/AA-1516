@@ -127,12 +127,12 @@ modify_rnd_bool_subvector <- function(v, perc = 0.1){
   mod_v <- v
 
   if( length(which(v == 1)) >= 10){
-    to_change <- sample(which(v == 1), 0.1*length(which(v == 1)) )
+    to_change <- sample(which(v == 1), perc*length(which(v == 1)) )
     mod_v[to_change] = -1
   }
 
   if( length(which(v == -1)) >= 10){
-    to_change <- sample(which(v == -1), 0.1*length(which(v == -1)) )
+    to_change <- sample(which(v == -1), perc*length(which(v == -1)) )
     mod_v[to_change] = 1
   }
 
@@ -371,6 +371,18 @@ points(lista_unif[1,], lista_unif[2,], col = (etiqueta_4+3))
 #sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
 #sol <- ajusta_PLA_MOD(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
 ```
+
+# Regresión lineal
+
+## Lectura de datos y dotación de forma
+```{r}
+datos = scan("datos/zip.train",sep=" ")
+datos = matrix(datos,ncol=257,byrow=T)
+datos <- datos[-(which(datos[,1] != 1 & datos[,1]!=5)),]
+
+datos <- data.frame( number = datos[,1], pixels = list(datos[,2:257]))
+```
+
 
 
 
