@@ -380,9 +380,30 @@ datos = scan("datos/zip.train",sep=" ")
 datos = matrix(datos,ncol=257,byrow=T)
 datos <- datos[-(which(datos[,1] != 1 & datos[,1]!=5)),]
 
-datos <- data.frame( number = datos[,1], pixels = list(datos[,2:257]))
+number <- datos[,1]
+pixels <- aperm(array(t(datos[,2:257]), dim=c(16,16,nrow(datos))), perm=c(2,1,3))
 ```
 
 
+## Cálculo de media y simetría
 
+```{r}
+means <- apply(pixels, 3, mean)
+
+simetria_vertical <- function(M){ 
+  -sum(apply(M, 2, function(x) sum(abs(x-x[length(x):1]))))
+} 
+
+sim_vertical <- apply(pixels,3,simetria_vertical)
+```
+
+## Representación 
+```{r}
+number_colors = numeric(length(number))
+number_colors[which(number==1)] <- 4
+number_colors[which(number==5)] <- 3
+data_list <- list('number'=number, 'pixels'=pixels, 'mean'=means,
+                  'v_symmetry'=sim_vertical, 'colors'=number_colors )
+plot(data_list$mean, data_list$v_symmetry, col = data_list$colors )
+```
 
