@@ -6,49 +6,77 @@ output: pdf_document
 
 # Generación y visualización de datos
 
+Antes de realizar cualquier operación que involucre elementos aleatorios estableceremos la semilla para que los datos y ejecuciones en las que se basan las conclusiones del informe sean reproducibles.
+
 ```{r}
-set.seed(3141592)
+set.seed(314159)
+```
+Para hacer paradas en cada paso, se define la función $\texttt{stp()}$
+```{r}
+stp <- function(){
+  cat("Pulse una tecla para continuar")
+  t<- readline()
+}
+```
+
+## Construir una función $\texttt{lista = simula_unif (N, dim, rango)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios uniformes en el intervalo $rango$.
+```{r}
 simula_unif <- function(N, dim, rango){
-  lista <- matrix(runif(N*dim, min =  rango[1], max = rango[2]), dim, N)
+  # Tomamos N*dim muestras de una uniforme de rango dado
+  lista <- matrix(runif(N*dim, min =  rango[1], max = rango[2]), N, dim)
   return(lista)
 }
 ```
 
+## Construir una función \texttt{lista = simula_gaus(N, dim, sigma)} que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector $sigma$
 ```{r}
 simula_gauss <- function(N, dim, sigma){
-  lista <- matrix(rnorm(N*dim, sd = sigma), dim, N)
+  #Tomamos N*dim elementos de una normal, tomando la desviación estándar del vector sigma
+  lista <- matrix(rnorm(N*dim, sd = sigma), N, dim, byrow=TRUE)
   return(lista)
 }
 ```
+En este caso estamos rellenando la matriz por filas. Haciéndolo de esta manera, y puesto que sigma es un vector cuya dimensión debería ser 1 o coincidir con la dimensión de los vectores ($dim$), el número generado se genera con la desviación típica correspondiente a la de su dimensión.
 
+##Suponer $N = 50, dim = 2, rango = [-50, +50]$ en cada dimensión para generar una lista de puntos de una distribución uniforme. Generar puntos también de una distribución normal con  $N = 50, dim = 2$ y $sigma = [5, 7]$. Dibujar una gráfica de la salida de ambas funciones.
 
 ```{r}
 lista_unif <- simula_unif(50, 2, c(-50, 50))
 lista_gauss <- simula_gauss(50, 2, c(5,7))
+stp()
 ```
 
 
+Para representar los valores, ponemos en el eje X la primera columna del conjunto de datos y en el eje Y la segunda columna. Si comparamos la representación de la distribución normal con la distribución uniforme, 
 ```{r}
-plot(lista_unif[1,], lista_unif[2,], xlab="Eje X", ylab="Eje Y")
-plot(lista_gauss[1,],lista_gauss[2,], xlab="Eje X", ylab="Eje Y")
+plot(lista_unif[,1], lista_unif[,2], xlab="Eje X", ylab="Eje Y", main="Muestra N=50 distribución uniforme" )
+stp()
+plot(lista_gauss[,1],lista_gauss[,2], xlab="Eje X", ylab="Eje Y", main="Muestra N=50 distribución normal")
+stp()
 ```
 
-
+Si mostramos ahora los diagramas de cajas con bigote para cada una de las dimensiones tanto en la distribución uniforme como en la distribución de Gauss, vemos que en la distribución uniforme ambos diagramas son muy parecidos (como era de esperar pues la distribución es la misma), mientras que en la distribución normal, el rango intercuartílico de la segunda dimensión es más amplio, ya que tiene desviación típica 
 ```{r}
-boxplot(lista_unif[1,],lista_unif[2,])
-boxplot(lista_gauss[1,],lista_gauss[2,])
-
+boxplot(lista_unif[,1],lista_unif[,2])
+stp()
+boxplot(lista_gauss[,1],lista_gauss[,2])
+stp()
 ```
 
+##Construir la función $\texttt{v=simula_recta(intervalo)}$ que calcula los parámetros, $v = (a, b)$ de una recta aleatoria, $y = ax + b$, que corte al cuadrado [-50, 50] × [-50, 50] (Ayuda: Para calcular la recta simular las coordenadas de dos puntos dentro del cuadrado y calcular la recta que pasa por ellos)
+Generamos otra muestra de tamaño 2 de una distribución uniforme y calculamos la recta que pasa por estos dos puntos.
 
 ```{r}
 simula_recta <- function(intervalo){
   puntos <- simula_unif(2,2,intervalo)
-  a <- (puntos[2,2]-puntos[2,1])/(puntos[1,2]-puntos[1,1])
-  b <- puntos[2,1] - a * puntos[1,1]
+  a <- (puntos[2,2]-puntos[1,2])/(puntos[2,1]-puntos[1,1])
+  b <- puntos[1,2] - a * puntos[1,1]
   return(c(a,b))
 }
 ```
+
+##Generar una muestra 2D de puntos usando $\texttt{simula\_unif()}$ y etiquetar la muestra usando el signo de la función $f (x, y) = y - ax - b$ de cada punto a una recta simulada con $\textt{simula\_recta()}. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
+Generamos los coeficientes de una recta y etiquetamos la muestra de puntos generada anteriormente. Para realizar el etiquetado, applicamos $\texttt{apply}$ por filas, generando un vector de etiquetas con el signo de la función.
 
 ```{r}
 intervalo = c(-50, 50)
@@ -60,79 +88,96 @@ f <- function(X){
   return(X[2] - a*X[1] -b)
 }
 
+etiqueta = apply(lista_unif, 1, function(X) sign(f(X)))
+```
 
-etiqueta = apply(lista_unif, 2, function(X) sign(f(X)))
-
-
-draw_function <- function(interval_x, interval_y, f, levels = 0, col = 0, add = FALSE){
+Escribimos una función que dibuje una función en $\mathbb{R}^2$ en un cierto intervalo, usando la función $\texttt{contour}$ para pintar también posteriormente las funciones cuadráticas. El argumento $\texttt{add}$ permitirá añadir un gráfico a un $\textit{plot}$ existente. 
+```{r}
+draw_function <- function(interval_x, interval_y, f, levels = 0, col = 1, add = FALSE){
   x <- seq(interval_x[1],interval_x[2],length=1000)
   y <- seq(interval_y[1],interval_y[2],length=1000)
-  z <- outer(x,y, f)
+  z <- outer(x,y, f) # Matriz con los resultados de hacer f(x,y)
 
-  contour(x,y,z, levels=0, main=expression(f), col = col, add = add)
+  # Levels = 0 porque queremos pintar f(x,y)=0
+  contour(x,y,z, levels=0, col = col, add = add)
 }
-
 
 draw_function(c(-50,50), c(-50,50),function(x,y) return(y - a*x -b))
-title(main="a*x+b", ylab = "lista_unif[2,]", xlab = "lista_unif[1,]")
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta+3))
-```
+title(main="a*x+b", ylab = "lista_unif[,2]", xlab = "lista_unif[,1]")
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta+3))
 
+```
+Como vemos en la gráfica, los puntos rojos (etiquetados con -1) se sitúan debajo de la gráfica ylos azules por encima. 
+
+##Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguientes funciones
+
+Aquí es donde verdaderamente entra en juego la función $\texttt{contour}$, pues nos permite representar una función cuadrática de manera sencilla. Para realizar el etiquetado, lo hacemos como para el caso de la recta, tomando el signo de la evaluación de la función en cada dato de la muestra.  
+En este caso la mayoría de datos cae fuera de la elipse corresponidente a la función.
 ```{r}
-f_1 <- function(X){
-  return((X[1] - 10)^2 + (X[2] - 20)^2 - 400)
+f_1 <- function(x,y){
+  return((x - 10)^2 + (y - 20)^2 - 400)
 }
 
-etiqueta_1 = apply(lista_unif, 2, function(X) sign(f_1(X)))
+etiqueta_1 = apply(lista_unif, 1, function(X) sign(f_1(X[1],X[2])))
 
-draw_function(c(-50,50), c(-50,50), function(x,y) (x - 10)^2 + (y - 20)^2 - 400)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_1+3))
+draw_function(c(-50,50), c(-50,50), f_1)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_1+3))
 ```
 
+Para esta segunda función, también la mayoría de datos cae fuera de la cuádrica y es una elipse, como podíamos deducir de sus coeficientes.
 ```{r}
-f_2 <- function(X){
-  return(0.5*(X[1] + 10)^2 + (X[2] - 20)^2 - 400)
+f_2 <- function(x,y){
+  return(0.5*(x + 10)^2 + (y - 20)^2 - 400)
 }
 
-etiqueta_2 = apply(lista_unif, 2, function(X) sign(f_2(X)))
+etiqueta_2 = apply(lista_unif, 1, function(X) sign(f_2(X[1],X[2])))
 
-draw_function(c(-50,50), c(-50,50),function(x,y) 0.5*(x + 10)^2 + (y - 20)^2 - 400)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_2+3))
+draw_function(c(-50,50), c(-50,50),f_2)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_2+3))
 ```
 
+En esta hipérbola, la mayoría de los datos caen fuera, o bien en la parte izquierda. 
 ```{r}
-f_3 <- function(X){
-  return(0.5*(X[1] - 10)^2 - (X[2] + 20)^2 - 400)
+f_3 <- function(x,y){
+  return(0.5*(x - 10)^2 - (y + 20)^2 - 400)
 }
 
-etiqueta_3 = apply(lista_unif, 2, function(X) sign(f_3(X)))
+etiqueta_3 = apply(lista_unif, 1, function(X) sign(f_3(X[1],X[2])))
 
-draw_function(c(-50,50), c(-50,50), function(x,y) 0.5*(x - 10)^2 - (y + 20)^2 - 400)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_3+3))
+draw_function(c(-50,50), c(-50,50), f_3)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_3+3))
 ```
 
+En esta parábola sólo uno de los datos cae por encima de la gráfica. Esto dará sin dudas problemas a la hora de clasificar, pues no tenemos información suficiente sobre los datos con etiqueta 1.
 ```{r}
-f_4 <- function(X){
-  return(X[2] - 20*X[1]^2- 5*X[1] + 3)
+f_4 <- function(x,y){
+  return(y - 20*x^2- 5*x + 3)
 }
 
-etiqueta_4 = apply(lista_unif, 2, function(X) sign(f_4(X)))
+etiqueta_4 = apply(lista_unif, 1, function(X) sign(f_4(X[1],X[2])))
 
-draw_function(c(-50,50), c(-50,50),function(x,y) y - 20*x^2 - 5*x + 3)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_4+3))
+draw_function(c(-50,50), c(-50,50), f_4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_4+3))
 ```
 
+De la representación gráfica de estas funciones y los datos clasificados según ellas, se extrae que no son separables linealmente, por lo que el algoritmo del Perceptron no convergerá, y será necesario una nueva aproximación para resolverlo.
+
+## Considerar de nuevo la muestra etiquetada en el apartado.6. Modifique las etiquetas de un 10 \% aleatorio de muestras positivas y otro 10\% aleatorio de negativas.
 ```{r}
 modify_rnd_bool_subvector <- function(v, perc = 0.1){
+  #Almacenamos una copia para poder saber qué puntos debemos cambiar en el original.
   mod_v <- v
 
-  if( length(which(v == 1)) >= 10){
-    to_change <- sample(which(v == 1), perc*length(which(v == 1)) )
+  #Contamos el número de puntos que corresponde cambiar para hacerlo sólo si hay alguno
+  length_change = round(length(which(v == 1))*perc)
+  if( length_change >= 1){
+    to_change <- sample(which(v == 1), length_change )
     mod_v[to_change] = -1
   }
 
-  if( length(which(v == -1)) >= 10){
-    to_change <- sample(which(v == -1), perc*length(which(v == -1)) )
+  length_change = round(length(which(v == -1))*perc)
+  if( length_change >= 1){
+    to_change <- sample(which(v == -1), length_change )
     mod_v[to_change] = 1
   }
 
@@ -140,6 +185,7 @@ modify_rnd_bool_subvector <- function(v, perc = 0.1){
 }
 ```
 
+###Visualice los puntos con las nuevas etiquetas y la recta del apartado 6
 ```{r}
 etiqueta_mod <- modify_rnd_bool_subvector(etiqueta)
 
@@ -147,56 +193,60 @@ draw_function(c(-50,50), c(-50,50), function(x,y) y-a*x-b)
 points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod+3))
 ```
 
+###En una gráfica aparte visualice nuevo los mismos puntos pero junto con las funciones del apartado 7
 ```{r}
 etiqueta_mod_1 <- modify_rnd_bool_subvector(etiqueta_1)
 
-draw_function(c(-50,50), c(-50,50),function(x,y) (x - 10)^2 + (y - 20)^2 - 400)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_1+3))
+draw_function(c(-50,50), c(-50,50), f_1)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
 ```
 
 ```{r}
 etiqueta_mod_2 <- modify_rnd_bool_subvector(etiqueta_2)
 
-draw_function(c(-50,50), c(-50,50),function(x,y) 0.5*(x + 10)^2 + (y - 20)^2 - 400)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_2+3))
+draw_function(c(-50,50), c(-50,50), f_2)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_2+3))
 ```
 
 ```{r}
 etiqueta_mod_3 <- modify_rnd_bool_subvector(etiqueta_3)
 
-draw_function(c(-50,50), c(-50,50),function(x,y) 0.5*(x - 10)^2 - (y + 20)^2 - 400)
-points(lista_unif[1,etiqueta_mod_3==1], lista_unif[2,etiqueta_mod_3==1])
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_3+3))
+draw_function(c(-50,50), c(-50,50), f_3)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_3+3))
 ```
 
 ```{r}
 etiqueta_mod_4 <- modify_rnd_bool_subvector(etiqueta_4)
 
-draw_function(c(-50,50), c(-50,50),function(x,y) y - 20*x^2 - 5*x + 3)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod_4+3))
+draw_function(c(-50,50), c(-50,50), f_4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_4+3))
 ```
 
+En el proceso de cambio vemos que si juntamos que la clase donde hay menos puntos, hay pocos, y que cambiamos el 10\% de valores, la clasificación se antoja aún más difícil, pues ya por ejemplo en el tercer y cuarto caso apenas se distinguen áreas claramente definidas.
 
 # Ajuste del algoritmo Perceptron
 
-```{r}
+##Implementar la función $\texttt{sol = ajusta\_PLA(datos, label, max\_iter, vini)}$ que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada datos es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, label el vector de etiquetas (cada etiqueta es un valor +1 o-1), max_iter es el número máximo de iteraciones permitidas y vini el valor inicial del vector. La salida sol devuelve los coeficientes del hiperplano.
 
-ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE, col = 0){
+```{r}
+ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
   sol <- vini
   iter <- 0
   changed <- TRUE
 
   while ( iter < max_iter && changed){
-
+    # Comprobaremos en cada vuelta si hemos hecho algún cambio
     changed <- FALSE
-    for( inner_iter in 1:ncol(datos) ){
-      x <- c(datos[,inner_iter],1)
+    for( inner_iter in 1:nrow(datos) ){
+      # Añadimos coeficiente independiente
+      x <- c(datos[inner_iter,],1)
 
       if( sign(crossprod(x,sol)) != label[inner_iter]){
         sol <- sol + label[inner_iter] * x
         changed <- TRUE
       }
     }
+    #Guardamos cada una de las iteraciones en un archivo para mostrarla posteriormente
     if(draw_iterations){
       if(iter < 10) name = paste('000', iter, 'plot.png', sep='')
       else if(iter < 100) name = paste('00', iter, 'plot.png', sep='')
@@ -204,27 +254,34 @@ ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE, co
       png(name)
       draw_function(c(-50,50), c(-50,50), function(x,y) y +sol[1]/sol[2]*x 
                     +sol[3]/sol[2], col = 4)
-      points(lista_unif[1,], lista_unif[2,], col = (label+3))
+      points(lista_unif[,1], lista_unif[,2], col = (label+3))
       dev.off()
     }
     iter <- iter+1
   }
+  
+  #Normalizamos la solución.
   sol <- sol/sol[length(sol)-1]
 
+  #Devolvemos el hiperplano obtenido y el número de iteraciones realizadas
   return( list( hiperplane = sol, iterations = iter))
 }
 
-sol_pla <- ajusta_PLA(lista_unif,etiqueta, 7000,rep(0,3))$hiperplane
+sol_pla <- ajusta_PLA(lista_unif,etiqueta, 200,rep(0,3))$hiperplane
 ```
 
-Representación de ejecución del algoritmo PLA
+La parte para dibujar y guardar las iteraciones no está demasiado relacionado con el algoritmo, pero puesto que se pide que se dibujen las iteraciones en determinados puntos, la he incluido. La normalización de la solución por la coordenada Y del vector solución se podría realizar simplemente a la hora de pintar la gráfica, pero así son datos más interpretables.  
+### Representación de ejecución del algoritmo PLA
+Con los datos generados en el ejercicio anterior, ejemplo del algoritmo PLA, que da la solución en azul, mientras que se pinta con $\texttt{abline}$ la recta con la que realizamos la clasificación. Se aprecia que efectivamente se ha resuelto, como mucho, las 200 iteraciones con las que se ha ejecutado. Pese a diferir de la recta original, no se encuentra ningún dato en las regiones de diferencia, por lo que no teníamos ninguna información para descartar la solución aportada
 ```{r}
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol_pla[1]*x+sol_pla[3], col = 4)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta+3))
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta+3))
 abline(b, a, col=3)
 ```
 
-Cálculo de la media para 10 ejecuciones del PLA con el vector (0,0,0) y vectores aleatorios:
+##Ejecutar el algoritmo PLA con los valores simulados en apartado.6 del ejercicio.5.2, inicializando el algoritmo con el vector cero y con vectores de números aleatorios en [0, 1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.
+
+Creamos un vector numérico de tamaño 10 que vamos rellenando con las iteraciones de sucesivas ejecuciones del algoritmo PLA para vectores iniciales aleatorios (salvo el primero que es $(0,0,0)$). No uso una función vectorial sino un bucle para ello para que el vector aleatorio generado sea distinto en cada iteración.
 ```{r}
 iterations <- numeric()
 length(iterations) <- 10
@@ -376,7 +433,7 @@ points(lista_unif[1,], lista_unif[2,], col = (etiqueta_4+3))
 
 ## Lectura de datos y dotación de forma
 ```{r}
-datos = scan("datos/zip.train",sep=" ")
+# datos = scan("datos/zip.train",sep=" ")
 datos = matrix(datos,ncol=257,byrow=T)
 datos <- datos[-(which(datos[,1] != 1 & datos[,1]!=5)),]
 
