@@ -1,7 +1,9 @@
 ---
 title: "Práctica 1 Aprendizaje Automático"
 author: "Jacinto Carrasco Castillo"
-output: pdf_document
+output: 
+  pdf_document: 
+    latex_engine: xelatex
 ---
 
 # Generación y visualización de datos
@@ -15,11 +17,11 @@ Para hacer paradas en cada paso, se define la función $\texttt{stp()}$
 ```{r}
 stp <- function(){
   cat("Pulse una tecla para continuar")
-  t<- readline()
+  t<- scan()
 }
 ```
 
-## Construir una función $\texttt{lista = simula_unif (N, dim, rango)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios uniformes en el intervalo $rango$.
+### Construir una función $\texttt{lista = simula\_unif (N, dim, rango)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios uniformes en el intervalo rango..
 ```{r}
 simula_unif <- function(N, dim, rango){
   # Tomamos N*dim muestras de una uniforme de rango dado
@@ -28,7 +30,7 @@ simula_unif <- function(N, dim, rango){
 }
 ```
 
-## Construir una función \texttt{lista = simula_gaus(N, dim, sigma)} que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector $sigma$
+### Construir una función $\texttt{lista = simula\_gaus(N, dim, sigma)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector $sigma$
 ```{r}
 simula_gauss <- function(N, dim, sigma){
   #Tomamos N*dim elementos de una normal, tomando la desviación estándar del vector sigma
@@ -38,7 +40,7 @@ simula_gauss <- function(N, dim, sigma){
 ```
 En este caso estamos rellenando la matriz por filas. Haciéndolo de esta manera, y puesto que sigma es un vector cuya dimensión debería ser 1 o coincidir con la dimensión de los vectores ($dim$), el número generado se genera con la desviación típica correspondiente a la de su dimensión.
 
-##Suponer $N = 50, dim = 2, rango = [-50, +50]$ en cada dimensión para generar una lista de puntos de una distribución uniforme. Generar puntos también de una distribución normal con  $N = 50, dim = 2$ y $sigma = [5, 7]$. Dibujar una gráfica de la salida de ambas funciones.
+### Suponer $N = 50, dim = 2, rango = [-50, +50]$ en cada dimensión para generar una lista de puntos de una distribución uniforme. Generar puntos también de una distribución normal con  $N = 50, dim = 2$ y $sigma = [5, 7]$. Dibujar una gráfica de la salida de ambas funciones.
 
 ```{r}
 lista_unif <- simula_unif(50, 2, c(-50, 50))
@@ -49,9 +51,11 @@ stp()
 
 Para representar los valores, ponemos en el eje X la primera columna del conjunto de datos y en el eje Y la segunda columna. Si comparamos la representación de la distribución normal con la distribución uniforme, 
 ```{r}
-plot(lista_unif[,1], lista_unif[,2], xlab="Eje X", ylab="Eje Y", main="Muestra N=50 distribución uniforme" )
+plot(lista_unif[,1], lista_unif[,2], xlab="Eje X", ylab="Eje Y", 
+     main="Muestra N=50 distribución uniforme" )
 stp()
-plot(lista_gauss[,1],lista_gauss[,2], xlab="Eje X", ylab="Eje Y", main="Muestra N=50 distribución normal")
+plot(lista_gauss[,1],lista_gauss[,2], xlab="Eje X", ylab="Eje Y", 
+     main="Muestra N=50 distribución normal")
 stp()
 ```
 
@@ -63,7 +67,7 @@ boxplot(lista_gauss[,1],lista_gauss[,2])
 stp()
 ```
 
-##Construir la función $\texttt{v=simula_recta(intervalo)}$ que calcula los parámetros, $v = (a, b)$ de una recta aleatoria, $y = ax + b$, que corte al cuadrado [-50, 50] × [-50, 50] (Ayuda: Para calcular la recta simular las coordenadas de dos puntos dentro del cuadrado y calcular la recta que pasa por ellos)
+### Construir la función $\texttt{v=simula\_recta(intervalo)}$ que calcula los parámetros, $v = (a, b)$ de una recta aleatoria, $y = ax + b$, que corte al cuadrado [-50, 50] × [-50, 50] (Ayuda: Para calcular la recta simular las coordenadas de dos puntos dentro del cuadrado y calcular la recta que pasa por ellos)  
 Generamos otra muestra de tamaño 2 de una distribución uniforme y calculamos la recta que pasa por estos dos puntos.
 
 ```{r}
@@ -75,7 +79,8 @@ simula_recta <- function(intervalo){
 }
 ```
 
-##Generar una muestra 2D de puntos usando $\texttt{simula\_unif()}$ y etiquetar la muestra usando el signo de la función $f (x, y) = y - ax - b$ de cada punto a una recta simulada con $\textt{simula\_recta()}. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
+### Etiquetado de muestra uniforme
+Generar una muestra 2D de puntos usando $\texttt{simula\_unif()}$ y etiquetar la muestra usando el signo de la función $f (x, y) = y - ax - b$ de cada punto a una recta simulada con $\texttt{simula\_recta()}$. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.  
 Generamos los coeficientes de una recta y etiquetamos la muestra de puntos generada anteriormente. Para realizar el etiquetado, applicamos $\texttt{apply}$ por filas, generando un vector de etiquetas con el signo de la función.
 
 ```{r}
@@ -91,7 +96,7 @@ f <- function(X){
 etiqueta = apply(lista_unif, 1, function(X) sign(f(X)))
 ```
 
-Escribimos una función que dibuje una función en $\mathbb{R}^2$ en un cierto intervalo, usando la función $\texttt{contour}$ para pintar también posteriormente las funciones cuadráticas. El argumento $\texttt{add}$ permitirá añadir un gráfico a un $\textit{plot}$ existente. 
+Escribimos una función que dibuje una función en $\mathbb{R}^2$ en un cierto intervalo, usando la función $\texttt{contour}$ para pintar también posteriormente las funciones cuadráticas. El argumento $\texttt{add}$ permitirá añadir un gráfico a un $\texttt{plot}$ existente. 
 ```{r}
 draw_function <- function(interval_x, interval_y, f, levels = 0, col = 1, add = FALSE){
   x <- seq(interval_x[1],interval_x[2],length=1000)
@@ -109,7 +114,7 @@ points(lista_unif[,1], lista_unif[,2], col = (etiqueta+3))
 ```
 Como vemos en la gráfica, los puntos rojos (etiquetados con -1) se sitúan debajo de la gráfica ylos azules por encima. 
 
-##Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguientes funciones
+### Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguientes funciones  
 
 Aquí es donde verdaderamente entra en juego la función $\texttt{contour}$, pues nos permite representar una función cuadrática de manera sencilla. Para realizar el etiquetado, lo hacemos como para el caso de la recta, tomando el signo de la evaluación de la función en cada dato de la muestra.  
 En este caso la mayoría de datos cae fuera de la elipse corresponidente a la función.
@@ -162,7 +167,7 @@ points(lista_unif[,1], lista_unif[,2], col = (etiqueta_4+3))
 
 De la representación gráfica de estas funciones y los datos clasificados según ellas, se extrae que no son separables linealmente, por lo que el algoritmo del Perceptron no convergerá, y será necesario una nueva aproximación para resolverlo.
 
-## Considerar de nuevo la muestra etiquetada en el apartado.6. Modifique las etiquetas de un 10 \% aleatorio de muestras positivas y otro 10\% aleatorio de negativas.
+### Considerar de nuevo la muestra etiquetada en el apartado 6. Modifique las etiquetas de un 10 \% aleatorio de muestras positivas y otro 10\% aleatorio de negativas.
 ```{r}
 modify_rnd_bool_subvector <- function(v, perc = 0.1){
   #Almacenamos una copia para poder saber qué puntos debemos cambiar en el original.
@@ -185,15 +190,15 @@ modify_rnd_bool_subvector <- function(v, perc = 0.1){
 }
 ```
 
-###Visualice los puntos con las nuevas etiquetas y la recta del apartado 6
+####Visualice los puntos con las nuevas etiquetas y la recta del apartado 6
 ```{r}
 etiqueta_mod <- modify_rnd_bool_subvector(etiqueta)
 
 draw_function(c(-50,50), c(-50,50), function(x,y) y-a*x-b)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_mod+3))
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
 ```
 
-###En una gráfica aparte visualice nuevo los mismos puntos pero junto con las funciones del apartado 7
+####En una gráfica aparte visualice nuevo los mismos puntos pero junto con las funciones del apartado 7
 ```{r}
 etiqueta_mod_1 <- modify_rnd_bool_subvector(etiqueta_1)
 
@@ -226,7 +231,7 @@ En el proceso de cambio vemos que si juntamos que la clase donde hay menos punto
 
 # Ajuste del algoritmo Perceptron
 
-##Implementar la función $\texttt{sol = ajusta\_PLA(datos, label, max\_iter, vini)}$ que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada datos es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, label el vector de etiquetas (cada etiqueta es un valor +1 o-1), max_iter es el número máximo de iteraciones permitidas y vini el valor inicial del vector. La salida sol devuelve los coeficientes del hiperplano.
+### Implementar la función $\texttt{sol = ajusta\_PLA(datos, label, max\_iter, vini)}$ que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada datos es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, label el vector de etiquetas (cada etiqueta es un valor +1 o-1), max_iter es el número máximo de iteraciones permitidas y vini el valor inicial del vector. La salida sol devuelve los coeficientes del hiperplano.
 
 ```{r}
 ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
@@ -248,14 +253,10 @@ ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
     }
     #Guardamos cada una de las iteraciones en un archivo para mostrarla posteriormente
     if(draw_iterations){
-      if(iter < 10) name = paste('000', iter, 'plot.png', sep='')
-      else if(iter < 100) name = paste('00', iter, 'plot.png', sep='')
-      else name = paste('0', iter, 'plot.png', sep='')
-      png(name)
       draw_function(c(-50,50), c(-50,50), function(x,y) y +sol[1]/sol[2]*x 
                     +sol[3]/sol[2], col = 4)
       points(lista_unif[,1], lista_unif[,2], col = (label+3))
-      dev.off()
+      Sys.sleep(0.1)
     }
     iter <- iter+1
   }
@@ -271,15 +272,14 @@ sol_pla <- ajusta_PLA(lista_unif,etiqueta, 200,rep(0,3))$hiperplane
 ```
 
 La parte para dibujar y guardar las iteraciones no está demasiado relacionado con el algoritmo, pero puesto que se pide que se dibujen las iteraciones en determinados puntos, la he incluido. La normalización de la solución por la coordenada Y del vector solución se podría realizar simplemente a la hora de pintar la gráfica, pero así son datos más interpretables.  
-### Representación de ejecución del algoritmo PLA
-Con los datos generados en el ejercicio anterior, ejemplo del algoritmo PLA, que da la solución en azul, mientras que se pinta con $\texttt{abline}$ la recta con la que realizamos la clasificación. Se aprecia que efectivamente se ha resuelto, como mucho, las 200 iteraciones con las que se ha ejecutado. Pese a diferir de la recta original, no se encuentra ningún dato en las regiones de diferencia, por lo que no teníamos ninguna información para descartar la solución aportada
+#### Con los datos generados en el ejercicio anterior, ejemplo del algoritmo PLA, que da la solución en azul, mientras que se pinta con $\texttt{abline}$ la recta con la que realizamos la clasificación. Se aprecia que efectivamente se ha resuelto, como mucho, las 200 iteraciones con las que se ha ejecutado. Pese a diferir de la recta original, no se encuentra ningún dato en las regiones de diferencia, por lo que no teníamos ninguna información para descartar la solución aportada
 ```{r}
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol_pla[1]*x+sol_pla[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta+3))
 abline(b, a, col=3)
 ```
 
-##Ejecutar el algoritmo PLA con los valores simulados en apartado.6 del ejercicio.5.2, inicializando el algoritmo con el vector cero y con vectores de números aleatorios en [0, 1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.
+###Ejecutar el algoritmo PLA con los valores simulados en apartado.6 del ejercicio.5.2, inicializando el algoritmo con el vector cero y con vectores de números aleatorios en [0, 1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.  
 
 Creamos un vector numérico de tamaño 10 que vamos rellenando con las iteraciones de sucesivas ejecuciones del algoritmo PLA para vectores iniciales aleatorios (salvo el primero que es $(0,0,0)$). No uso una función vectorial sino un bucle para ello para que el vector aleatorio generado sea distinto en cada iteración.
 ```{r}
@@ -296,21 +296,26 @@ for(i in 2:10){
 print(c("Media de iteraciones ", mean(iterations)))
 ```
 
+Como vemos, se llevan a cabo 59 iteraciones de media. Es un resultado aceptable teniendo en cuenta que la recta que separa a los dos conjuntos de datos no pasa por el origen. Por ejecuciones con distintos conjuntos de datos, la convergencia cuando ocurre esto es mucho mayor, ya que una de las componentes del hiperplano (el término independiente) ya sería correcto. En cambio, para conjuntos de datos donde el término independiente tiene un mayor valor absoluto, el número de iteraciones también es mayor. 
+
+### Ejecutar el algoritmo PLA con los datos generados en el apartado.8 del ejercicio.5.2, usando valores de 10, 100 y 1000 para $\texttt{max\_iter}$. Etiquetar los datos de la muestra usando la función solución encontrada y contar el número de errores respecto de las etiquetas originales. Valorar el resultado.  
+
+Para contar los errores, generamos un vector con los signos de la aplicación de la función solución a los datos y contamos los que sean distintos de las etiquetas.
 ```{r}
 count_errors <- function(f, datos, label){
   #Conteo de errores
-  signes <- apply(datos, 2, function(x) return(sign(f(c(x,1)))))
+  signes <- apply(datos, 1, function(x) return(sign(f(c(x,1)))))
   v <- signes != label
   return(length(v[v]))
 }
 ```
 
+Al haber hecho la función para contar errores de esta manera (por si en el futuro tuviéramos funciones que no fuesen lineales) necesitamos pasar de un vector (hiperplano) a una función lineal.
 ```{r}
 hiperplane_to_function <- function( vec ){
   f <- function(x){
     return( crossprod(vec,x) )
   }
-
   return(f)
 }
 ```
@@ -319,28 +324,71 @@ hiperplane_to_function <- function( vec ){
 Conteo de errores
 ```{r}
 sol <- ajusta_PLA(lista_unif,etiqueta_mod, 10,rep(0,3))$hiperplane
-count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
-
-sol <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3))$hiperplane
-count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
-
-sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3))$hiperplane
-count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
+cat("Errores con 10 iteraciones", count_errors(hiperplane_to_function(sol),
+                                               lista_unif, etiqueta_mod ))
+draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
 ```
 
-Conteo de errores función cuadrática
+```{r}
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3))$hiperplane
+cat("Errores con 100 iteraciones",count_errors(hiperplane_to_function(sol),
+                                               lista_unif, etiqueta_mod ))
+draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
+```
+
+```{r}
+sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3))$hiperplane
+cat("Errores con 1000 iteraciones",count_errors(hiperplane_to_function(sol),
+                                                lista_unif, etiqueta_mod ))
+draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
+```
+
+
+Ahora, con 1000 iteraciones llega a una solución equivalente a la del apartado anterior, aunque lógicamente con errores pues los datos no son separables. Aún así, es la mejor solución que podíamos encontrar ya que sólo están mal clasificados los datos cuya etiqueta hemos cambiado, y así se halla el mínimo de errores posibles. En cambio, realizando menos iteraciones tenemos más errores que estos cinco que hemos cambiado. Esto se explica porque el algoritmo también tratará de clasificar bien los datos que hacen el conjunto no separable, lo que entorpece el proceso.
+
+###Repetir el análisis del punto anterior usando la primera función del apartado.7 del ejercicio 5.2.
+
 ```{r}
 sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 10,rep(0,3))$hiperplane
-count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
-
-sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 100,rep(0,3))$hiperplane
-count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
-
-sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 1000,rep(0,3))$hiperplane
-count_errors(hiperplane_to_function(sol), lista_unif, etiqueta_mod )
+cat("Errores con 10 iteraciones", count_errors(hiperplane_to_function(sol),
+                                            lista_unif, etiqueta_mod_1 ))
+draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
 ```
 
-Algoritmo PLA Modificado
+```{r}
+
+sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 100,rep(0,3))$hiperplane
+cat("Errores con 100 iteraciones", count_errors(hiperplane_to_function(sol),
+                                            lista_unif, etiqueta_mod_1 ))
+draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
+```
+
+```{r}
+sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 1000,rep(0,3))$hiperplane
+cat("Errores con 1000 iteraciones", count_errors(hiperplane_to_function(sol),
+                                            lista_unif, etiqueta_mod_1 ))
+draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
+```
+
+
+De nuevo tenemos el problema de que los datos no son separables linealmente sin realizar una transformación, por lo que el resultado es muy malo, prácticamente aleatorio. Podemos, eso sí, al menos quedarnos con la mejor iteración del algoritmo. 
+
+# Modifique la función $\texttt{ajusta\_PLA}$ para que le permita visualizar los datos y soluciones que va encontrando a lo largo de las iteraciones. Ejecute con la nueva versión el apartado 3 del ejercicio 5.3.
+
+```{r}
+# ajusta_PLA(lista_unif,etiqueta, 1000,rep(0,3), TRUE)$hiperplane
+# ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
+```
+
+### A la vista de la conducta de las soluciones observada en el apartado anterior, proponga e implemente una modificación de la función original sol = $\texttt{ajusta\_PLA\_MOD()}$ que permita obtener soluciones razonables sobre datos no linealmente separables. Mostrar y valorar el resultado encontrado usando los datos del apartado 7 del ejercicio 5.2  
+
+Como se ha mencionado anteriormente, el algoritmo implementado anteriormente no asegura ni siquiera que devolvamos la mejor solución encontrada, así que es lógico guardar siempre la mejor solución. 
 ```{r}
 ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
   sol <- vini
@@ -353,7 +401,7 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE
     changed <- FALSE
     
     for( inner_iter in 1:ncol(datos) ){
-      x <- c(datos[,inner_iter],1)
+      x <- c(datos[inner_iter,],1)
 
       if( sign(crossprod(x,current_sol)) != label[inner_iter]){
         current_sol <- current_sol + label[inner_iter] * x
@@ -362,16 +410,13 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE
     }
     
     if(draw_iterations){
-      if(iter < 10) name = paste('000', iter, 'plot.png', sep='')
-      else if(iter < 100) name = paste('00', iter, 'plot.png', sep='')
-      else name = paste('0', iter, 'plot.png', sep='')
-      png(name)
       draw_function(c(-50,50), c(-50,50), 
                     function(x,y) y +sol[1]/sol[2]*x +sol[3]/sol[2], col = 4)
       draw_function(c(-50,50), c(-50,50), 
-                    function(x,y) y +current_sol[1]/current_sol[2]*x +current_sol[3]/current_sol[2], col = 5, add=TRUE)
-      points(lista_unif[1,], lista_unif[2,], col = (label+3))
-      dev.off()
+                    function(x,y) y +current_sol[1]/current_sol[2]*x
+                    +current_sol[3]/current_sol[2], col = 5, add=TRUE)
+      points(lista_unif[,1], lista_unif[,2], col = (label+3))
+      Sys.pause(0.1)
     }
     
     if( current_errors >= count_errors(hiperplane_to_function(current_sol),
@@ -387,53 +432,53 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE
 }
 ```
 
+Para ver cómo afecta esto a la ejecución, mostramos las iteraciones para el caso del ejercicio anterior.
+```{r}
+#ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
+```
 
-Evaluación funciones cuadráticas
+Lo lanzamos ahora con las funciones cuadráticas. y mostramos el número de errores:
 ```{r}
 sol_cuadratic_1 <- ajusta_PLA_MOD(lista_unif, etiqueta_1, 1000, rep(0,3))$hiperplane
-
+cat("Errores f_1", count_errors(hiperplane_to_function(sol_cuadratic_1), 
+                                lista_unif, etiqueta_1 ))
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_1[1]*x +sol_cuadratic_1[3], col = 4)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_1+3))
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_1+3))
 ```
 
 ```{r}
 sol_cuadratic_2 <- ajusta_PLA_MOD(lista_unif, etiqueta_2, 1000, rep(0,3))$hiperplane
-
+cat("Errores f_2", count_errors(hiperplane_to_function(sol_cuadratic_2), 
+                                lista_unif, etiqueta_2 ))
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_2[1]*x +sol_cuadratic_2[3], col = 4)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_2+3))
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_2+3))
 ```
 
 ```{r}
 sol_cuadratic_3 <- ajusta_PLA_MOD(lista_unif, etiqueta_3, 1000, rep(0,3))$hiperplane
-
+cat("Errores f_3", count_errors(hiperplane_to_function(sol_cuadratic_3), 
+                                lista_unif, etiqueta_3 ))
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_3[1]*x +sol_cuadratic_3[3], col = 4)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_3+3))
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_3+3))
 ```
 
 ```{r}
-sol_cuadratic_4 <- ajusta_PLA_MOD(lista_unif, etiqueta_3, 1000, rep(0,3))$hiperplane
-
+sol_cuadratic_4 <- ajusta_PLA_MOD(lista_unif, etiqueta_4, 1000, rep(0,3))$hiperplane
+cat("Errores f_4", count_errors(hiperplane_to_function(sol_cuadratic_4), 
+                                lista_unif, etiqueta_4 ))
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_4[1]*x +sol_cuadratic_4[3], col = 4)
-points(lista_unif[1,], lista_unif[2,], col = (etiqueta_4+3))
-```
-
-
-###Drawing iterations
-```{r}
-#sol <- ajusta_PLA(lista_unif,etiqueta, 1000,rep(0,3), TRUE)$hiperplane
-#sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
-#sol <- ajusta_PLA_MOD(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_4+3))
 ```
 
 # Regresión lineal
 
-## Lectura de datos y dotación de forma
+### Lectura de datos y dotación de forma
 ```{r}
-# datos = scan("datos/zip.train",sep=" ")
+datos = scan("datos/zip.train",sep=" ")
 datos = matrix(datos,ncol=257,byrow=T)
 datos <- datos[-(which(datos[,1] != 1 & datos[,1]!=5)),]
 
@@ -442,7 +487,7 @@ pixels <- aperm(array(t(datos[,2:257]), dim=c(16,16,nrow(datos))), perm=c(2,1,3)
 ```
 
 
-## Cálculo de media y simetría
+### Cálculo de media y simetría
 
 ```{r}
 means <- apply(pixels, 3, mean)
@@ -454,7 +499,7 @@ simetria_vertical <- function(M){
 sim_vertical <- apply(pixels,3,simetria_vertical)
 ```
 
-## Representación 
+### Representación 
 ```{r}
 number_colors = numeric(length(number))
 number_colors[which(number==1)] <- 4
@@ -463,4 +508,111 @@ data_list <- list('number'=number, 'pixels'=pixels, 'mean'=means,
                   'v_symmetry'=sim_vertical, 'colors'=number_colors )
 plot(data_list$mean, data_list$v_symmetry, col = data_list$colors )
 ```
+
+### Implementar la $\texttt{función sol = Regress\_Lin(datos, label)}$ que permita ajustar un modelo de regresion lineal (usar SVD). Los datos de entrada se interpretan igual que en clasificación.
+
+```{r}
+
+pseudoinv <- function(X){
+  desc <- svd(X)
+  d <- round(desc$d, digits=5)
+  d[abs(d)>0] <- 1/d[abs(d)>0]
+  pseudo_inv = desc$v %*% diag(d) %*% t(desc$u) 
+  return(pseudo_inv)
+}
+
+regress_lin <- function(datos, label){ 
+  pseudo_inv = pseudoinv(t(datos)%*%datos)
+  return(pseudo_inv%*%t(datos)%*%label)
+  # pseudo_inv = pseudoinv(datos)
+  # return(pseudo_inv%*%label)
+}
+```
+
+```{r}
+plot(data_list$mean, data_list$v_symmetry, col = data_list$colors )
+coefs <- regress_lin(cbind(means,rep(1,length(means))), sim_vertical)
+abline(coefs[2],coefs[1])
+
+label= numeric(length(number))
+label[which(number==1)] <- -1
+label[which(number==5)] <- 1
+coefs2 <- regress_lin(cbind(means,sim_vertical,rep(1,length(means))), label)
+abline(-coefs2[3]/coefs2[2],-coefs2[1]/coefs2[2],col=2)
+```
+
+### En este ejercicio exploramos cómo funciona regresión lineal en problemas de clasificación. Para ello generamos datos usando el mismo procedimiento que en ejercicios anteriores. Suponemos $X = [−10, 10] \times [−10, 10]$ y elegimos muestras aleatorias uniformes dentro de $X$ . La función $f$ en cada caso será una recta aleatoria que corta a $X$ y que asigna etiqueta a cada punto con el valor de su signo. En cada apartado generamos una muestra y le asignamos etiqueta con la función $f$ generada. En cada ejecución generamos una nueva función $f$
+
+#### Fijar el tamaño de muestra $N = 100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{in}$ , (el porcentaje de puntos incorrectamente clasificados).Evaluar también $E_{out}$ (porcentaje de puntos mal clasificados).Repetir el experimento 1000 veces y promediar los resultados ¿Qué valor obtiene para $E_{in}$ ?.¿Qué valor obtiene de $E_{out}? Valore los resultados
+
+```{r}
+N <- 100
+num_repeticiones <- 1000
+E_in_vector <- numeric(num_repeticiones)
+E_out_vector <- numeric(num_repeticiones)
+
+for( i in 1:num_repeticiones){
+  coefs_recta <- simula_recta(c(-10,10))
+  f <- function(x,y){ return(y - coefs_recta[1]*x -coefs_recta[2])}
+ 
+  muestra_in <- simula_unif(N, 2, c(-10, 10))
+  etiqueta_in <- apply(muestra_in, 1, function(X) sign(f(X[1],X[2])))
+  
+  coefs_rl <- regress_lin(cbind(muestra_in[,1],muestra_in[,2], rep(1,N)),matrix(etiqueta_in,N,1))
+  g <- function(x,y){y + coefs_rl[1]/coefs_rl[2]*x + coefs_rl[3]/coefs_rl[2]}
+  
+  rl_etiqueta_in <- apply(muestra_in, 1, function(X) sign(g(X[1],X[2])))
+  E_in <-sum(etiqueta_in != rl_etiqueta_in)/N*100 
+  E_in_vector[i] <- E_in
+
+  muestra_out <- simula_unif(N, 2, c(-10, 10))
+  etiqueta_out <- apply(muestra_out, 1, function(X) sign(f(X[1],X[2])))
+  rl_etiqueta_out <- apply(muestra_unif_r, 1, function(X) sign(g(X[1],X[2])))
+  E_out <- sum(etiqueta_out != rl_etiqueta_out)/N*100 
+  E_out_vector[i] <- E_out
+}
+
+cat( "Ein. Media = ", mean(E_in_vector), "\n Max = ", max(E_in_vector), 
+       "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector))
+  
+cat( "Eout. Media = ", mean(E_out_vector), "\n Max = ", max(E_out_vector), 
+       "\n Min = ", min(E_out_vector), "\n Desv. Típica = ", sd(E_out_vector))
+```
+
+#### Ahora fijamos N = 10, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1.000 veces ¿Cuál es valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
+
+```{r}
+N <- 10
+num_repeticiones <- 1000
+iterations_vector <- numeric(num_repeticiones)
+
+for( i in 1:num_repeticiones){
+  coefs_recta <- simula_recta(c(-10,10))
+  f <- function(x,y){ return(y - coefs_recta[1]*x -coefs_recta[2])}
+ 
+  muestra_in <- simula_unif(N, 2, c(-10, 10))
+  etiqueta_in <- apply(muestra_in, 1, function(X) sign(f(X[1],X[2])))
+  coefs_rl <- regress_lin(cbind(muestra_in[,1],muestra_in[,2], rep(1,N)),matrix(etiqueta_in,N,1))
+  
+  iterations[i] <- ajusta_PLA(muestra_in,etiqueta_in, 10000,coefs_rl)$iterations
+}
+
+cat( "Iterations. Media = ", mean(iterations), "\n Max = ", max(iterations), 
+       "\n Min = ", min(iterations), "\n Desv. Típica = ", sd(iterations))
+```
+
+### En este ejercicio exploramos el uso de transformaciones no lineales. Consideremos la función objetivo $f(x_1, x_2) = sign(x_1^2 + x_2^2 − 25)$. Generar una muestra de entrenamiento de $N = 1000$ puntos a partir de $\mathcal{X}= [−10, 10] \times [−10, 10]$ muestreando cada punto $x \in \mathcal{X}$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10$\%$ de puntos del conjunto aleatorio generado.
+
+```{r}
+N <- 1000
+f <- function(x,y){
+  x^2+y^2-25
+}
+
+muestra_8 <- simula_unif(N, 2, c(-10, 10))
+etiquetas_8 <- modify_rnd_bool_subvector(apply(muestra_8, 1, function(X) sign(f(X[1],X[2]))))
+plot(muestra_8[,1],muestra_8[,2],col=etiquetas_8+3)
+```
+
+#### Ajustar regresion lineal, para estimar los pesos $w$. Ejecutar el experimento 1.000 y calcular el valor promedio del error de entrenamiento $E_{in}$ . Valorar el resultado.
 
