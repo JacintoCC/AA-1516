@@ -7,7 +7,7 @@ output:
     latex_engine: xelatex
 ---
 
-# Generación y visualización de datos
+# A - Generación y visualización de datos
 
 Antes de realizar cualquier operación que involucre elementos aleatorios estableceremos la semilla para que los datos y ejecuciones en las que se basan las conclusiones del informe sean reproducibles.
 
@@ -23,7 +23,7 @@ stp <- function(){
 }
 ```
 
-### Construir una función $\texttt{lista = simula\_unif (N, dim, rango)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios uniformes en el intervalo rango.
+### 1. Construir una función $\texttt{lista = simula\_unif (N, dim, rango)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios uniformes en el intervalo rango.
 
 Dado que es lo que indica el enunciado y aunque en el desarrollo de la práctica se da a entender que esta función podría requerir distintos intervalos para cada función, no se pide, sólo he incluido un vector $rango$ que será el intervalo en el que estén los puntos para todas las dimensiones.
 
@@ -37,7 +37,7 @@ simula_unif <- function(N, dim, rango){
 Situamos los datos por filas para una más fácil visualización. Tendremos por tanto una matriz con tantas filas como el número de datos y tantas columnas como dimensiones.
 
 
-### Construir una función $\texttt{lista = simula\_gaus(N, dim, sigma)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector $sigma$
+### 2. Construir una función $\texttt{lista = simula\_gaus(N, dim, sigma)}$ que calcule una lista de longitud $N$ de vectores de dimensión $dim$ conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector $sigma$
 ```{r}
 simula_gauss <- function(N, dim, sigma){
   #Tomamos N*dim elementos de una normal, tomando la desviación estándar del vector sigma
@@ -47,7 +47,7 @@ simula_gauss <- function(N, dim, sigma){
 ```
 En este caso estamos rellenando la matriz por filas. Haciéndolo de esta manera, y puesto que sigma es un vector cuya dimensión debería ser 1 o coincidir con la dimensión de los vectores ($dim$), el número generado se genera con la desviación típica correspondiente a la de su dimensión, y se irá repitiendo hasta cubrir el número de datos a generar ($N \cdot dim$) con lo que lo hará para cada fila (dato).
 
-### Suponer $N = 50, dim = 2, rango = [-50, +50]$ en cada dimensión para generar una lista de puntos de una distribución uniforme. Generar puntos también de una distribución normal con  $N = 50, dim = 2$ y $sigma = [5, 7]$. Dibujar una gráfica de la salida de ambas funciones.
+### 3 y 4. Suponer $N = 50, dim = 2, rango = [-50, +50]$ en cada dimensión para generar una lista de puntos de una distribución uniforme. Generar puntos también de una distribución normal con  $N = 50, dim = 2$ y $sigma = [5, 7]$. Dibujar una gráfica de la salida de ambas funciones.
 
 ```{r}
 lista_unif <- simula_unif(50, 2, c(-50, 50))
@@ -70,7 +70,7 @@ boxplot(lista_unif[,1],lista_unif[,2])
 boxplot(lista_gauss[,1],lista_gauss[,2])
 ```
 
-### Construir la función $\texttt{v=simula\_recta(intervalo)}$ que calcula los parámetros, $v = (a, b)$ de una recta aleatoria, $y = ax + b$, que corte al cuadrado [-50, 50] × [-50, 50] (Ayuda: Para calcular la recta simular las coordenadas de dos puntos dentro del cuadrado y calcular la recta que pasa por ellos)
+### 5. Construir la función $\texttt{v=simula\_recta(intervalo)}$ que calcula los parámetros, $v = (a, b)$ de una recta aleatoria, $y = ax + b$, que corte al cuadrado [-50, 50] × [-50, 50] (Ayuda: Para calcular la recta simular las coordenadas de dos puntos dentro del cuadrado y calcular la recta que pasa por ellos)
 Generamos otra muestra de tamaño 2 de una distribución uniforme y calculamos la recta que pasa por estos dos puntos. La función  $\texttt{v=simula\_recta(intervalo)}$ devolverá una función en $\mathbb{R}^2$ que represente la recta generada.
 
 ```{r}
@@ -86,7 +86,7 @@ simula_recta <- function(intervalo){
 }
 ```
 
-### Generar una muestra 2D de puntos usando $\texttt{simula\_unif()}$ y etiquetar la muestra usando el signo de la función $f (x, y) = y - ax - b$ de cada punto a una recta simulada con $\texttt{simula\_recta()}$. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
+### 6. Generar una muestra 2D de puntos usando $\texttt{simula\_unif()}$ y etiquetar la muestra usando el signo de la función $f (x, y) = y - ax - b$ de cada punto a una recta simulada con $\texttt{simula\_recta()}$. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
 Generamos los coeficientes de una recta y etiquetamos la muestra de puntos generada anteriormente. Para realizar el etiquetado, aplicamos $\texttt{apply}$ por filas, generando un vector de etiquetas con el signo de la función.
 
 ```{r}
@@ -95,7 +95,7 @@ f <- simula_recta(intervalo)
 etiqueta <- apply(lista_unif, 1, function(X) sign(f(X[1],X[2])))
 ```
 
-Escribimos una función que dibuje una función en $\mathbb{R}^2$ en un cierto intervalo, usando la función $\texttt{contour}$ para pintar también posteriormente las funciones cuadráticas. El argumento $\texttt{add}$ permitirá añadir un gráfico a un $\texttt{plot}$ existente.
+Escribimos una función que dibuje una función en $\mathbb{R}^2$ en un cierto intervalo, usando la función $\texttt{contour}$ para pintar también posteriormente las funciones cuadráticas. El argumento $\texttt{add}$ permitirá añadir un gráfico a un $\texttt{plot}$ existente.  
 ```{r}
 draw_function <- function(interval_x, interval_y, f, levels = 0, col = 1, add = FALSE){
   x <- seq(interval_x[1],interval_x[2],length=1000)
@@ -110,9 +110,10 @@ draw_function(c(-50,50), c(-50,50), f)
 title(main="a*x+b", ylab = "lista_unif[,2]", xlab = "lista_unif[,1]")
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta+3))
 ```
+
 Como vemos en la gráfica, los puntos rojos (etiquetados con -1) se sitúan debajo de la gráfica y los azules por encima. Para hacer esto, aunque se podría generar un vector de colores en función de las etiquetas, es más cómodo sumar $3$ al vector de etiquetas para obtener así $(2,4)$ y que los colores sean rojo y azul, respectivamente, que se distinguen bien y se realiza la asociación de rojo con estar por debajo de cero.
 
-### Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguientes funciones
+### 7. Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguientes funciones
 
 Aquí es donde verdaderamente entra en juego la función $\texttt{contour}$, pues nos permite representar una función cuadrática de manera sencilla. Para realizar el etiquetado, lo hacemos como para el caso de la recta, tomando el signo de la evaluación de la función en cada dato de la muestra.
 En este caso la mayoría de datos cae fuera de la elipse corresponidente a la función.
@@ -165,7 +166,7 @@ points(lista_unif[,1], lista_unif[,2], col = (etiqueta_4+3))
 
 De la representación gráfica de estas funciones y los datos clasificados según ellas, se extrae que no son separables linealmente, por lo que el algoritmo del Perceptron no convergerá sin hacer antes una transformación, y será necesario una nueva aproximación para resolver el problema.
 
-### Considerar de nuevo la muestra etiquetada en el apartado 6. Modifique las etiquetas de un 10  aleatorio de muestras positivas y otro 10 aleatorio de negativas.
+### 8. Considerar de nuevo la muestra etiquetada en el apartado 6. Modifique las etiquetas de un 10  aleatorio de muestras positivas y otro 10 aleatorio de negativas.
 ```{r}
 modify_rnd_bool_subvector <- function(v, perc = 0.1){
   #Almacenamos una copia para poder saber qué puntos debemos cambiar en el original.
@@ -189,16 +190,17 @@ modify_rnd_bool_subvector <- function(v, perc = 0.1){
 }
 ```
 
-#### Visualice los puntos con las nuevas etiquetas y la recta del apartado 6
+#### a) Visualice los puntos con las nuevas etiquetas y la recta del apartado 6  
 ```{r}
 etiqueta_mod <- modify_rnd_bool_subvector(etiqueta)
 
 draw_function(c(-50,50), c(-50,50), f)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
 ```
+
 Ahora hay datos que podríamos considerar mal clasificados, pues se sitúan en el lado erróneo de la recta. Sin embargo, esto excede la capacidad de las herramientas vistas hasta ahora, ya que al no ser linearmente separables el Perceptron no dará con las solución correcta.
 
-#### En una gráfica aparte visualice nuevo los mismos puntos pero junto con las funciones del apartado 7
+#### b) En una gráfica aparte visualice nuevo los mismos puntos pero junto con las funciones del apartado 7
 ```{r}
 etiqueta_mod_1 <- modify_rnd_bool_subvector(etiqueta_1)
 
@@ -229,9 +231,9 @@ points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_4+3))
 
 En el proceso de cambio vemos que si juntamos que la clase donde hay menos puntos, hay pocos, y que cambiamos el 10 de valores, la clasificación se antoja aún más difícil, pues ya por ejemplo en el tercer y cuarto caso apenas se distinguen áreas claramente definidas.
 
-# Ajuste del algoritmo Perceptron
+# B - Ajuste del algoritmo Perceptron
 
-### Implementar la función $\texttt{sol = ajusta\_PLA(datos, label, max\_iter, vini)}$ que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada datos es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, label el vector de etiquetas (cada etiqueta es un valor +1 o-1), max_iter es el número máximo de iteraciones permitidas y vini el valor inicial del vector. La salida sol devuelve los coeficientes del hiperplano.
+### 1. Implementar la función $\texttt{sol = ajusta\_PLA(datos, label, max\_iter, vini)}$ que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada datos es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, label el vector de etiquetas (cada etiqueta es un valor +1 o-1), max_iter es el número máximo de iteraciones permitidas y vini el valor inicial del vector. La salida sol devuelve los coeficientes del hiperplano.
 
 ```{r}
 ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
@@ -274,14 +276,14 @@ sol_pla <- ajusta_PLA(lista_unif,etiqueta, 200,rep(0,3))$hiperplane
 
 La parte para dibujar y guardar las iteraciones no está demasiado relacionado con el algoritmo, pero puesto que se pide que se dibujen las iteraciones en determinados puntos, la he incluido. La normalización de la solución por la coordenada Y del vector solución se podría realizar simplemente a la hora de pintar la gráfica, pero así son datos más interpretables.
 
-Con los datos generados en el ejercicio anterior, ejemplo del algoritmo PLA, que da la solución en azul, mientras que se pinta en verde la recta con la que realizamos la clasificación. Se aprecia que efectivamente se ha resuelto en, como mucho, las 200 iteraciones con las que se ha ejecutado. Pese a diferir de la recta original, no se encuentra ningún dato en las regiones de diferencia, por lo que no teníamos ninguna información para descartar la solución aportada
+Con los datos generados en el ejercicio anterior mostramos un ejemplo de la ejecución del algoritmo PLA, que da la solución en azul, mientras que se pinta en verde la recta con la que realizamos la clasificación. Se aprecia que efectivamente se ha resuelto en, como mucho, las 200 iteraciones con las que se ha ejecutado. Pese a diferir de la recta original, no se encuentra ningún dato en las regiones de diferencia, por lo que sin conocer la solución real no tenemos ninguna información para descartar la solución aportada.  
 ```{r}
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol_pla[1]*x+sol_pla[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta+3))
 draw_function(c(-50,50), c(-50,50), f, col = 3, add = TRUE)
 ```
 
-### Ejecutar el algoritmo PLA con los valores simulados en apartado.6 del ejercicio 5.2, inicializando el algoritmo con el vector cero y con vectores de números aleatorios en [0, 1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.
+### 2. Ejecutar el algoritmo PLA con los valores simulados en apartado.6 del ejercicio 5.2, inicializando el algoritmo con el vector cero y con vectores de números aleatorios en [0, 1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.
 
 Creamos un vector numérico de tamaño 10 que vamos rellenando con las iteraciones de sucesivas ejecuciones del algoritmo PLA para vectores iniciales aleatorios (salvo el primero que es $(0,0,0)$). No uso una función vectorial sino un bucle para ello para que el vector aleatorio generado sea distinto en cada iteración.
 
@@ -298,9 +300,9 @@ for(i in 2:10){
 print(c("Media de iteraciones ", mean(iterations)))
 ```
 
-Como vemos, se llevan a cabo 55 iteraciones de media. Es un resultado aceptable teniendo en cuenta que la recta que separa a los dos conjuntos de datos no pasa por el origen. Por ejecuciones con distintos conjuntos de datos, la convergencia cuando ocurre esto es mucho mayor, ya que una de las componentes del hiperplano (el término independiente) ya sería correcto. En cambio, para conjuntos de datos donde el término independiente tiene un mayor valor absoluto, el número de iteraciones también es mayor.
+Como vemos, se llevan a cabo 55 iteraciones de media. Es un resultado aceptable teniendo en cuenta que la recta que separa a los dos conjuntos de datos no pasa por el origen. Por ejecuciones con distintos conjuntos de datos, algo que se puede comprobar cambiando la semilla, la convergencia cuando ocurre esto es mucho más rápida, ya que una de las componentes del hiperplano (el término independiente) ya sería correcto. En cambio, para conjuntos de datos donde el término independiente tiene un mayor valor absoluto, el número de iteraciones también es mayor.
 
-### Ejecutar el algoritmo PLA con los datos generados en el apartado 8 del ejercicio 5.2, usando valores de 10, 100 y 1000 para $\texttt{max\_iter}$. Etiquetar los datos de la muestra usando la función solución encontrada y contar el número de errores respecto de las etiquetas originales. Valorar el resultado.
+### 3. Ejecutar el algoritmo PLA con los datos generados en el apartado 8 del ejercicio 5.2, usando valores de 10, 100 y 1000 para $\texttt{max\_iter}$. Etiquetar los datos de la muestra usando la función solución encontrada y contar el número de errores respecto de las etiquetas originales. Valorar el resultado.
 
 Para contar los errores, generamos un vector con los signos de la aplicación de la función solución a los datos y contamos los que sean distintos de las etiquetas.
 ```{r}
@@ -350,7 +352,7 @@ points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
 
 Ahora, con 1000 iteraciones llega a una solución equivalente a la del apartado anterior, aunque lógicamente con errores pues los datos no son separables. Aún así, es la mejor solución que podíamos encontrar ya que sólo están mal clasificados los datos cuya etiqueta hemos cambiado, y así se halla el mínimo de errores posibles. En cambio, realizando menos iteraciones tenemos más errores que estos cinco que hemos cambiado. Esto se explica porque el algoritmo también tratará de clasificar bien los datos que hacen el conjunto no separable, lo que entorpece el proceso.
 
-### Repetir el análisis del punto anterior usando la primera función del apartado 7 del ejercicio 5.2.
+### 4. Repetir el análisis del punto anterior usando la primera función del apartado 7 del ejercicio 5.2.
 
 ```{r}
 sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 10,rep(0,3))$hiperplane
@@ -379,14 +381,14 @@ points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
 
 De nuevo tenemos el problema de que los datos no son separables linealmente sin realizar una transformación, por lo que el resultado es muy malo, y además vemos como el algoritmo tiende a situar todos los puntos con etiqueta positiva por encima de la recta aunque tenga algunos puntos con etiqueta negativa mal clasificados. Podemos, al menos quedarnos con la mejor iteración del algoritmo.
 
-# Modifique la función $\texttt{ajusta\_PLA}$ para que le permita visualizar los datos y soluciones que va encontrando a lo largo de las iteraciones. Ejecute con la nueva versión el apartado 3 del ejercicio 5.3.
+### 5. Modifique la función $\texttt{ajusta\_PLA}$ para que le permita visualizar los datos y soluciones que va encontrando a lo largo de las iteraciones. Ejecute con la nueva versión el apartado 3 del ejercicio 5.3.
 
 ```{r, eval=FALSE, include=TRUE}
 ajusta_PLA(lista_unif,etiqueta, 1000,rep(0,3), TRUE)$hiperplane
 ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3), TRUE)$hiperplane
 ```
 
-### A la vista de la conducta de las soluciones observada en el apartado anterior, proponga e implemente una modificación de la función original sol = $\texttt{ajusta\_PLA\_MOD()}$ que permita obtener soluciones razonables sobre datos no linealmente separables. Mostrar y valorar el resultado encontrado usando los datos del apartado 7 del ejercicio 5.2
+### 6. A la vista de la conducta de las soluciones observada en el apartado anterior, proponga e implemente una modificación de la función original sol = $\texttt{ajusta\_PLA\_MOD()}$ que permita obtener soluciones razonables sobre datos no linealmente separables. Mostrar y valorar el resultado encontrado usando los datos del apartado 7 del ejercicio 5.2
 
 Como se ha mencionado anteriormente, el algoritmo implementado anteriormente no asegura ni siquiera que devolvamos la mejor solución encontrada, así que es lógico guardar siempre la mejor solución.
 ```{r}
@@ -478,18 +480,19 @@ points(lista_unif[,1], lista_unif[,2], col = (etiqueta_4+3))
 
 Se ve que sigue sin ser la mejor solución posible. Para separar estos datos lo que habría que hacer es buscar una transformación que los haga, al menos a excepción de los datos cuyas etiquetas hemos modificado aleatoriamente, separables. En este caso tendríamos que elevar cada coordenada (centrada en torno al centro o foco de la cuádrica) al cuadrado.
 
-Por ejemplo, para el segundo caso, la transformación de los datos será $\Phi(x,y) = ((x-10)^2, (y-20)^2)$. De esta manera, los datos quedan de la forma:
+Por ejemplo, para el segundo caso, la transformación de los datos será $\Phi(x,y) = ((x-10)^2, (y-20)^2)$. De esta manera, los datos quedan de la forma:  
 
 ```{r}
 lista_unif_transf <- matrix(apply(lista_unif,1,
    function(X)c((X[1]-10)^2,(X[2]-20)^2)),50,2,byrow=T)
 plot(lista_unif_transf[,1], lista_unif_transf[,2], col = (etiqueta_1+3))
 ```
-que es separable. Podemos aplicar ahora el algoritmo del Perceptron para separar los datos:
+
+que es separable. Podemos aplicar ahora el algoritmo del Perceptron para separar los datos:  
 
 ```{r}
 sol_transf <- sol_transf <- ajusta_PLA(lista_unif_transf, etiqueta_1, 4000, rep(0,3))$hiperplane
-cat("Errores transformado", count_errors(hiperplane_to_function(sol_transf),
+cat("Errores con la transformación:", count_errors(hiperplane_to_function(sol_transf),
                                 lista_unif_transf, etiqueta_1 ))
 plot(lista_unif_transf[,1], lista_unif_transf[,2], col = (etiqueta_1+3))
 draw_function(c(-10,1000), c(-10,1000), function(x,y)
@@ -500,13 +503,14 @@ draw_function(c(-50,50), c(-50,50), function(x,y)
     (y-20)^2 +sol_transf[1]*(x-10)^2 +sol_transf[3], col = 4,add=TRUE)
 draw_function(c(-50,50), c(-50,50), f_1, col = 3,add=TRUE)
 ```
+
 Vemos como, si sabemos o podemos intuir cuál es la transformación, podríamos aplicar el algoritmo PLA pese a que los datos no fuesen linealmente separables.
 
-# Regresión lineal
+# C - Regresión lineal
 
 Leemos los datos del fichero $\texttt{train.zip}$ y los colocamos en una matriz de 257 columnas en las que cada fila será un dato conformado por el número dibujado y 256 valores correspondientes a la intensidad en cada píxel. De estos datos seleccionamos únicamente aquellos en los que la primera columna contenga un 1 o un 5. Además, formamos un vector con los números dibujados, y un array tridimensional formado por matrices de tamaño $16 \times 16$ en las dos primeras dimensiones.
 
-### Lectura de datos y dotación de forma
+### 1 y 2. Lectura de datos y dotación de forma
 ```{r}
 datos <- scan("datos/zip.train",sep=" ")
 datos <- matrix(datos,ncol=257,byrow=T)
@@ -516,7 +520,8 @@ number <- datos[,1]
 pixels <- array(t(datos[,2:257]), dim=c(16,16,nrow(datos)))
 ```
 
-Para mostrar las imágenes hay que voltear las imágenes en el eje Y. Además le añadimos el parámetro $\texttt{col}$ para ponerlas en blanco y negro y debido a que los valores en el fichero de datos son negativos, le damos la vuelta a la escala de grises:
+Para mostrar las imágenes hay que voltear las imágenes en el eje Y. Además le añadimos el parámetro $\texttt{col}$ para ponerlas en blanco y negro y debido a que los valores en el fichero de datos son negativos, le damos la vuelta a la escala de grises:  
+
 ```{r, echo=FALSE}
 image(1:16,1:16,pixels[,16:1,1],col = gray(32:0/32))
 image(1:16,1:16,pixels[,16:1,2],col = gray(32:0/32))
@@ -531,7 +536,7 @@ for(i in 1:dim(pixels)[3]){
 ``` 
 
 
-### Para cada matriz de números calcularemos su valor medio y su grado de simetría vertical. Para calcular la simetría calculamos la suma del valor absoluto de las diferencias en cada píxel entre la imagen original y la imagen que obtenemos invertiendo el orden de las columnas. Finalmente le cambiamos el signo.
+### 3. Para cada matriz de números calcularemos su valor medio y su grado de simetría vertical. Para calcular la simetría calculamos la suma del valor absoluto de las diferencias en cada píxel entre la imagen original y la imagen que obtenemos invertiendo el orden de las columnas. Finalmente le cambiamos el signo.
 
 El vector de medias se obtiene directamente aplicando la función $\texttt{mean}$ en cada elemento de la tercera dimensión. Para la simetría, creamos la función $\texttt{simetria\_vertical}$, que calcula la simetría para cada matriz. Esta función, para cada fila, calcula la diferencia entre la fila y la fila invertida.
 
@@ -545,7 +550,7 @@ simetria_vertical <- function(M){
 sim_vertical <- apply(pixels,3,simetria_vertical)
 ```
 
-### Representación
+### 4. Representación
 
 Mostramos la gráfica con la simetría en el eje Y y la intensidad media en el eje X. Creamos también un vector con colores referentes al número que representan. Los 1s estarán representados por círculos azules y los 5s por círculos verdes. 
 
@@ -558,7 +563,7 @@ data_list <- list('number'=number, 'pixels'=pixels, 'mean'=means,
 plot(data_list$mean, data_list$v_symmetry, col = data_list$colors )
 ```
 
-### Implementar la $\texttt{función sol = Regress\_Lin(datos, label)}$ que permita ajustar un modelo de regresion lineal (usar SVD). Los datos de entrada se interpretan igual que en clasificación.
+### 5. Implementar la $\texttt{función sol = Regress\_Lin(datos, label)}$ que permita ajustar un modelo de regresion lineal (usar SVD). Los datos de entrada se interpretan igual que en clasificación.
 
 Creamos dos métodos para obtener la regresión lineal. La primera función calcula la pseudoinversa de una matriz. Para ello usamos la descomposición SVD e invertimos los valores en la diagonal que sean distintos de 0. Hay que mencionar que antes hacemos un redondeo a la quinta cifra decimal porque puede darse que haya un valor muy cercano a 0 (fruto de la precisión de la máquina) y que al invertirlo ese valor cobre demasiada relevancia.Para hacer la regresión lineal $Y \leadsto W^TX$, calculamos la matriz pseudoinversa de $X^TX$, $X^\star$ y entonces $W=X^\star X^T Y$. También podríamos tomar $X^\star$ como la pseudoinversa de $X$ y $W=X^\star Y$
 
@@ -578,6 +583,8 @@ regress_lin <- function(datos, label){
 }
 ```
 
+### 6. Ajustar un modelo de regresión lineal a los datos de (Intensidad promedio, Simetría) y pintar la solución junto con los datos. Valorar el resultado.
+
 Se aprecia como la regresión lineal realizada en los datos sigue la nube de puntos , separándose de ellos cuando se aproxima a los 5s para quedar más cerca de los puntos lejanos a la nube de puntos. Si además lo que queremos hacer es separar los datos, tenemos que incluir las etiquetas para que la regresión lineal separe los datos, con buenos resultados teniendo en cuenta que los datos no son separables.
 
 ```{r}
@@ -592,11 +599,11 @@ coefs2 <- regress_lin(cbind(means,sim_vertical,rep(1,length(means))), label)
 abline(-coefs2[3]/coefs2[2],-coefs2[1]/coefs2[2],col=2)
 ```
 
-### En este ejercicio exploramos cómo funciona regresión lineal en problemas de clasificación. Para ello generamos datos usando el mismo procedimiento que en ejercicios anteriores. Suponemos $X = [−10, 10] \times [−10, 10]$ y elegimos muestras aleatorias uniformes dentro de $X$ . La función $f$ en cada caso será una recta aleatoria que corta a $X$ y que asigna etiqueta a cada punto con el valor de su signo. En cada apartado generamos una muestra y le asignamos etiqueta con la función $f$ generada. En cada ejecución generamos una nueva función $f$
+### 7. En este ejercicio exploramos cómo funciona regresión lineal en problemas de clasificación. Para ello generamos datos usando el mismo procedimiento que en ejercicios anteriores. Suponemos $X = [−10, 10] \times [−10, 10]$ y elegimos muestras aleatorias uniformes dentro de $X$ . La función $f$ en cada caso será una recta aleatoria que corta a $X$ y que asigna etiqueta a cada punto con el valor de su signo. En cada apartado generamos una muestra y le asignamos etiqueta con la función $f$ generada. En cada ejecución generamos una nueva función $f$
 
-#### Fijar el tamaño de muestra $N = 100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{in}$ , (el porcentaje de puntos incorrectamente clasificados).Evaluar también $E_{out}$ (porcentaje de puntos mal clasificados).Repetir el experimento 1000 veces y promediar los resultados ¿Qué valor obtiene para $E_{in}$ ?.¿Qué valor obtiene de $E_{out}$? Valore los resultados
+#### a) y b) Fijar el tamaño de muestra $N = 100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{in}$ , (el porcentaje de puntos incorrectamente clasificados).Evaluar también $E_{out}$ (porcentaje de puntos mal clasificados).Repetir el experimento 1000 veces y promediar los resultados ¿Qué valor obtiene para $E_{in}$ ?¿Qué valor obtiene de $E_{out}$? Valore los resultados
 
-Debido a que estos dos apartados consecutivos tienen la misma intención y sólo varía la muestra y sobre cuál se hace la regresión, creo que tiene sentido hacerlos conjuntamente. En primer lugar se simula una recta de la manera que lo hemos venido haciendo, con $\texttt{simula\_recta}$. Generamos una muestra aleatoria de 100 datos y la etiquetamos según el signo con respecto a la recta. Entonces realizamos la regresión lineal y vemos cuántos fallos hay con respecto a las etiquetas originales. Para los datos de fuera de la muestra, generamos unos datos aleatorios, vemos la etiquieta que asignaría la regresión lineal y la recta original. La diferencia aquí es que la regresión no se ha realizado con respecto a estos datos sino con respecto a los originales. El error obtenido en la muestra es de un $7.42\%$, mientras que fuera de la muestra es de $8.265\%$. Hay que destacar que la media se ve incluida también por situaciones en las que, pese a separar los datos correctamente, los clasifica mal ($100\%$ de error). Esto se debe a que lo que minimiza la regresión lineal es la distancia de los puntos a la recta, no los errores. Al haber dos clases y querer minimizar la distancia, efectivamente los separa, pero puede que la recta tenga una pendiente negativa en lugar de positiva, que es lo que determina que unos puntos estén ``debajo'' o ``encima''  de la recta. Esto se suele dar cuando la recta que separa los dos puntos es casi vertical.
+Debido a que estos dos apartados consecutivos tienen la misma intención y sólo varía la muestra y sobre cuál se hace la regresión, creo que tiene sentido hacerlos conjuntamente. En primer lugar se simula una recta de la manera que lo hemos venido haciendo, con $\texttt{simula\_recta}$. Generamos una muestra aleatoria de 100 datos y la etiquetamos según el signo con respecto a la recta. Entonces realizamos la regresión lineal y vemos cuántos fallos hay con respecto a las etiquetas originales. Para los datos de fuera de la muestra, generamos unos datos aleatorios, vemos la etiquieta que asignaría la regresión lineal y la recta original. La diferencia aquí es que la regresión no se ha realizado con respecto a estos datos sino con respecto a los originales. El error obtenido en la muestra es de un $4.072\%$, mientras que fuera de la muestra es de $4.945\%$. La diferencia se explica porque la regresión se ha realizado con los datos que consideramos dentro de la muestra.
 
 ```{r}
 N <- 100
@@ -610,8 +617,9 @@ for( i in 1:num_repeticiones){
   muestra_in <- simula_unif(N, 2, c(-10, 10))
   etiqueta_in <- apply(muestra_in, 1, function(X) sign(f(X[1],X[2])))
 
-  coefs_rl <- regress_lin(cbind(muestra_in[,1],muestra_in[,2], rep(1,N)),matrix(etiqueta_in,N,1))
-  g <- function(x,y){y + coefs_rl[1]/coefs_rl[2]*x + coefs_rl[3]/coefs_rl[2]}
+  coefs_rl <- regress_lin(cbind(muestra_in[,1],muestra_in[,2], rep(1,N)),
+                          matrix(etiqueta_in,N,1))
+  g <- function(x,y){coefs_rl[2]*y + coefs_rl[1]*x + coefs_rl[3]}
 
   rl_etiqueta_in <- apply(muestra_in, 1, function(X) sign(g(X[1],X[2])))
   E_in <-sum(etiqueta_in != rl_etiqueta_in)/N*100
@@ -631,9 +639,9 @@ cat( "Eout. Media = ", mean(E_out_vector), "\n Max = ", max(E_out_vector),
        "\n Min = ", min(E_out_vector), "\n Desv. Típica = ", sd(E_out_vector))
 ```
 
-#### Ahora fijamos N = 10, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1.000 veces ¿Cuál es valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
+#### c) Ahora fijamos N = 10, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1.000 veces ¿Cuál es valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
 
-Ahora lo que hacemos es ejecutar el PLA una vez realizada la regresión lineal. De nuevo se simula una recta y se realiza una regresión lineal sobre los datos. Entonces pasamos el vector solución dado por la regresión lineal y contamos el número de iteraciones hasta que converje, que sabremos que pasará debido a que los datos son separables. Vemos que se tienen de media $9.599$ iteraciones, sin embargo cabría esperar tener menos ya que los datos estarían clasificados. De nuevo, influyen los casos en los que todos los datos están mal clasificados debido a la pendiente de la recta.
+Ahora lo que hacemos es ejecutar el PLA una vez realizada la regresión lineal. De nuevo se simula una recta y se realiza una regresión lineal sobre los datos. Entonces pasamos el vector solución dado por la regresión lineal y contamos el número de iteraciones hasta que converje, que sabremos que pasará debido a que los datos son separables. Vemos que se tienen de media $9.599$ iteraciones, sin embargo cabría esperar tener menos ya que los datos estarían clasificados.
 
 ```{r}
 N <- 10
@@ -655,7 +663,7 @@ cat( "Iterations. Media = ", mean(iterations), "\n Max = ", max(iterations),
        "\n Min = ", min(iterations), "\n Desv. Típica = ", sd(iterations))
 ```
 
-### En este ejercicio exploramos el uso de transformaciones no lineales. Consideremos la función objetivo $f(x_1, x_2) = sign(x_1^2 + x_2^2 − 25)$. Generar una muestra de entrenamiento de $N = 1000$ puntos a partir de $\mathcal{X}= [−10, 10] \times [−10, 10]$ muestreando cada punto $x \in \mathcal{X}$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10 de puntos del conjunto aleatorio generado.
+### 8. En este ejercicio exploramos el uso de transformaciones no lineales. Consideremos la función objetivo $f(x_1, x_2) = sign(x_1^2 + x_2^2 - 25)$. Generar una muestra de entrenamiento de $N = 1000$ puntos a partir de $\mathcal{X}= [−10, 10] \times [−10, 10]$ muestreando cada punto $x \in \mathcal{X}$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10 de puntos del conjunto aleatorio generado.
 
 ```{r}
 N <- 1000
@@ -668,14 +676,15 @@ etiquetas_8 <- modify_rnd_bool_subvector(apply(muestra_8, 1, function(X) sign(f(
 plot(muestra_8[,1],muestra_8[,2],col=etiquetas_8+3)
 ```
 
-#### Ajustar regresion lineal, para estimar los pesos $w$. Ejecutar el experimento 1.000 y calcular el valor promedio del error de entrenamiento $E_{in}$ . Valorar el resultado.
+#### a) Ajustar regresion lineal, para estimar los pesos $w$. Ejecutar el experimento 1.000 veces y calcular el valor promedio del error de entrenamiento $E_{in}$ . Valorar el resultado.
 
 ```{r}
 for( i in 1:num_repeticiones){
   muestra_8 <- simula_unif(N, 2, c(-10, 10))
   etiquetas_8 <- modify_rnd_bool_subvector(apply(muestra_8, 1, function(X) sign(f(X[1],X[2]))))
 
-  coefs_rl <- regress_lin(cbind(muestra_8[,1],muestra_8[,2], rep(1,N)),matrix(etiquetas_8,N,1))
+  coefs_rl <- regress_lin(cbind(muestra_8[,1],muestra_8[,2], rep(1,N)),
+                          matrix(etiquetas_8,N,1))
   g <- function(x,y){coefs_rl[2,1]*y + coefs_rl[1,1]*x + coefs_rl[3,1]}
 
   rl_etiqueta_8 <- apply(muestra_8, 1, function(X) sign(g(X[1],X[2])))
@@ -686,11 +695,11 @@ cat( "Ein. Media = ", mean(E_in_vector), "\n Max = ", max(E_in_vector),
        "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector))
 ```
 
-Como vemos el error está en torno al $50\%$, lo que significa que no clasifica nada. Esto se debe a que los datos no son separables linealmente y estamos intentando hacerlo mediante una función lineal, lo que nos da este error. Veremos en el siguiente apartado que el resultado es mucho mejor.
+Como vemos el error está en torno al $25\%$, lo que significa que no realiza una clasificación aceptable. Esto se debe a que los datos no son separables linealmente y estamos intentando hacerlo mediante una función lineal, lo que nos da este error. Veremos en el siguiente apartado que el resultado es mucho mejor.
 
-#### Ahora,consideremos $N = 1000$ datos de entrenamiento y el siguiente vector de variables: $(1, x_1 , x_2 , x_1 x_2 , x^2_1 , x_2^2 )$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\hat{w}$. Mostrar el resultado.
+#### b) y c) Ahora,consideremos $N = 1000$ datos de entrenamiento y el siguiente vector de variables: $(1, x_1 , x_2 , x_1 x_2 , x^2_1 , x_2^2 )$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\hat{w}$. Mostrar el resultado.
 
-De nuevo tiene más sentido hacer estos dos apartados simultáneamente. Vemos que el ajuste es mucho mejor, pues dentro de la muestra (de cuyos valores hemos cambiado un $10\%$) el error es de un $15\%$. En cambio, para valores de fuera de la muestra con la que se ha realizado la regresión lineal, el error se reduce a un $6\%$. Esta bajada del porcentaje de error se debe a que no se han modificado las etiquetas como sí se ha hecho en los datos de la muestra. Si pintamos por ejemplo en la última iteración los datos, la función original y la estimada por la regresión lineal, se comprueba que la diferencia podría ser aceptable teniendo en cuenta que la regresión se ha realizado con datos con ruido.
+De nuevo tiene más sentido hacer estos dos apartados simultáneamente. Vemos que el ajuste es mucho mejor, pues dentro de la muestra (de cuyos valores hemos cambiado un $10\%$) el error es de un $15\%$. En cambio, para valores de fuera de la muestra con la que se ha realizado la regresión lineal, el error se reduce a un $7\%$. Esta bajada del porcentaje de error se debe a que no se han modificado las etiquetas como sí se ha hecho en los datos de la muestra. Si pintamos por ejemplo en la última iteración los datos, la función original y la estimada por la regresión lineal, se comprueba que la diferencia podría ser aceptable teniendo en cuenta que la regresión se ha realizado con datos con ruido.
 ```{r}
 for( i in 1:num_repeticiones){
   muestra_8 <- simula_unif(N, 2, c(-10, 10))
