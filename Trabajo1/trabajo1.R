@@ -2,12 +2,12 @@
 
 # Establecimiento de la semilla para reproducir los datos del informe
 set.seed(314159)
-
+X11()
 
 # Función para realizar paradas
 stp <- function(){
-  cat("Pulse una tecla para continuar")
-  t<- scan()
+  cat("Pulse una tecla para continuar", "\n")
+  t<- invisible(readLines("stdin", n=1))
 }
 
 # Función para simular N datos uniformes en dim dimensiones
@@ -79,6 +79,8 @@ f_1 <- function(x,y){
 etiqueta_1 <- apply(lista_unif, 1, function(X) sign(f_1(X[1],X[2])))
 
 draw_function(c(-50,50), c(-50,50), f_1)
+points(lista_unif[,1], lista_unif[,2], col = (etiqueta_1+3))
+title(main=expression((x - 10)^2 + (y - 20)^2 - 400))
 stp()
 
 
@@ -90,6 +92,7 @@ etiqueta_2 <- apply(lista_unif, 1, function(X) sign(f_2(X[1],X[2])))
 
 draw_function(c(-50,50), c(-50,50),f_2)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_2+3))
+title(main=expression(0.5*(x + 10)^2 + (y - 20)^2 - 400))
 stp()
 
 
@@ -101,6 +104,7 @@ etiqueta_3 <- apply(lista_unif, 1, function(X) sign(f_3(X[1],X[2])))
 
 draw_function(c(-50,50), c(-50,50), f_3)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_3+3))
+title(main=expression(0.5*(x - 10)^2 - (y + 20)^2 - 400))
 stp()
 
 f_4 <- function(x,y){
@@ -111,6 +115,7 @@ etiqueta_4 <- apply(lista_unif, 1, function(X) sign(f_4(X[1],X[2])))
 
 draw_function(c(-50,50), c(-50,50), f_4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_4+3))
+title(main=expression(y = 20*x^2+ 5*x - 3))
 stp()
 
 
@@ -141,12 +146,14 @@ etiqueta_mod <- modify_rnd_bool_subvector(etiqueta)
 
 draw_function(c(-50,50), c(-50,50), f)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
+title(main="Etiquetas modificadas para f")
 stp()
 
 etiqueta_mod_1 <- modify_rnd_bool_subvector(etiqueta_1)
 
 draw_function(c(-50,50), c(-50,50), f_1)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
+title(main="Etiquetas modificadas para f_1")
 stp()
 
 
@@ -154,6 +161,7 @@ etiqueta_mod_2 <- modify_rnd_bool_subvector(etiqueta_2)
 
 draw_function(c(-50,50), c(-50,50), f_2)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_2+3))
+title(main="Etiquetas modificadas para f_2")
 stp()
 
 
@@ -161,6 +169,7 @@ etiqueta_mod_3 <- modify_rnd_bool_subvector(etiqueta_3)
 
 draw_function(c(-50,50), c(-50,50), f_3)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_3+3))
+title(main="Etiquetas modificadas para f_4")
 stp()
 
 
@@ -168,6 +177,7 @@ etiqueta_mod_4 <- modify_rnd_bool_subvector(etiqueta_4)
 
 draw_function(c(-50,50), c(-50,50), f_4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_4+3))
+title(main="Etiquetas modificadas para f_3")
 stp()
 
 
@@ -196,8 +206,9 @@ ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
     if(draw_iterations){
       draw_function(c(-50,50), c(-50,50), function(x,y) y +sol[1]/sol[2]*x
                     +sol[3]/sol[2], col = 4)
+      title(main=paste("Iteración ", iter,sep=" "))
       points(lista_unif[,1], lista_unif[,2], col = (label+3))
-      Sys.sleep(0.05)
+      Sys.sleep(0.5)
     }
     iter <- iter+1
   }
@@ -209,11 +220,12 @@ ajusta_PLA <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
   return( list( hiperplane = sol, iterations = iter))
 }
 
-# Ejemplo de la ejecución del PLA con el primer ejemplo
+# Ejemplo de la ejecución del PLA
 sol_pla <- ajusta_PLA(lista_unif,etiqueta, 200,rep(0,3))$hiperplane
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol_pla[1]*x+sol_pla[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta+3))
 draw_function(c(-50,50), c(-50,50), f, col = 3, add = TRUE)
+title(main="Ejecución PLA")
 stp()
 
 # Ejecuciones del algoritmo PLA para hallar la media de iteraciones
@@ -246,46 +258,52 @@ hiperplane_to_function <- function( vec ){
 # Muestra de la ejecución y el número de errores para distintos números de ejecuciones
 sol <- ajusta_PLA(lista_unif,etiqueta_mod, 10,rep(0,3))$hiperplane
 cat("Errores con 10 iteraciones", count_errors(hiperplane_to_function(sol),
-                                               lista_unif, etiqueta_mod ))
+                                               lista_unif, etiqueta_mod ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
+title(main="Ejecución con 10 iteraciones")
 stp()
 
 sol <- ajusta_PLA(lista_unif,etiqueta_mod, 100,rep(0,3))$hiperplane
 cat("Errores con 100 iteraciones",count_errors(hiperplane_to_function(sol),
-                                               lista_unif, etiqueta_mod ))
+                                               lista_unif, etiqueta_mod ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
+title(main="Ejecución con 100 iteraciones")
 stp()
 
 sol <- ajusta_PLA(lista_unif,etiqueta_mod, 1000,rep(0,3))$hiperplane
 cat("Errores con 1000 iteraciones",count_errors(hiperplane_to_function(sol),
-                                                lista_unif, etiqueta_mod ))
+                                                lista_unif, etiqueta_mod ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod+3))
+title(main="Ejecución con 1000 iteraciones")
 stp()
 
 # Muestra de la ejecución y el número de errores para distintos números de ejecuciones
 #   con datos no linealmente separables y cuadráticos
 sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 10,rep(0,3))$hiperplane
 cat("Errores con 10 iteraciones", count_errors(hiperplane_to_function(sol),
-                                            lista_unif, etiqueta_mod_1 ))
+                                            lista_unif, etiqueta_mod_1 ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
+title(main="Ejecución con 10 iteraciones")
 stp()
 
 sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 100,rep(0,3))$hiperplane
 cat("Errores con 100 iteraciones", count_errors(hiperplane_to_function(sol),
-                                            lista_unif, etiqueta_mod_1 ))
+                                            lista_unif, etiqueta_mod_1 ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
+title(main="Ejecución con 100 iteraciones")
 stp()
 
 sol <- ajusta_PLA(lista_unif,etiqueta_mod_1, 1000,rep(0,3))$hiperplane
 cat("Errores con 1000 iteraciones", count_errors(hiperplane_to_function(sol),
-                                            lista_unif, etiqueta_mod_1 ))
+                                            lista_unif, etiqueta_mod_1 ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y) y+sol[1]*x+sol[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_mod_1+3))
+title(main="Ejecución con 1000 iteraciones")
 stp()
 
 
@@ -325,7 +343,8 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE
                     function(x,y) y*current_sol[2] +current_sol[1]*x +current_sol[3],
                     col = 5, add=TRUE)
       points(lista_unif[,1], lista_unif[,2], col = (label+3))
-      Sys.sleep(0.05)
+      title(main=paste("Iteración ", iter,sep=" "))
+      Sys.sleep(0.5)
     }
 
     if( current_errors >= count_errors(hiperplane_to_function(current_sol),
@@ -347,34 +366,38 @@ stp()
 # Muestra de cómo se comporta para datos que no son linealmente separables
 sol_cuadratic_1 <- ajusta_PLA_MOD(lista_unif, etiqueta_1, 1000, rep(0,3))$hiperplane
 cat("Errores f_1", count_errors(hiperplane_to_function(sol_cuadratic_1),
-                                lista_unif, etiqueta_1 ))
+                                lista_unif, etiqueta_1 ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_1[1]*x +sol_cuadratic_1[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_1+3))
+title(main="Ajuste lineal para f1")
 stp()
 
 sol_cuadratic_2 <- ajusta_PLA_MOD(lista_unif, etiqueta_2, 1000, rep(0,3))$hiperplane
 cat("Errores f_2", count_errors(hiperplane_to_function(sol_cuadratic_2),
-                                lista_unif, etiqueta_2 ))
+                                lista_unif, etiqueta_2 ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_2[1]*x +sol_cuadratic_2[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_2+3))
+title(main="Ajuste lineal para f2")
 stp()
 
 sol_cuadratic_3 <- ajusta_PLA_MOD(lista_unif, etiqueta_3, 1000, rep(0,3))$hiperplane
 cat("Errores f_3", count_errors(hiperplane_to_function(sol_cuadratic_3),
-                                lista_unif, etiqueta_3 ))
+                                lista_unif, etiqueta_3 ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_3[1]*x +sol_cuadratic_3[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_3+3))
+title(main="Ajuste lineal para f3")
 stp()
 
 sol_cuadratic_4 <- ajusta_PLA_MOD(lista_unif, etiqueta_4, 1000, rep(0,3))$hiperplane
 cat("Errores f_4", count_errors(hiperplane_to_function(sol_cuadratic_4),
-                                lista_unif, etiqueta_4 ))
+                                lista_unif, etiqueta_4 ), "\n")
 draw_function(c(-50,50), c(-50,50), function(x,y)
   y +sol_cuadratic_4[1]*x +sol_cuadratic_4[3], col = 4)
 points(lista_unif[,1], lista_unif[,2], col = (etiqueta_4+3))
+title(main="Ajuste lineal para f4")
 stp()
 
 
@@ -382,21 +405,24 @@ stp()
 lista_unif_transf <- matrix(apply(lista_unif,1,
    function(X)c((X[1]-10)^2,(X[2]-20)^2)),50,2,byrow=T)
 plot(lista_unif_transf[,1], lista_unif_transf[,2], col = (etiqueta_1+3))
+title(main="Transformación de los datos")
 stp()
 
 # Aplicamos PLA y deshacemos la transformación
 sol_transf <- sol_transf <- ajusta_PLA(lista_unif_transf, etiqueta_1, 4000, rep(0,3))$hiperplane
 cat("Errores transformado", count_errors(hiperplane_to_function(sol_transf),
-                                lista_unif_transf, etiqueta_1 ))
+                                lista_unif_transf, etiqueta_1 ), "\n")
 plot(lista_unif_transf[,1], lista_unif_transf[,2], col = (etiqueta_1+3))
 draw_function(c(-10,1000), c(-10,1000), function(x,y)
   y +sol_transf[1]*x +sol_transf[3], col = 4,add=TRUE)
+title(main="PLA en datos transformados")
 stp()
 
 plot(lista_unif[,1], lista_unif[,2], col = (etiqueta_1+3))
 draw_function(c(-50,50), c(-50,50), function(x,y)
     (y-20)^2 +sol_transf[1]*(x-10)^2 +sol_transf[3], col = 4,add=TRUE)
 draw_function(c(-50,50), c(-50,50), f_1, col = 3,add=TRUE)
+title(main="PLA deshecha la transformación")
 stp()
 
   # REGRESIÓN LINEAL
@@ -412,7 +438,7 @@ pixels <- array(t(datos[,2:257]), dim=c(16,16,nrow(datos)))
 # Muestra de las imágenes leídas
 for(i in 1:dim(pixels)[3]){
   image(1:16,1:16,pixels[,16:1,i],col = gray(32:0/32))
-  Sys.sleep(0.05)
+  Sys.sleep(0.5)
 }
 stp()
 
@@ -434,6 +460,7 @@ number_colors[which(number==5)] <- 3
 data_list <- list('number'=number, 'pixels'=pixels, 'mean'=means,
                   'v_symmetry'=sim_vertical, 'colors'=number_colors )
 plot(data_list$mean, data_list$v_symmetry, col = data_list$colors )
+title(main="Intensidad y simetría")
 stp()
 
 # Función para calcular la pseudoinversa de una matriz
@@ -455,6 +482,7 @@ regress_lin <- function(datos, label){
 plot(data_list$mean, data_list$v_symmetry, col = data_list$colors )
 coefs <- regress_lin(cbind(means,rep(1,length(means))), sim_vertical)
 abline(coefs[2],coefs[1])
+title(main="Regresión")
 stp()
 
 # Muestra de la recta que clasifica los datos en función del número que representa
@@ -484,7 +512,7 @@ for( i in 1:num_repeticiones){
 
   # Cálculo de la regresión
   coefs_rl <- regress_lin(cbind(muestra_in[,1],muestra_in[,2], rep(1,N)),matrix(etiqueta_in,N,1))
-  g <- function(x,y){y + coefs_rl[1]/coefs_rl[2]*x + coefs_rl[3]/coefs_rl[2]}
+  g <- function(x,y){coefs_rl[2]*y + coefs_rl[1]*x + coefs_rl[3]}
 
   # Etiquetado según la regresión
   rl_etiqueta_in <- apply(muestra_in, 1, function(X) sign(g(X[1],X[2])))
@@ -506,10 +534,10 @@ for( i in 1:num_repeticiones){
 }
 
 cat( "Ein. Media = ", mean(E_in_vector), "\n Max = ", max(E_in_vector),
-       "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector))
+       "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector), "\n")
 
 cat( "Eout. Media = ", mean(E_out_vector), "\n Max = ", max(E_out_vector),
-       "\n Min = ", min(E_out_vector), "\n Desv. Típica = ", sd(E_out_vector))
+       "\n Min = ", min(E_out_vector), "\n Desv. Típica = ", sd(E_out_vector), "\n")
 stp()
 
 
@@ -535,7 +563,7 @@ for( i in 1:num_repeticiones){
 }
 
 cat( "Iterations. Media = ", mean(iterations), "\n Max = ", max(iterations),
-       "\n Min = ", min(iterations), "\n Desv. Típica = ", sd(iterations))
+       "\n Min = ", min(iterations), "\n Desv. Típica = ", sd(iterations), "\n")
 stp()
 
 # Ejecución de la regresión para funciones no lineales
@@ -550,6 +578,7 @@ f <- function(x,y){
 muestra_8 <- simula_unif(N, 2, c(-10, 10))
 etiquetas_8 <- modify_rnd_bool_subvector(apply(muestra_8, 1, function(X) sign(f(X[1],X[2]))))
 plot(muestra_8[,1],muestra_8[,2],col=etiquetas_8+3)
+title(main="Representación datos")
 stp()
 
 
@@ -570,7 +599,7 @@ for( i in 1:num_repeticiones){
   E_in_vector[i] <- E_in
 }
 cat( "Ein. Media = ", mean(E_in_vector), "\n Max = ", max(E_in_vector),
-       "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector))
+       "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector), "\n")
 stp()
 
 # Regresión lineal con funciones cuadráticas
@@ -607,8 +636,9 @@ for( i in 1:num_repeticiones){
 draw_function(c(-10,10), c(-10,10), f, col = 3)
 draw_function(c(-10,10), c(-10,10), g, col = 1, add = TRUE)
 points(muestra_8[,1],muestra_8[,2],col=etiquetas_8+3)
+title(main="Regresión lineal con funciones cuadráticas")
 cat( "Ein. Media = ", mean(E_in_vector), "\n Max = ", max(E_in_vector),
-       "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector))
+       "\n Min = ", min(E_in_vector), "\n Desv. Típica = ", sd(E_in_vector), "\n")
 cat( "Eout. Media = ", mean(E_out_vector), "\n Max = ", max(E_out_vector),
-       "\n Min = ", min(E_out_vector), "\n Desv. Típica = ", sd(E_out_vector))
+       "\n Min = ", min(E_out_vector), "\n Desv. Típica = ", sd(E_out_vector), "\n")
 stp()
