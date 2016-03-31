@@ -5,6 +5,7 @@
 \usepackage{enumerate}
 \usepackage{listings}
 \usepackage{amsthm}
+\usepackage{amsmath}
 \usepackage[pdftex]{hyperref} 
 
 \title{Aprendizaje autom\'atico. Cuestionario de teor\'ia 1}
@@ -17,10 +18,6 @@
 \newtheorem{cuestion}{Cuestión}
 \newtheorem{solucion}{Solución}
 
-% Sección para facilitar la edición mientras se realiza el cuestionario ----------------------------------------------------------
-\section{Contestadas}
-
-% Sección para facilitar la edición mientras se realiza el cuestionario ----------------------------------------------------------
 \begin{cuestion}
 Identificar, para cada una de las siguientes tareas, qué tipo de aprendizaje es el adecuado (supervisado, no supervisado, por refuerzo) y los datos de aprendizaje que deberíamos usar. Si una tarea se ajusta a más de un tipo, explicar cómo y describir los datos para cada tipo.
 
@@ -88,15 +85,19 @@ Suponga un modelo PLA y un dato $x(t)$ mal clasificado respecto de dicho modelo.
 
 \begin{solucion}
 Sea $w$ la solución en el paso $t$ del modelo PLA. Si $x(t)$, con etiqueta $y(t)$ está mal clasificado, significa que $\texttt{sign}(w^T x(t)) \neq y(t)$. Dado que sólo uno de los elementos $\{w^T x(t), y(t)\}$ es negativo y el otro es positivo, se tiene que el producto $y(t) w^T x(t) < 0$. Ahora bien, veamos qué pasa al actualizar $w$ a $w_{new}$. Como queremos probar que la solución se mueve ``en la buena dirección'', veamos qué le ocurre a $y(t) w_{new}^T x(t)$:
-	\[ y(t) w_{new}^T x(t) = y(t) (w + y(t)x(t))^T x(t) =
-			y(t) w^T x(t) + y(t)^2 x(t)^T x(t) = y(t) w^T x(t) + x(t)^T x(t)\]
+	\begin{equation}
+	\begin{split}
+	y(t) w_{new}^T x(t) &= y(t) (w + y(t)x(t))^T x(t) = \\
+			&= y(t) w^T x(t) + y(t)^2 x(t)^T x(t) = y(t) w^T x(t) + x(t)^T x(t)
+	\end{split}
+	\end{equation}	 
 	Como $x(t)^T x(t) = \Vert x(t) \Vert > 0$, ya que todos los puntos del espacio tienen la coordenada homogénea a $1$ y por tanto su norma no puede ser 0, estamos añadiendo a $y(t) w^T x(t)$ una cantidad positiva. En resumen:
 	\[ y(t) w_{new}^T x(t) > y(t) w^T x(t) \]
-	Esto significa que estamos más cerca de clasificar el valor (que sería $y(t) w_{new}^T x(t) > 0$). Como sabemos, el algoritmo PLA converge, aunque no podemos afirmar que en un único paso clasifiquemos correctamente $x(t)$ pero sí que clasificará correctamente el punto en un número finito de pasos.
+	Esto significa que estamos más cerca de clasificar el valor (que sería $y(t) w_{new}^T \cdot$ $x(t)> 0$). Como sabemos, el algoritmo PLA converge, aunque no podemos afirmar que en un único paso clasifiquemos correctamente $x(t)$ pero sí que clasificará correctamente el punto en un número finito de pasos.
 \end{solucion}
 
 \begin{cuestion}
-Considere el enunciado del ejercicio 2 de la sección $\texttt{FACTIBILIDAD}$ $\texttt{DEL APRENDIZAJE}$
+Considere el enunciado del ejercicio 2 de la sección $\texttt{FACTIBI-}$ $\texttt{LIDAD}$ $\texttt{DEL APRENDIZAJE}$
 de la relación apoyo.
 
 \begin{enumerate}[a]
@@ -135,8 +136,8 @@ Como es simplemente despejar, lo hacemos en función de $M$, $\varepsilon$ y la 
 \[2M\exp^{-2\varepsilon^2 N} \leq \alpha;\quad -2 \varepsilon^2 N \leq \log(\frac{\alpha}{2M}) \]
 \[ N \geq \frac{-\log(\frac{\alpha}{2M})}{2 \varepsilon^2} \]
 \begin{itemize}
-\item $M=1, \quad N \geq \lceil 839.941 \rceil = 834$
-\item $M=10, \quad N \geq \lceil 1300.458 \rceil = 1341$
+\item $M=1, \quad N \geq \lceil 839.941 \rceil = 840$
+\item $M=10, \quad N \geq \lceil 1300.458 \rceil = 1301$
 \item $M=100, \quad N \geq \lceil 1760.975 \rceil = 1761$
 \end{itemize}
 \end{solucion}
@@ -219,24 +220,23 @@ Si queremos mostrar que $k^\star$ es un punto de ruptura cuales de las siguiente
 Para un conjunto $\mathcal{H}$ con $d_{VC} = 10$, ¿qué tamaño muestral se necesita (según la cota de generalización) para tener un $95\%$ de confianza de que el error de generalización sea como mucho 0.05?
 \end{cuestion}
 
+\begin{solucion}
 Planteamos la ecuación implícita correspondiente:
 	\[ N \geq \frac{8}{\varepsilon^2} \log\left( \frac{4((2N)^{d_{VC}}+1)}{\delta}\right) \]
 En nuestro caso, $\delta = 1-95\%= 0.05,\ \varepsilon=0.05$
-	\[ N \geq \frac{8}{\0.05^2} \log\left( \frac{4((2N)^10+1)}{0.05}\right) \]
+	\[ N \geq \frac{8}{0.05^2} \log\left( \frac{4((2N)^10+1)}{0.05}\right) \]
 Resolvemos la ecuación de manera iterativa:
 
-\begin{lstlisting}[R]
+\begin{lstlisting}
 cota=1
 for(i in 1:10){
    cota=3200*log((4*(2*cota)^10 + 4)/0.05)
    print(cota)
 }
 \end{lstlisting}
-
 y en 8 iteraciones ya llegamos al punto fijo de la ecuación, $N \geq \lceil 452956.9 \rceil$, luego $N \geq 452957$
+\end{solucion}
 
-
-\section{No contestadas (aún)}
 
 \begin{cuestion}
 Consideremos un escenario de aprendizaje simple. Supongamos que la dimensión de entrada es uno. Supongamos que la variable de entrada $x$ está uniformemente distribuida en el intervalo $[-1, 1]$ y el conjunto de datos consiste en 2 puntos $\{x_1, x_2\}$ y que la función objetivo es $f(x) = x^2$. Por tanto es conjunto de datos completo es $\mathcal{D} = \{(x_1, x^2_1), (x_2 , x_2^2)\}$. El algoritmo de aprendizaje devuelve la línea que ajusta estos dos puntos como $g$ (i.e. $\mathcal{H}$ consiste en funciones de la forma $h(x) = ax + b$).
@@ -245,6 +245,42 @@ Consideremos un escenario de aprendizaje simple. Supongamos que la dimensión de
 \item Calcular analíticamente los valores de $E_{out}$, $\textbf{bias}$, $\textbf{var}$
 \end{enumerate}
 \end{cuestion}
+
+\begin{solucion} \textbf{ }
+\begin{enumerate}[a]
+\item Partimos de los datos $S = \{(x_1, x^2_1), (x_2 , x_2^2)\}$. La función $g^S$ será la recta que pase por estos dos puntos: $g^S(x) = \frac{x_2^2-x^2_1}{x_2-x_1} (x-x_1) + x_1^2=$ $(x_2+x_1) (x-x_1) + x_1^2 = (x_1 + x_2) x - x_1 x_2$. Se define $\bar{g}(x)$ como $\mathbb{E}_S [g^S(x)]$:
+	\[ \bar{g}(x) = \mathbb{E}_S [g^S(x)] = \mathbb{E}_S [ (x_1 + x_2) x - x_1 x_2 ] \]
+	Entonces usamos la linealidad de la esperanza, que $x$ es independiente de $S$ y que la distribución de $x_1$ y $x_2$ son independientes con lo que la esperanza del producto es el producto de las esperanzas:
+	\[ \bar{g}(x) = ( \mathbb{E}_S [ x_1 ] + \mathbb{E}_S [ x_2 ] ) \cdot x -
+						\mathbb{E}_S [ x_1 ] \mathbb{E}_S [ x_2 ] \]
+	Por ser $\mathbb{E}_S [ x_1 ] = \frac{1 - 1}{2} = 0 = \mathbb{E}_S [ x_2 ]$
+	\[ \bar{g}(x) = 0 \]
+\item Para hallar $E_{out}$ usaremos $E_{out} = \mathbb{E}_S [ E_{out}(g^S) ] = \mathbb{E}_x [ bias(x) + var(x) ] = bias + var$
+		\begin{equation}
+		\begin{split}
+		 bias & = \mathbb{E}_x [ bias(x) ] = \mathbb{E}_x [ \mathbb{E}_S [ (\bar{g}(x) - f(x) )^2 ] ] =  
+			\mathbb{E}_x [ \mathbb{E}_S [ x^4 ] ] = \mathbb{E}_x [ x^4 ] = \\
+			& = \mathbb{E}_x [ x^4 ] = \int_{-1}^1 \frac{x^5}{2 \cdot 5} dx = \frac{1}{5}
+		\end{split}
+		\end{equation}
+	
+	\[ var = \mathbb{E}_x [ var(x) ] = \mathbb{E}_x [ \mathbb{E}_S [ (g^S(x) - \bar{g}(x))^2 ] ] =  
+			\mathbb{E}_x [ \mathbb{E}_S [ g^S(x)^2 ] ];\]
+		Calculamos aparte $\mathbb{E}_S [ g^S(x)^2 ]$, usando que $\mathbb{E}_S [ x_1 ] = 0$ y que $x_1$, $x_2$ son independientes.
+		\begin{equation}
+		\begin{split}
+			\mathbb{E}_S \left[ g^S(x)^2 \right] &=  \mathbb{E}_S \left[ (x_1 + x_2)^2 x^2 + x_1^2 x_2^2 - 2x x_1 x_2 (x_1 + x_2) \right] =\\
+ 				& = x^2 (\mathbb{E}_S \left[ x_1^2 \right] + \mathbb{E}_S \left[ x_2^2 \right]) + 
+ 															\mathbb{E}_S \left[ x_1^2 \right]\mathbb{E}_S \left[ x_2^2 \right] = \\
+ 				& = \frac{2 x^2}{3} + \frac{1}{9} 
+		\end{split}
+		\end{equation}
+	donde hemos usado $\mathbb{E}_S\left [x_1^2 \right] = \int_{-1}^1 \frac{x_1^2}{2} dx_1 = \frac{1}{3} = \mathbb{E}_S \left[ x_2^2 \right]$ (pues son i.d.). Por tanto:
+	\[ var = \mathbb{E}_x [ var(x) ] = \mathbb{E}_x \left[ \frac{2 x^2}{3} + \frac{1}{9} \right] = \frac{1}{3} \]
+	Y nos queda:
+	\[ E_{out} = bias + var = \frac{1}{5} + \frac{1}{3} = \frac{8}{15} \]
+\end{enumerate}
+\end{solucion}
 
 
 
