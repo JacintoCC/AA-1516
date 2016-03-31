@@ -17,6 +17,10 @@
 \newtheorem{cuestion}{Cuestión}
 \newtheorem{solucion}{Solución}
 
+% Sección para facilitar la edición mientras se realiza el cuestionario ----------------------------------------------------------
+\section{Contestadas}
+
+% Sección para facilitar la edición mientras se realiza el cuestionario ----------------------------------------------------------
 \begin{cuestion}
 Identificar, para cada una de las siguientes tareas, qué tipo de aprendizaje es el adecuado (supervisado, no supervisado, por refuerzo) y los datos de aprendizaje que deberíamos usar. Si una tarea se ajusta a más de un tipo, explicar cómo y describir los datos para cada tipo.
 
@@ -55,16 +59,41 @@ También podría aplicarse aprendizaje supervisado, pues lo que nos interesa es 
 \end{enumerate}
 \end{solucion}
 
-
 \begin{cuestion}
-Construir un problema de aprendizaje desde datos para un problema de selección de fruta en una explotación agraria ( ver transparencias de clase). Identificar y describir cada uno
-de sus elementos formales. Justificar las decisiones.
+Construir un problema de aprendizaje desde datos para un problema de selección de fruta en una explotación agraria (ver transparencias de clase). Identificar y describir cada uno de sus elementos formales. Justificar las decisiones.
 \end{cuestion}
 
+\begin{solucion}
+Los elementos a identificar son:
+\begin{enumerate}[a]
+\item Entrada
+\item Salida
+\item Función objetivo
+\item Datos de entrada
+\end{enumerate}
+
+Como pone en las transparencias, no tenemos conocimiento sobre las propiedades que hacen sabrosos a los mangos, así que lo único que podemos hacer es hacer mediciones sobre las frutas: color, tamaño, peso, textura, etc. Esto lo anotaríamos sobre el mayor y más variado conjunto posible de mangos (teniendo en cuenta que puede darse que muchos mangos no estén en su estado óptimo de recolección y que tendremos que pagar a quien realice la cata de mangos para determinar si están buenos o no).
+\begin{enumerate}[a]
+\item La entrada será un elemento $x$ del conjunto donde se mueven las variables que hemos medido (suponiendo que sigue el orden en el que se escribieron antes, $ \mathcal{X} = \textit{Color} \times \mathbb{R}^3 \times \mathbb{R}^+ \times textit{Textura}$).
+\item La salida, puesto que queremos saber cuál será el precio de los mangos y sólo pagarán por aquellos que sean aptos para la venta en los días siguientes, será un punto $y$ en el conjunto de los números positivos y el $0$: $\mathcal{Y} = \mathbb{R}^+_0$
+\item La función objetivo, desconocida, será $f:\mathcal{X} \longrightarrow \mathcal{Y}$, donde $f(x) = 0$, donde el vector $x \in \mathcal{X}$ se corresponde con las características de un mango que no está bueno.
+\item Los datos de entrad serán $(x_1, y_1), \dots, (x_N, y_N)$, donde $x_i \in \mathcal{X}, y_i \in \mathcal{Y} \forall i=1, \dots, N$.
+
+\end{enumerate}
+\end{solucion}
+
 \begin{cuestion}
-Suponga un modelo PLA y un dato $x(t)$ mal clasificado respecto de dicho modelo. Probar que la regla de adaptación de pesos del PLA es un movimiento en la dirección correcta
-para clasificar bien $x(t)$.
+Suponga un modelo PLA y un dato $x(t)$ mal clasificado respecto de dicho modelo. Probar que la regla de adaptación de pesos del PLA es un movimiento en la dirección correcta para clasificar bien $x(t)$.
 \end{cuestion}
+
+\begin{solucion}
+Sea $w$ la solución en el paso $t$ del modelo PLA. Si $x(t)$, con etiqueta $y(t)$ está mal clasificado, significa que $\texttt{sign}(w^T x(t)) \neq y(t)$. Dado que sólo uno de los elementos $\{w^T x(t), y(t)\}$ es negativo y el otro es positivo, se tiene que el producto $y(t) w^T x(t) < 0$. Ahora bien, veamos qué pasa al actualizar $w$ a $w_{new}$. Como queremos probar que la solución se mueve ``en la buena dirección'', veamos qué le ocurre a $y(t) w_{new}^T x(t)$:
+	\[ y(t) w_{new}^T x(t) = y(t) (w + y(t)x(t))^T x(t) =
+			y(t) w^T x(t) + y(t)^2 x(t)^T x(t) = y(t) w^T x(t) + x(t)^T x(t)\]
+	Como $x(t)^T x(t) = \Vert x(t) \Vert > 0$, ya que todos los puntos del espacio tienen la coordenada homogénea a $1$ y por tanto su norma no puede ser 0, estamos añadiendo a $y(t) w^T x(t)$ una cantidad positiva. En resumen:
+	\[ y(t) w_{new}^T x(t) > y(t) w^T x(t) \]
+	Esto significa que estamos más cerca de clasificar el valor (que sería $y(t) w_{new}^T x(t) > 0$). Como sabemos, el algoritmo PLA converge, aunque no podemos afirmar que en un único paso clasifiquemos correctamente $x(t)$ pero sí que clasificará correctamente el punto en un número finito de pasos.
+\end{solucion}
 
 \begin{cuestion}
 Considere el enunciado del ejercicio 2 de la sección $\texttt{FACTIBILIDAD}$ $\texttt{DEL APRENDIZAJE}$
@@ -77,16 +106,48 @@ de la relación apoyo.
 \end{enumerate}
 \end{cuestion}
 
+\begin{solucion}
+\begin{enumerate}[a]
+\item Teniendo en cuenta que la hipótesis que sería mejor es tomar como función $h_1$ puesto que $\mathbb{P}[f(x)=1]=0.9$, nos interesa saber con qué probabilidad en $\mathcal{D}$ habrá más muestras con la etiqueta 1 que con la etiqueta -1. La probabilidad de que haya un cierto número de 1s en $\mathcal{D}$ sigue una distribución binomial ($\mathbb{B}(25,0.9)$), por tanto, tenemos que sumar las probabilidades de los casos en los que hay más 1s que -1s, es decir:
+	\[ \sum\limits_{k=13}^{25} \left(\begin{array}{c} 25\\k\end{array} \right)
+								0.9^k 0.1^{25-k} = 0.9999998	\]
+
+\item La hipótesis considerada mejor será $h_1$ si $p>0.5$ y $h_2$ si $p<0.5$. Entonces se pregunta si existe $p$ tal que $C$ produzca una hipótesis mejor, es decir:
+	\[ \textsc{Si } p>0.5, \sum\limits_{k=0}^{12} 
+				\left(\begin{array}{c} 25\\k\end{array} \right)
+				p^k (1-p)^{25-k} > 0.5, \]
+	\[ \textsc{Si } p<0.5, \sum\limits_{k=13}^{25} 
+				\left(\begin{array}{c} 25\\k\end{array} \right)
+				p^k (1-p)^{25-k} > 0.5, \]
+	lo cual no puede darse, pues significa que la probabilidad de que se den más apariciones del elemento que aparece con menor probabilidad sea más alta que la probabilidad de que se den más apariciones del elemento que aparece con menor probabilidad. Para $p=0.5$, ambos algoritmos de aprendizaje tienen la misma probabilidad de realizar una hipótesis mejor, pues son las dos igual de buenas.
+\end{enumerate}
+\end{solucion}
+
 \begin{cuestion}
 La desigualdad de Hoeffding modificada nos da una forma de caracterizar el error de generalización con una cota probabilística
 \[ \mathcal{P}[ \vert E_{out}(g) - E_{in}(g) \vert > \varepsilon ]
-	\leq 2M\exp^{-2N^2 \varepsilon} \]
-para cualquier $\varepsilon > 0$. Si fijamos $\varepsilon = 0.05$ y queremos que la cota probabilística $ 2 M \exp^{-2N^2 \varepsilon} $ sea como máximo $0.03$, ¿cuál será el valor más pequeño de $N$ que verifique estas condiciones si $M = 1$? Repetir para $M = 10$ y para $M = 100$
+	\leq 2M\exp^{-2N \varepsilon^2} \]
+para cualquier $\varepsilon > 0$. Si fijamos $\varepsilon = 0.05$ y queremos que la cota probabilística $ 2 M \exp^{-2N\varepsilon^2 } $ sea como máximo $0.03$, ¿cuál será el valor más pequeño de $N$ que verifique estas condiciones si $M = 1$? Repetir para $M = 10$ y para $M = 100$
 \end{cuestion}
+
+\begin{solucion}
+Como es simplemente despejar, lo hacemos en función de $M$, $\varepsilon$ y la cota del error, que llamaremos $\alpha$ y posteriormente sustituimos.
+\[2M\exp^{-2\varepsilon^2 N} \leq \alpha;\quad -2 \varepsilon^2 N \leq \log(\frac{\alpha}{2M}) \]
+\[ N \geq \frac{-\log(\frac{\alpha}{2M})}{2 \varepsilon^2} \]
+\begin{itemize}
+\item $M=1, \quad N \geq \lceil 839.941 \rceil = 834$
+\item $M=10, \quad N \geq \lceil 1300.458 \rceil = 1341$
+\item $M=100, \quad N \geq \lceil 1760.975 \rceil = 1761$
+\end{itemize}
+\end{solucion}
 
 \begin{cuestion}
 Consideremos el modelo de aprendizaje ``$M$-intervalos'' donde $h: \mathbb{R} \rightarrow \{-1, +1\}$, y $h(x) = +1$ si el punto está dentro de cualquiera de $m$ intervalos arbitrariamente elegidos y $-1$ en otro caso. ¿Cuál es el más pequeño punto de ruptura para este conjunto de hipótesis?
 \end{cuestion}
+
+\begin{solucion}
+El más pequeño punto de ruptura es $2m+1$, puesto que hasta $2m$ podemos separar cualquier partición de los datos sin más que situar un intervalo en cada conjunto de puntos contiguos de la clase +1. El problema llega cuando hay $m+1$ conjuntos de puntos contiguos de la clase +1, y lógicamente el menor número de puntos para que esta circunstancia pueda darse es cuando estos conjuntos son de únicamente un punto, y los conjuntos de puntos que los separan son también de un punto.
+\end{solucion}
 
 \begin{cuestion}
 Suponga un conjunto de $k^\star$ puntos $x_1, x_2, \dots , x_{k^\star}$ sobre los cuales la clase $\mathcal{H}$ implementa $<2^{k^\star}$ dicotomías. ¿Cuáles de las siguientes afirmaciones son correctas?
@@ -100,6 +161,16 @@ Suponga un conjunto de $k^\star$ puntos $x_1, x_2, \dots , x_{k^\star}$ sobre lo
 \end{enumerate}
 \end{cuestion}
 
+\begin{solucion} \textbf{ }
+\begin{enumerate}[a]
+\item  Falso. Puede existir un conjunto de $x_1, x_2, \dots , x_{k^\star}$ puntos sobre los cuales la clase $\mathcal{H}$ implemente $2^{k^\star}$ dicotomías, con lo que $k^\star$ no es un punto de ruptura.
+\item  Falso. No podemos afirmar que $k^\star$ no es un punto de ruptura, pues es posible que no exista un conjunto de $k^\star$ puntos para los que el número de dicotomías sea $2^{k^\star}$
+\item  Falso. Por el apartado anterior, $k^\star$ podría ser un punto de ruptura, e incluso ser menores, puesto que si $k < k^\star$ es punto de ruptura, $k^\star$ lo es.
+\item  Falso. Por lo comentado también en el apartado anterior, si $k^\star$ es punto de ruptura, $k > k^\star $ son puntos de ruptura.
+\item  Verdadero. Que exista un conjunto de $k^\star$ puntos tal que que $\mathcal{H}$ implemente $2^{k^\star}$ dicotomías no aporta ninguna información sobre el punto de ruptura.
+\end{enumerate}
+\end{solucion}
+
 \begin{cuestion}
 Para todo conjunto de $k^\star$ puntos, $\mathcal{H}$ implementa $<2^{k^\star}$ dicotomías. ¿Cuáles de las siguientes afirmaciones son correctas?
 
@@ -112,6 +183,16 @@ Para todo conjunto de $k^\star$ puntos, $\mathcal{H}$ implementa $<2^{k^\star}$ 
 \end{enumerate}
 \end{cuestion}
 
+\begin{solucion} \textbf{ }
+\begin{enumerate}[a]
+\item  Verdadero. Si esto se da para todo conjunto de $k^\star$ puntos, también se da para aquel conjunto tal que $m_\mathcal{H}$ es máximo y esta es la definición de punto de ruptura.
+\item  Falso. Contradice el apartado anterior.
+\item  Verdadero. Por ser $k^\star$ punto de ruptura, todos los $k \geq k^\star$ son puntos de ruptura. Si existiese una configuración para la que se implementan $2^k$ dicotomías, para todo subconjunto de $k^\star$ puntos se estarían implementando $2^{k^\star}$ dicotomías, lo que contradice que $k^\star$ sea un punto de ruptura.
+\item  Falso. Por ejemplo, 4 es punto de ruptura para el Perceptron 2D, pero no así 3.
+\item  Falso. Sabemos que $k^\star$ es punto de ruptura.
+\end{enumerate}
+\end{solucion}
+
 \begin{cuestion}
 Si queremos mostrar que $k^\star$ es un punto de ruptura cuales de las siguientes afirmaciones nos servirían para ello:
 
@@ -120,20 +201,51 @@ Si queremos mostrar que $k^\star$ es un punto de ruptura cuales de las siguiente
 \item Mostrar que  $\mathcal{H}$ puede separar cualquier conjunto de $k^\star$ puntos.
 \item Mostrar que un conjunto de $k^\star$ puntos $x_1,  \dots, x_{k^\star}$ que $\mathcal{H}$ no se puede separar.
 \item Mostrar que $\mathcal{H}$ no puede separar ningún conjunto de $k^\star$ puntos.
-\item Mostrar que $m_{\mathcal{H}}(k)=2k^\star$
+\item Mostrar que $m_{\mathcal{H}}(k)=2^{k^\star}$
 \end{enumerate}
 \end{cuestion}
+
+\begin{solucion} \textbf{ }
+\begin{enumerate}[a]
+\item  Nos ayudaría a decir que $k^\star$ no es un punto de ruptura, pues $m_\mathcal{H}(k^\star)= 2^{k^\star}$ y se alcanza en el conjunto dado.
+\item  Nos ayuda a decir que $k^\star$ no es un punto de ruptura, al igual que en el apartado anterior, sólo que vale cualquier conjunto.
+\item  No nos sirve, pues puede existir otro conjunto de $k^\star$ puntos que sí sea separable, y por tanto $k^\star$ no sea un punto de ruptura. También podría darse que ningún conjunto de $k^\star$ puntos fuese separable, esto es, $m_\mathcal{H}(k^\star) < 2^{k^\star}$ y por tanto $k^\star$ sería un punto de ruptura.
+\item  Esto nos dice que $k^\star$ es un punto de ruptura, pues para todo conjunto de $k^\star$ puntos el número de dicotomías es $< 2^{k^\star}$ .
+\item  Esta afirmación nos puede aportar formación dependiendo de la relación entre $k$ y $k^\star$. Si $k = k^\star$, claramente $k^\star$ no es un punto de ruptura. Si $k > k^\star$ no nos da información, pues puede darse $m_{\mathcal{H}}(k)= 2^{k^\star}<2^k$ ($k$ sería un punto de ruptura) y darse o bien $m_{\mathcal{H}}(k^\star) = 2^{k^\star}$ o $m_{\mathcal{H}}(k^\star) < 2^{k^\star}$, con lo que no deducimos nada. El caso $k < k^\star$ no puede darse.
+\end{enumerate}
+\end{solucion}
 
 \begin{cuestion}
 Para un conjunto $\mathcal{H}$ con $d_{VC} = 10$, ¿qué tamaño muestral se necesita (según la cota de generalización) para tener un $95\%$ de confianza de que el error de generalización sea como mucho 0.05?
 \end{cuestion}
 
+Planteamos la ecuación implícita correspondiente:
+	\[ N \geq \frac{8}{\varepsilon^2} \log\left( \frac{4((2N)^{d_{VC}}+1)}{\delta}\right) \]
+En nuestro caso, $\delta = 1-95\%= 0.05,\ \varepsilon=0.05$
+	\[ N \geq \frac{8}{\0.05^2} \log\left( \frac{4((2N)^10+1)}{0.05}\right) \]
+Resolvemos la ecuación de manera iterativa:
+
+\begin{lstlisting}[R]
+cota=1
+for(i in 1:10){
+   cota=3200*log((4*(2*cota)^10 + 4)/0.05)
+   print(cota)
+}
+\end{lstlisting}
+
+y en 8 iteraciones ya llegamos al punto fijo de la ecuación, $N \geq \lceil 452956.9 \rceil$, luego $N \geq 452957$
+
+
+\section{No contestadas (aún)}
+
 \begin{cuestion}
-Consideremos un escenario de aprendizaje simple. Supongamos que la dimensión de entrada es uno. Supongamos que la variable de entrada $x$ está uniformemente distribuida en el intervalo $[-1, 1]$ y el conjunto de datos consiste en 2 puntos $\{x_1, x_2\}$ y que la función objetivo es $f(x) = x_2$. Por tanto es conjunto de datos completo es $\mathcal{D} = \{(x_1, x^2_1), (x_2 , x_2^2)\}$. El algoritmo de aprendizaje devuelve la línea que ajusta estos dos puntos como $g$ (i.e. $\mathcal{H}$ consiste en funciones de la forma $h(x) = ax + b$).
+Consideremos un escenario de aprendizaje simple. Supongamos que la dimensión de entrada es uno. Supongamos que la variable de entrada $x$ está uniformemente distribuida en el intervalo $[-1, 1]$ y el conjunto de datos consiste en 2 puntos $\{x_1, x_2\}$ y que la función objetivo es $f(x) = x^2$. Por tanto es conjunto de datos completo es $\mathcal{D} = \{(x_1, x^2_1), (x_2 , x_2^2)\}$. El algoritmo de aprendizaje devuelve la línea que ajusta estos dos puntos como $g$ (i.e. $\mathcal{H}$ consiste en funciones de la forma $h(x) = ax + b$).
 \begin{enumerate}[a]
 \item Dar una expresión analítica para la función promedio $\bar{g}(x)$
 \item Calcular analíticamente los valores de $E_{out}$, $\textbf{bias}$, $\textbf{var}$
 \end{enumerate}
 \end{cuestion}
+
+
 
 \end{document}

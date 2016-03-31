@@ -1,0 +1,59 @@
+---
+title: "Trabajo 2 Aprendizaje Automático"
+author: "Jacinto Carrasco Castillo"
+date: "30 de marzo de 2016"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+---
+
+
+# A - MODELOS LINEALES
+
+### 1.- Gradiente Descendente. Implementar el algoritmo de gradiente descendiente.
+
+#### a) Considerar la función no lineal de error $E(u, v) = (ue^v - 2ve^{-u})^2$. Usar gradiente descendente y minimizar esta función de error, comenzando desde el punto $(u, v) = (1, 1)$ y usando una tasa de aprendizaje $\nu = 0.1$.
+
+##### 1) Calcular analíticamente y mostrar la expresión del gradiente de la función $E(u, v)$
+
+Debido a que es una función sencilla de derivar, lo incluimos directamente en la función en lugar de utilizar métodos numéricos de derivación:
+
+  $$ w = (u,v); \quad \bigtriangledown E(w) = (\frac{\part E}{\part x},\frac{\part E}{\part y} )=
+      2(u e^v - 2v e^{-u})( e^v + 2 v e^{-u} , u e^v - 2 e^{-u})
+```{r}
+E_1a <- function(w){
+  value <- (w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))^2
+  derivative_f <- c(2*(w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))*(exp(w[2]) + 2*w[2]*exp(-w[1])),
+                    2*(w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))*(w[1]*exp(w[2]) - 2*exp(-w[1])))
+  return(list('value' = value, 'derivative_f'= derivative_f))
+}
+```
+
+```{r}
+gradientDescent <- function(fun, v_ini, lr, max_iterations, err = 0, draw_iterations=FALSE){
+  iter <- 0
+  stopped <- FALSE
+  w <- v_ini
+  old_value <- fun(w)$value
+  
+  while(iter < max_iterations && !stopped){
+    aux <- fun(w)
+    grad <- aux$derivative_f
+    if( abs(old_value - aux$value) < err && iter > 0){
+      stopped <- TRUE
+    }
+    else{
+      old_value <- aux$value
+      w <- w - lr * grad
+
+    }
+    iter <- iter + 1
+  }
+  
+  return(list('min' = w, 'iterations' = iter))
+}
+
+print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 100, err= 10^-14))
+```
+
+
