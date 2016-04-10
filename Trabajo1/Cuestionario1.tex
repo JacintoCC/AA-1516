@@ -17,6 +17,8 @@
 
 \newtheorem{cuestion}{Cuestión}
 \newtheorem{solucion}{Solución}
+\newtheorem{cuestionopcional}{Cuestión Opcional}
+
 
 \begin{cuestion}
 Identificar, para cada una de las siguientes tareas, qué tipo de aprendizaje es el adecuado (supervisado, no supervisado, por refuerzo) y los datos de aprendizaje que deberíamos usar. Si una tarea se ajusta a más de un tipo, explicar cómo y describir los datos para cada tipo.
@@ -28,7 +30,7 @@ Identificar, para cada una de las siguientes tareas, qué tipo de aprendizaje es
 \end{enumerate}
 \end{cuestion}
 
-\begin{solucion}
+\begin{solucion} \textbf{ }
 \begin{enumerate}[a]
 \item El tipo de aprendizaje adecuado es el aprendizaje supervisado, pues, en primer lugar, queremos asignar una etiqueta concreta a cada animal y no  simplemente agruparlos por sus características. En segundo lugar, sabemos a priori características de estos grupos, por lo que tampoco es necesario pasar por una fase previa de aprendizaje no supervisado para dotar de estructura a los datos.\\
 Sin embargo, para este problema, por estar las categorías tan bien diferenciadas y, seleccionando bien las características a medir o tomar como entrada no habría lugar a dudas, sería más apropiada una aproximación por diseño.\\
@@ -48,7 +50,7 @@ También podría aplicarse aprendizaje supervisado, pues lo que nos interesa es 
 \end{enumerate}
 \end{cuestion}
 
-\begin{solucion}
+\begin{solucion} \textbf{ }
 \begin{enumerate}[a]
 \item Para este problema es más adecuada una aproximación por aprendizaje, ya que para encontrar el ciclo óptimo usaremos datos como el número de vehículos que pasan por cada cruce, las retenciones, el tiempo a esperar, etc. Sin embargo, no podemos realizar una aproximación por diseño, ya que no tenemos unas circunstancias explícitas y concretas para las cuales aplicar un ciclo concreto.
 \item Para este problema es más adecuada una aproximación por aprendizaje,  en concreto, realizando una regresión sobre los datos que nos permita determinar los ingresos medios. Para esto no es factible usar una aproximación por diseño, ya que no se sabe (no existe) una función que nos permita saber, ni siquiera asumiendo un cierto error (un error aceptable, se entiende), con total seguridad, los ingresos medios.
@@ -71,7 +73,7 @@ Los elementos a identificar son:
 
 Como pone en las transparencias, no tenemos conocimiento sobre las propiedades que hacen sabrosos a los mangos, así que lo único que podemos hacer es hacer mediciones sobre las frutas: color, tamaño, peso, textura, etc. Esto lo anotaríamos sobre el mayor y más variado conjunto posible de mangos (teniendo en cuenta que puede darse que muchos mangos no estén en su estado óptimo de recolección y que tendremos que pagar a quien realice la cata de mangos para determinar si están buenos o no).
 \begin{enumerate}[a]
-\item La entrada será un elemento $x$ del conjunto donde se mueven las variables que hemos medido (suponiendo que sigue el orden en el que se escribieron antes, $ \mathcal{X} = \textit{Color} \times \mathbb{R}^3 \times \mathbb{R}^+ \times textit{Textura}$).
+\item La entrada será un elemento $x$ del conjunto donde se mueven las variables que hemos medido (suponiendo que sigue el orden en el que se escribieron antes, $ \mathcal{X} = \textit{Color} \times \mathbb{R}^3 \times \mathbb{R}^+ \times \textit{Textura}$).
 \item La salida, puesto que queremos saber cuál será el precio de los mangos y sólo pagarán por aquellos que sean aptos para la venta en los días siguientes, será un punto $y$ en el conjunto de los números positivos y el $0$: $\mathcal{Y} = \mathbb{R}^+_0$
 \item La función objetivo, desconocida, será $f:\mathcal{X} \longrightarrow \mathcal{Y}$, donde $f(x) = 0$, donde el vector $x \in \mathcal{X}$ se corresponde con las características de un mango que no está bueno.
 \item Los datos de entrad serán $(x_1, y_1), \dots, (x_N, y_N)$, donde $x_i \in \mathcal{X}, y_i \in \mathcal{Y} \forall i=1, \dots, N$.
@@ -282,6 +284,24 @@ Consideremos un escenario de aprendizaje simple. Supongamos que la dimensión de
 \end{enumerate}
 \end{solucion}
 
+\begin{cuestionopcional}
+Considere el enunciado del ejercicio 2 de la sección ERROR Y RUIDO de la
+relación apoyo.
+\begin{enumerate}[a]
+\item Si su algoritmo busca la hipótesis $h$ que minimiza la suma de los valores absolutos de los errores de la muestra,
+ \[ E_{in}(h) = \sum\limits_{n=1}^N \vert h - y_n \vert \]
+entonces mostrar que la estimación será la mediana de la muestra, $h_{med}$ (cualquier valor que deje la mitad de la muestra a su derecha y la mitad a su izquierda)
+\item Suponga que $y_N$ es modificado como $y_N + \varepsilon$, donde $\varepsilon \leftarrow \varepsilon$. Obviamente el valor de $y_N$ se convierte en un punto muy alejado de su valor original. ¿Cómo afecta esto a los estimadores dados por $h_{mean}$ y $h_{med}$ ?
+\end{enumerate}
+\end{cuestionopcional}
+
+\begin{cuestionopcional}
+Considere el ejercicio 12.
+\begin{enumerate}
+\item Describir un experimento que podamos ejecutar para determinar (numéricamente) $\bar{g}(x), E_{out}, \textbf{bias}, y \textbf{ var}.$
+\item Ejecutar el experimento y dar los resultados. Comparar $E_{out}$ con $ \textbf{bias} + \textbf{var}$. Dibujar en unos mismos ejes 
+\end{enumerate}
+\end{cuestionopcional}
 
 
 \end{document}

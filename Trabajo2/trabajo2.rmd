@@ -12,6 +12,51 @@ output:
 
 ### 1.- Gradiente Descendente. Implementar el algoritmo de gradiente descendiente.
 
+```{r}
+gradientDescent <- function(fun, v_ini, lr, max_iterations, dif = 0, draw_iterations=FALSE, 
+                            print_iterations=FALSE){
+  # Creación del vector donde guardaremos los valores obtenidos
+  values <- vector(mode = "numeric", length = max_iterations+1)
+  
+  w <- v_ini   # Solución inicial
+  aux <- fun(w)
+  values[1] <- aux$value
+  grad <- aux$derivative_f
+  
+  # Comenzamos el bucle
+  iter <- 2
+  stopped <- FALSE 
+  
+  while(iter <= max_iterations+1 && !stopped){
+    # Actualización de w
+    w <- w - lr * grad
+    
+    # Evaluamos la función
+    aux <- fun(w)
+    values[iter]<- aux$value
+    grad <-  aux$derivative_f
+    
+    #Comprobamos si la diferencia entre dos iteraciones es menor a un umbral
+    if( abs(values[iter-1] - values[iter]) < dif){
+      stopped <- TRUE
+    }
+    if(print_iterations){
+      cat("Iteration ",iter-1,"\n")
+      print(w)
+      print(values[iter])
+    }
+    
+    iter <- iter +1
+  }
+  
+  if(draw_iterations){
+    plot(1:iter,values[1:iter])
+  }
+  
+  return(list('min' = w, 'iterations' = iter-2))
+}
+```
+
 #### a) Considerar la función no lineal de error $E(u, v) = (ue^v - 2ve^{-u})^2$. Usar gradiente descendente y minimizar esta función de error, comenzando desde el punto $(u, v) = (1, 1)$ y usando una tasa de aprendizaje $\nu = 0.1$.
 
 ##### 1) Calcular analíticamente y mostrar la expresión del gradiente de la función $E(u, v)$
@@ -19,7 +64,7 @@ output:
 Debido a que es una función sencilla de derivar, lo incluimos directamente en la función en lugar de utilizar métodos numéricos de derivación:
 
   $$ w = (u,v); \quad \bigtriangledown E(w) = (\frac{\part E}{\part x},\frac{\part E}{\part y} )=
-      2(u e^v - 2v e^{-u})( e^v + 2 v e^{-u} , u e^v - 2 e^{-u})
+      2(u e^v - 2v e^{-u})( e^v + 2 v e^{-u} , u e^v - 2 e^{-u})$$
 ```{r}
 E_1a <- function(w){
   value <- (w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))^2
@@ -30,30 +75,127 @@ E_1a <- function(w){
 ```
 
 ```{r}
-gradientDescent <- function(fun, v_ini, lr, max_iterations, err = 0, draw_iterations=FALSE){
-  iter <- 0
-  stopped <- FALSE
-  w <- v_ini
-  old_value <- fun(w)$value
-  
-  while(iter < max_iterations && !stopped){
-    aux <- fun(w)
-    grad <- aux$derivative_f
-    if( abs(old_value - aux$value) < err && iter > 0){
-      stopped <- TRUE
-    }
-    else{
-      old_value <- aux$value
-      w <- w - lr * grad
+results_1a <- gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 15)
+print(results_1a$iterations)
+print(results_1a$min)
+print(E_1a(results_1a$min)$value)
+```
 
-    }
-    iter <- iter + 1
-  }
-  
-  return(list('min' = w, 'iterations' = iter))
+#### 2) ¿Cuántas iteraciones tarda el algoritmo en obtener por primera vez un valor de $E(u,v)$ inferior a $10^{−14}?
+
+```{r}
+print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 100, dif= 10^-14, print_iterations = TRUE))
+```
+
+Se comprueba que en la sexta iteración (séptima si contamos la evaluación del vector inicial) se obtiene un valor menor que $10^{-14}$
+
+
+#### 3) ¿Qué valores de $(u, v)$ obtuvo en el apartado anterior cuando alcanzo el error de $10^{−14}$
+
+Se obtuvo $u=0.04864120$, $v=0.02621088$. No es el mínimo esperado, $(0,0)$, aunque se acerca. Esto se debe a que la función es muy inestable, esto es, para pequeños valores de $u$ y $v$ y al hacer la exponencial de $v$ y $-u$, se obtienen valores muy grandes según el signo de las variables.
+
+### b) Considerar ahora la función $f(x,y) = x^2 + 2y^2 + 2\sin(2\pi x) \sin(2 \pi y)
+
+Implementamos de nuevo la función y sus derivadas:
+```{r}
+E_1b <- function(w){
+  value <- w[1]^2 + 2*w[2]^2 + 2*sin(2*pi*w[1])*sin(2*pi*w[2])
+  derivative_f <- c(2*w[1] + 4*pi*sin(2*pi*w[2])*cos(2*pi*w[1]),
+                    4*w[2] + 4*pi*cos(2*pi*w[1])*sin(2*pi*w[2]))
+  hessian_f <- matrix(c(2-4*pi^2*sin(2*pi*w[2])*sin()),2,2,TRUE)
+  return(list('value' = value, 'derivative_f'= derivative_f, 'hessian_f'=hessian_f))
 }
-
-print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 100, err= 10^-14))
 ```
 
 
+#### 1)Usar gradiente descendente para minimizar esta función. Usar como valores iniciales $x_0 = 1, y_0 = 1$, la tasa de aprendizaje $\nu = 0.01$ y un máximo de 50 iteraciones. Generar un gráfico de cómo desciende el valor de la función con las iteraciones. Repetir el experimento pero usando $\nu = 0.1$, comentar las diferencias.
+
+```{r}
+print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.01, max_iterations = 50, dif= 10^-14, draw_iterations = TRUE))
+```
+
+Con este valor de la tasa de aprendizaje la función converge a $0.5$, además de una forma suave.
+
+```{r}
+print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.1, max_iterations = 50, dif= 10^-14, draw_iterations = TRUE))
+```
+
+Con este valor de la tasa de aprendizaje, no existe una convergencia clara. Esto se debe a que la función tiene varios mínimos y máximos locales y la tasa de aprendizaje hace que el punto vaya de una región a otra, en lugar de, como en el caso anterior o en la primera función, converger hacia el mínimo más cercano.
+
+#### 2) Obtener el valor mínimo y los valores de las variables que lo alcanzan cuando el punto de inicio se fija: (0,1, 0,1), (1, 1),(−0,5, −0,5),(−1, −1). Generar una tabla con los valores obtenidos ¿Cuál sería su conclusión sobre la verdadera dificultad de encontrar el mínimo global de una función arbitraria?
+
+```{r}
+vectors_ini <- matrix(c(0.1,0.1,1,1,-0.5,-0.5,-1,-1),ncol=2,byrow=TRUE)
+vectors_min <- t(apply(vectors_ini,1, function(x) gradientDescent(E_1b, v_ini =x , lr = 0.01, max_iterations <- 100, dif= 10^-14)$min))
+t(apply(vectors_min,1, function(x) E_1b(x)$value))
+```
+
+Vemos como el mínimo es de entre los puntos es $-0.61$ y sin embargo un par de puntos han llegado al mismo mínimo y el primer punto se ha quedado en torno al 0. Por tanto, depende del punto inicial, además de la regularidad y concavidad de la función.
+
+### 2. Coordenada descendente. En este ejercicio comparamos la eficiencia de la técnica de optimización de “coordenada descendente” usando la misma función del ejercicio 1.1a. En cada iteración, tenemos dos pasos a lo largo de dos coordenadas. En el Paso-1 nos movemos a lo largo de la coordenada $u$ para reducir el error (suponer que se verifica una aproximación de primer orden como en gradiente descendente), y el Paso-2 es para reevaluar y movernos a lo largo de la coordenada v para reducir el error ( hacer la misma hipótesis que en el paso-1). Usar una tasa de aprendizaje $\mu = 0.1$.
+
+```{r}
+coordinateDescent <- function(fun, v_ini, lr, max_iterations, dif = 0, draw_iterations=FALSE,
+                              print_iterations=FALSE){
+  
+  # Creación del vector donde guardaremos los valores obtenidos
+  values <- vector(mode = "numeric", length = max_iterations+1)
+  
+  w <- v_ini   # Solución inicial
+  aux <- fun(w)
+  values[1] <- aux$value
+  grad_u <- aux$derivative_f[1]
+  
+  # Comenzamos el bucle
+  iter <- 2
+  stopped <- FALSE 
+  
+  while(iter <= max_iterations+1 && !stopped){
+    # Primer paso. Movimiento en u
+    w[1] <- w[1] - lr * grad_u
+    
+    # Segundo paso. Movimiento en v
+    grad_v <- fun(w)$derivative_f[2]
+    w[2] <- w[2] - lr * grad_v
+    
+    # Evaluamos la función
+    aux <- fun(w)
+    values[iter]<- aux$value
+    grad_u <-  aux$derivative_f[1]
+    
+    #Comprobamos si la diferencia entre dos iteraciones es menor a un umbral
+    if( abs(values[iter-1] - values[iter]) < dif){
+      stopped <- TRUE
+    }
+    if(print_iterations){
+      cat("Iteration ",iter-1,"\n")
+      print(w)
+      print(values[iter])
+    }
+    
+    iter <- iter +1
+  }
+  
+  if(draw_iterations){
+    plot(1:iter,values[1:iter])
+  }
+  
+  return(list('min' = w, 'iterations' = iter-2))
+}
+```
+
+#### a) ¿Qué error E(u, v) se obtiene después de 15 iteraciones completas (i.e. 30 pasos) ?
+```{r}
+min_2a <- coordinateDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 15)$min
+print(E_1a(min_2a)$value)
+```
+
+#### b) Establezca una comparación entre esta técnica y la técnica de gradiente descendente.
+
+Obtenemos un error de $8.990612\cdot 10^{-20}$. Vemos como también se acerca al mínimo. Sin embargo, lo hace más lento que el método del gradiente descendiente, que en las mismas 15 iteraciones llegaba a un valor de $4.814825 \cdot 10^{-35}$. Esto se debe a que con la técnica del gradiente descendiente estamos bajando en ambas coordenadas por la mayor pendiente para cada punto, en lugar de bajar primero por la mayor pendiente para una dimensión, volver a evaluar, y bajar por la mayor pendiente para la otra dimensión.
+
+### 3.- Método de Newton: Implementar el algoritmo de minimización de Newton y aplicarlo a la función $f(x,y)$ dada en el ejercicio 1b. Desarrolle los mismos experimentos usando los mismos puntos de inicio.
+
+#### a) Generar un gráfico de como desciende el valor de la función con las iteraciones
+
+#### b) Extraer conclusiones sobre las conductas de los algoritmos comparando la curva de decrecimiento de la función calculada en el apartado anterior y la correspondiente obtenida con gradiente descendente.
