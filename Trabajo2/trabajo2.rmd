@@ -28,7 +28,8 @@ pause <- function(){
 Como en la práctica 1 y para facilitar la visualización de los resultados, se incluye un método para dibujar funciones:
 
 ```{r}
-draw_function <- function(interval_x, interval_y, f, levels = 0, col = 1, add = FALSE){
+draw_function <- function(interval_x, interval_y, f, levels = 0, col = 1, 
+                          add = FALSE){
   x <- seq(interval_x[1],interval_x[2],length=1000)
   y <- seq(interval_y[1],interval_y[2],length=1000)
   z <- outer(x,y, f) # Matriz con los resultados de hacer f(x,y)
@@ -36,19 +37,35 @@ draw_function <- function(interval_x, interval_y, f, levels = 0, col = 1, add = 
   # Levels = 0 porque queremos pintar f(x,y)=0
   contour(x,y,z, levels=0, col = col, add = add)
 }
-hiperplane_to_function <- function( vec ){
+
+hypplane_to_func <- function( vec, change_signs = FALSE ){
+  if(change_signs){
+    vec[2:length(vec)] <- -vec[2:length(vec)]
+  }
   f <- function(x){
-    return( crossprod(vec,x) )
+    return( vec[1]*x[1]+vec[2]*x[2]+vec[3]*x[3] )
   }
   return(f)
 }
+
+vec3D_to_func2D <- function( vec, change_signs = FALSE ){
+  if(change_signs){
+    vec[2:length(vec)] <- -vec[2:length(vec)]
+  }
+  f <- function(x,y){
+    return( vec[1]*x+vec[2]*y+vec[3] )
+  }
+  return(f)
+}
+
 ```
 
 
 ### 1.- Gradiente Descendente. Implementar el algoritmo de gradiente descendiente.
 
 ```{r}
-gradientDescent <- function(fun, v_ini, lr, max_iterations, dif = 0, draw_iterations=FALSE, 
+gradientDescent <- function(fun, v_ini, lr, max_iterations, 
+                            dif = 0, draw_iterations=FALSE, 
                             print_iterations=FALSE){
   # Creación del vector donde guardaremos los valores obtenidos
   values <- vector(mode = "numeric", length = max_iterations+1)
@@ -114,7 +131,7 @@ print(results_1a$min)
 print(E_1a(results_1a$min)$value)
 ```
 
-#### 2) ¿Cuántas iteraciones tarda el algoritmo en obtener por primera vez un valor de $E(u,v)$ inferior a $10^{−14}?
+##### 2) ¿Cuántas iteraciones tarda el algoritmo en obtener por primera vez un valor de $E(u,v)$ inferior a $10^{−14}?
 
 ```{r}
 print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 100, dif= 10^-14, print_iterations = TRUE))
@@ -123,11 +140,11 @@ print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 100, di
 Se comprueba que en la sexta iteración (séptima si contamos la evaluación del vector inicial) se obtiene un valor menor que $10^{-14}$
 
 
-#### 3) ¿Qué valores de $(u, v)$ obtuvo en el apartado anterior cuando alcanzo el error de $10^{−14}$
+##### 3) ¿Qué valores de $(u, v)$ obtuvo en el apartado anterior cuando alcanzo el error de $10^{−14}$
 
 Se obtuvo $u=0.04864120$, $v=0.02621088$. No es el mínimo esperado, $(0,0)$, aunque se acerca. Esto se debe a que la función es muy inestable, esto es, para pequeños valores de $u$ y $v$ y al hacer la exponencial de $v$ y $-u$, se obtienen valores muy grandes según el signo de las variables.
 
-### b) Considerar ahora la función $f(x,y) = x^2 + 2y^2 + 2\sin(2\pi x) \sin(2 \pi y)$
+#### b) Considerar ahora la función $f(x,y) = x^2 + 2y^2 + 2\sin(2\pi x) \sin(2 \pi y)$
 
 Implementamos de nuevo la función y sus derivadas:
 ```{r}
@@ -144,21 +161,23 @@ E_1b <- function(w){
 ```
 
 
-#### 1)Usar gradiente descendente para minimizar esta función. Usar como valores iniciales $x_0 = 1, y_0 = 1$, la tasa de aprendizaje $\nu = 0.01$ y un máximo de 50 iteraciones. Generar un gráfico de cómo desciende el valor de la función con las iteraciones. Repetir el experimento pero usando $\nu = 0.1$, comentar las diferencias.
+##### 1)Usar gradiente descendente para minimizar esta función. Usar como valores iniciales $x_0 = 1, y_0 = 1$, la tasa de aprendizaje $\nu = 0.01$ y un máximo de 50 iteraciones. Generar un gráfico de cómo desciende el valor de la función con las iteraciones. Repetir el experimento pero usando $\nu = 0.1$, comentar las diferencias.
 
 ```{r}
-print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.01, max_iterations = 50, draw_iterations = TRUE))
+print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.01, 
+                      max_iterations = 50, draw_iterations = TRUE))
 ```
 
 Con este valor de la tasa de aprendizaje la función converge a $0.5$.
 
 ```{r}
-print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.1, max_iterations = 50, draw_iterations = TRUE))
+print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.1, 
+                      max_iterations = 50, draw_iterations = TRUE))
 ```
 
 Con este valor de la tasa de aprendizaje, no existe la convergencia. Esto se debe a que la función tiene varios mínimos y máximos locales y la tasa de aprendizaje hace que el punto vaya de una región a otra, en lugar de, como en el caso anterior o en la primera función, converger hacia el mínimo más cercano.
 
-#### 2) Obtener el valor mínimo y los valores de las variables que lo alcanzan cuando el punto de inicio se fija: (0,1, 0,1), (1, 1),(−0,5, −0,5),(−1, −1). Generar una tabla con los valores obtenidos ¿Cuál sería su conclusión sobre la verdadera dificultad de encontrar el mínimo global de una función arbitraria?
+##### 2) Obtener el valor mínimo y los valores de las variables que lo alcanzan cuando el punto de inicio se fija: (0,1, 0,1), (1, 1),(−0,5, −0,5),(−1, −1). Generar una tabla con los valores obtenidos ¿Cuál sería su conclusión sobre la verdadera dificultad de encontrar el mínimo global de una función arbitraria?
 
 ```{r}
 vectors_ini <- matrix(c(0.1,0.1,1,1,-0.5,-0.5,-1,-1),ncol=2,byrow=TRUE)
@@ -172,7 +191,8 @@ Vemos como el mínimo es de entre los puntos es $-1.8$ y sin embargo un par de p
 ### 2. Coordenada descendente. En este ejercicio comparamos la eficiencia de la técnica de optimización de “coordenada descendente” usando la misma función del ejercicio 1.1a. En cada iteración, tenemos dos pasos a lo largo de dos coordenadas. En el Paso-1 nos movemos a lo largo de la coordenada $u$ para reducir el error (suponer que se verifica una aproximación de primer orden como en gradiente descendente), y el Paso-2 es para reevaluar y movernos a lo largo de la coordenada v para reducir el error ( hacer la misma hipótesis que en el paso-1). Usar una tasa de aprendizaje $\mu = 0.1$.
 
 ```{r}
-coordinateDescent <- function(fun, v_ini, lr, max_iterations, dif = 0, draw_iterations=FALSE,
+coordinateDescent <- function(fun, v_ini, lr, max_iterations, 
+                              dif = 0, draw_iterations=FALSE,
                               print_iterations=FALSE){
   
   # Creación del vector donde guardaremos los valores obtenidos
@@ -223,7 +243,8 @@ coordinateDescent <- function(fun, v_ini, lr, max_iterations, dif = 0, draw_iter
 
 #### a) ¿Qué error E(u, v) se obtiene después de 15 iteraciones completas (i.e. 30 pasos) ?
 ```{r}
-min_2a <- coordinateDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 15)$min
+min_2a <- coordinateDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, 
+                            max_iterations = 15)$min
 print(E_1a(min_2a)$value)
 ```
 
@@ -234,8 +255,9 @@ Obtenemos un error de $8.990612\cdot 10^{-20}$. Vemos como también se acerca al
 ### 3.- Método de Newton: Implementar el algoritmo de minimización de Newton y aplicarlo a la función $f(x,y)$ dada en el ejercicio 1b. Desarrolle los mismos experimentos usando los mismos puntos de inicio.
 
 ```{r}
-newtonMethod <- function(fun, v_ini, lr, max_iterations, dif = 0, draw_iterations=FALSE, 
-                            print_iterations=FALSE){
+newtonMethod <- function(fun, v_ini, lr, max_iterations, dif = 0,
+                         draw_iterations=FALSE,
+                         print_iterations=FALSE){
   # Creación del vector donde guardaremos los valores obtenidos
   values <- vector(mode = "numeric", length = max_iterations+1)
   
@@ -281,13 +303,15 @@ newtonMethod <- function(fun, v_ini, lr, max_iterations, dif = 0, draw_iteration
 #### a) Generar un gráfico de cómo desciende el valor de la función con las iteraciones.
 
 ```{r}
-print(newtonMethod(E_1b, v_ini = c(1,1), lr = 0.01, max_iterations =50, draw_iterations = TRUE))
+print(newtonMethod(E_1b, v_ini = c(1,1), lr = 0.01, 
+                   max_iterations =50, draw_iterations = TRUE))
 ```
 
 Con este valor de la tasa de aprendizaje la función converge a $2.94$.
 
 ```{r}
-print(newtonMethod(E_1b, v_ini = c(1,1), lr = 0.1, max_iterations = 50, draw_iterations = TRUE))
+print(newtonMethod(E_1b, v_ini = c(1,1), lr = 0.1, 
+                   max_iterations = 50, draw_iterations = TRUE))
 ```
 
 Con esta tasa de aprendizaje hay convergencia a $2.90$. Se comprueba que con este método es más difícil no quedarse en mínimos locales.
@@ -323,9 +347,7 @@ simula_recta <- function(intervalo){
   a <- (puntos[2,2]-puntos[1,2])/(puntos[2,1]-puntos[1,1])
   b <- puntos[1,2] - a * puntos[1,1]
 
-  f <- function(x,y){
-    return(y - a*x -b)
-  }
+  f <- vec3D_to_func2D(c(a,1,b), change_signs=TRUE)
   return(f)
 }
 ```
@@ -344,12 +366,6 @@ etiquetas_4a <- apply(muestra_4a, 1, function(X) sign(recta_4a(X[1],X[2])))
 * Aplicar una permutación aleatoria de $1, 2, \dots,N$ a los datos antes de usarlos en cada época del algoritmo.
 * Usar una tasa de aprendizaje de $\nu = 0.01$
 
-
-Definición de la función logística:
-
-```{r}
-logistic <- function(x){ exp(x)/(1+exp(x)) }
-```
 
 Implementación del descenso del gradiente estocástico:
 ```{r}
@@ -373,12 +389,12 @@ SGD <- function(datos, valores, max_iter, vini= c(1,1,1),
       gr <- lr*y*x/(1+exp(y*(sol%*%x)))
       sol <- sol + gr
     }
-    print(norm_v(sol - prev_sol))
+    
     if(norm_v(sol - prev_sol) < 0.01)
       stopped = TRUE
     if(draw_iterations){
-      draw_function(c(-1,1), c(-1,1), function(x,y) y +sol[1]/sol[2]*x
-                    +sol[3]/sol[2], col = 4)
+      draw_function(c(-1,1), c(-1,1), vec3D_to_func2D(sol), 
+                    col = 4)
       title(main=paste("Iteración ", iter,sep=" "))
       points(datos[,1], datos[,2], col = (valores+2))
       Sys.sleep(0.5)
@@ -391,7 +407,7 @@ SGD <- function(datos, valores, max_iter, vini= c(1,1,1),
   sol <- sol/sol[length(sol)-1]
 
   #Devolvemos el hiperplano obtenido y el número de iteraciones realizadas
-  return( list( hiperplane = sol, iterations = iter))
+  return( list( hyperplane = sol, iterations = iter))
 }
 
 ```
@@ -399,7 +415,7 @@ SGD <- function(datos, valores, max_iter, vini= c(1,1,1),
 Cálculo de la función $g$ mediante la regresión logística:
 ```{r}
 sol_4a <- SGD(muestra_4a, etiquetas_4a, 15000)
-g_4a <- function(x,y) sol_4a$hiperplane[1]*x + sol_4a$hiperplane[2]*y + sol_4a$hiperplane[3]
+g_4a <- vec3D_to_func2D(sol_4a$hyperplane)
 draw_function(c(-1,1),c(-1,1), g_4a)
 points(muestra_4a[,1],muestra_4a[,2],col=etiquetas_4a+3)
 print(sol_4a$iterations)
@@ -414,8 +430,7 @@ Generamos una muestra aleatoria, la etiquetamos según la función aleatoria y s
   muestra_4a_out <- simula_unif(N, 2, c(-1,1))
   etiquetas_4a_out <- apply(muestra_4a_out, 1, 
                             function(X) sign(recta_4a(X[1],X[2])))
-  etiquetas_4a_out[etiquetas_4a_out<0] <- 0
-
+  
   # Etiquetado según la regresión
   rl_etiqueta_4a_out <- apply(muestra_4a_out, 1, function(X) sign(g_4a(X[1],X[2])))
 
@@ -431,19 +446,19 @@ E_out_4c <- vector(mode="numeric", length = N)
 for( i in 1:100){
   recta_4c <- simula_recta(c(-1,1))
   muestra_4c <- simula_unif(N, 2, c(-1, 1))
-  etiquetas_4c <- apply(muestra_4c, 1, function(X) sign(recta_4c(X[1],X[2])))
-  etiquetas_4c[etiquetas_4c<0] <- 0
+  etiquetas_4c <- apply(muestra_4c, 1, sign(recta_4c(X[1],X[2])))
   
-  sol_4c <- SGD(muestra_4c, etiquetas_4c, 1000)$hiperplane
-  g_4c <- function(x,y) sol_4c[1]*x + sol_4c[2]*y + sol_4c[3]
+  sol_4c <- SGD(muestra_4c, etiquetas_4c, 1000)$hyperplane
+  g_4c <- vec3D_to_func2D(sol_4c)
   
   muestra_4c_out <- simula_unif(N, 2, c(-1,1))
-  etiquetas_4c_out <- apply(muestra_4c_out, 1, function(X) sign(recta_4c(X[1],X[2])))
+  etiquetas_4c_out <- apply(muestra_4c_out, 1, 
+                            function(X) sign(recta_4c(X[1],X[2])))
   etiquetas_4c_out[etiquetas_4c_out<0] <- 0
 
   # Etiquetado según la regresión
-  rl_etiquetas_4c_out <- apply(muestra_4c_out, 1, function(X) sign(g_4c(X[1],X[2])))
-  rl_etiquetas_4c_out[rl_etiquetas_4c_out<0] <- 0
+  rl_etiquetas_4c_out <- apply(muestra_4c_out, 1, 
+                               function(X) sign(g_4c(X[1],X[2])))
 
   # Cálculo del error fuera de la muestra usada para la regresión
   E_out_4c[i] <- sum(etiquetas_4c_out != rl_etiquetas_4c_out)/N*100
@@ -459,7 +474,7 @@ cat("Media E_out: ", mean(E_out_4c))
  Lectura de datos y dotación de forma para datos de entrenamiento
 ```{r}
 datos_train <- scan("datos/zip.train",sep=" ")
-datos_train <- matrix(datos_train,ncol=257,byrow=T)
+datos_train <- matrix(datos_train, ncol=257, byrow=T)
 datos_train <- datos_train[datos_train[,1] == 1 | datos_train[,1]==5,]
 
 number_train <- datos_train[,1]
@@ -470,7 +485,7 @@ pixels_train <- array(t(datos_train[,2:257]), dim=c(16,16,nrow(datos_train)))
 ```{r}
 datos_test <- scan("datos/zip.test",sep=" ")
 datos_test <- matrix(datos_test,ncol=257,byrow=T)
-datos_test <- datos_test[-(which(datos_test[,1] != 1 & datos_test[,1]!=5)),]
+datos_test <- datos_test[datos_test[,1] == 1 | datos_test[,1]==5,]
 
 number_test <- datos_test[,1]
 pixels_test <- array(t(datos_test[,2:257]), dim=c(16,16,nrow(datos_test)))
@@ -502,7 +517,8 @@ count_errors <- function(f, datos, label){
   return( sum(signs != label) )
 }
 
-ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE){
+ajusta_PLA_MOD <- function(datos, label, max_iter, vini, 
+                           draw_iterations = FALSE){
   sol <- vini
   iter <- 0
   changed <- TRUE
@@ -510,7 +526,7 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE
 
   while ( iter < max_iter && changed){
     # Comprobaremos en cada vuelta si hemos hecho algún cambio
-    current_errors <- count_errors(hiperplane_to_function(sol), datos, label )
+    current_errors <- count_errors(hypplane_to_func(sol), datos, label )
     changed <- FALSE
 
     for( inner_iter in 1:nrow(datos) ){
@@ -524,17 +540,15 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE
     }
 
     if(draw_iterations){
-      draw_function(c(-50,50), c(-50,50),
-                    function(x,y) y*sol[2] +sol[1]*x +sol[3], col = 4)
-      draw_function(c(-50,50), c(-50,50),
-                    function(x,y) y*current_sol[2] +current_sol[1]*x +current_sol[3],
+      draw_function(c(-50,50), c(-50,50),vec3D_to_func2D(sol), col = 4)
+      draw_function(c(-50,50), c(-50,50),vec3D_to_func2D(current_sol),
                     col = 5, add=TRUE)
       points(lista_unif[,1], lista_unif[,2], col = (label+3))
       title(main=paste("Iteración ", iter,sep=" "))
       Sys.sleep(0.5)
     }
 
-    if( current_errors >= count_errors(hiperplane_to_function(current_sol),
+    if( current_errors >= count_errors(hypplane_to_func(current_sol),
                                        datos, label )){
       sol <- current_sol
     }
@@ -543,7 +557,7 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini, draw_iterations = FALSE
   }
   sol <- sol/sol[length(sol)-1]
 
-  return( list( hiperplane = sol, iterations = iter))
+  return( list( hyperplane = sol, iterations = iter))
 }
 
 pseudoinv <- function(X){
@@ -566,8 +580,11 @@ label_5 <- numeric(length(number_train))
 label_5[number_train==1] <- -1
 label_5[number_train==5] <- 1
 
-coefs_rl_5 <- regress_lin(cbind(means_train,sim_vertical_train,rep(1,length(means_train))), label_5)
-coefs_5 <- ajusta_PLA_MOD(cbind(means_train,sim_vertical_train), label_5, 100, coefs_rl_5)
+coefs_rl_5 <- regress_lin(cbind(means_train,sim_vertical_train,
+                                rep(1,length(means_train))),
+                          label_5)
+coefs_5 <- ajusta_PLA_MOD(cbind(means_train,sim_vertical_train),
+                          label_5, 100, coefs_rl_5)$hyperplane
 ```
 
 
@@ -581,8 +598,8 @@ n_train_colors[number_train==5] <- 3
 data_list_train <- list('number'=number_train, 'pixels'=pixels_train, 'mean'=means_train,
                   'v_symmetry'=sim_vertical_train, 'colors'=n_train_colors )
 
-draw_function(c(-1,0.2),c(-260,10),function(x,y) y + coefs_rl_5[1]/coefs_rl_5[2]*x +coefs_rl_5[3]/coefs_rl_5[2])
-draw_function(c(-1,0.2),c(-260,10),function(x,y) y + coefs_5[1]*x +coefs_5[3])
+draw_function(c(-1,0.2),c(-260,10),vec3D_to_func2D(coefs_rl_5), col = 2)
+draw_function(c(-1,0.2),c(-260,10),vec3D_to_func2D(coefs_5), col=4, add=TRUE)
 points(data_list_train$mean, data_list_train$v_symmetry, col = data_list_train$colors )
 title(main="Datos Train")
 ```
@@ -594,16 +611,32 @@ n_test_colors[which(number_test==5)] <- 3
 data_list_test <- list('number'=number_test, 'pixels'=pixels_test,
                        'mean'=means_test,'v_symmetry'=sim_vertical_test,
                        'colors'=n_test_colors )
-draw_function(c(-1,0.2),c(-260,10),function(x,y) y + coefs_5_rl[1]/coefs_5_rl[2]*x +coefs_5[3]/coefs_5_rl[2])
-draw_function(c(-1,0.2),c(-260,10),function(x,y) y + coefs_5[1]*x +coefs_5[3])
-points(data_list_train$mean, data_list_train$v_symmetry, col = data_list_train$colors )
-title(main="Datos Test")
+draw_function(c(-1,0.2),c(-260,10),vec3D_to_func2D(coefs_rl_5), col = 2)
+draw_function(c(-1,0.2),c(-260,10),vec3D_to_func2D(coefs_5), col=4, add=TRUE)
+points(data_list_test$mean, data_list_test$v_symmetry, col = data_list_test$colors )
+title(main="Datos Train")
 ```
 
 
 #### b) Calcular $E_{in}$ y $E_{test}$ (error sobre los datos de test).
 
-#### c) Obtener cotas sobre el verdadero valor de $E_{out}. Pueden calcularse dos cotas una basada en $E_{in}$ y otra basada en $E_{test}$. Usar una tolerancia $\delta = 0.05$. ¿Qué cota es mejor?
+```{r}
+E_in_5b = count_errors(hypplane_to_func(coefs_5,TRUE),
+                       cbind(means_train, sim_vertical_train), 
+                       label_5)
+
+label_test_5 <- numeric(length(number_test))
+label_test_5[number_test==1] <- -1
+label_test_5[number_test==5] <- 1
+
+E_test_5b = count_errors(hypplane_to_func(coefs_5,TRUE),
+                         cbind(means_test, sim_vertical_test),
+                         label_test_5)
+```
+
+
+#### c) Obtener cotas sobre el verdadero valor de $E_{out}$. Pueden calcularse dos cotas una basada en $E_{in}$ y otra basada en $E_{test}$. Usar una tolerancia $\delta = 0.05$. ¿Qué cota es mejor?
+
 
 #### d) Repetir los puntos anteriores pero usando una transformación polinómica de tercer orden($\Phi_3(x)$ en las transparencias de teoría)
 
