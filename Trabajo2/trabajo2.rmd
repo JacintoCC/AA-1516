@@ -118,8 +118,8 @@ Debido a que es una función sencilla de derivar, lo incluimos directamente en l
 ```{r}
 E_1a <- function(w){
   value <- (w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))^2
-  derivative_f <- c(2*(w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))*(exp(w[2]) + 2*w[2]*exp(-w[1])),
-                    2*(w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))*(w[1]*exp(w[2]) - 2*exp(-w[1])))
+  derivative_f<-c(2*(w[1]*exp(w[2])-2*w[2]*exp(-w[1]))*(exp(w[2])+ 2*w[2]*exp(-w[1])),
+                  2*(w[1]*exp(w[2])-2*w[2]*exp(-w[1]))*(w[1]*exp(w[2])- 2*exp(-w[1])))
   return(list('value' = value, 'derivative_f'= derivative_f))
 }
 ```
@@ -134,7 +134,9 @@ print(E_1a(results_1a$min)$value)
 ##### 2) ¿Cuántas iteraciones tarda el algoritmo en obtener por primera vez un valor de $E(u,v)$ inferior a $10^{−14}?
 
 ```{r}
-print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 100, dif= 10^-14, print_iterations = TRUE))
+print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, 
+                      max_iterations = 100, dif= 10^-14, 
+                      print_iterations = TRUE))
 ```
 
 Se comprueba que en la sexta iteración (séptima si contamos la evaluación del vector inicial) se obtiene un valor menor que $10^{-14}$
@@ -181,7 +183,9 @@ Con este valor de la tasa de aprendizaje, no existe la convergencia. Esto se deb
 
 ```{r}
 vectors_ini <- matrix(c(0.1,0.1,1,1,-0.5,-0.5,-1,-1),ncol=2,byrow=TRUE)
-vectors_min <- t(apply(vectors_ini,1, function(x) gradientDescent(E_1b, v_ini =x , lr = 0.01, max_iterations <- 100)$min))
+vectors_min <- t(apply(vectors_ini,1, 
+                       function(x) gradientDescent(E_1b, v_ini =x , 
+                          lr = 0.01, max_iterations= 100)$min))
 print(vectors_min)
 t(apply(vectors_min,1, function(x) E_1b(x)$value))
 ```
@@ -319,7 +323,8 @@ Con esta tasa de aprendizaje hay convergencia a $2.90$. Se comprueba que con est
 
 ```{r}
 vectors_ini <- matrix(c(0.1,0.1,1,1,-0.5,-0.5,-1,-1),ncol=2,byrow=TRUE)
-vectors_min <- t(apply(vectors_ini,1, function(x) newtonMethod(E_1b, v_ini =x , lr = 0.01, max_iterations <- 100)$min))
+vectors_min <- t(apply(vectors_ini,1, function(x) newtonMethod(E_1b,
+                        v_ini =x , lr = 0.01, max_iterations= 100)$min))
 print(vectors_min)
 t(apply(vectors_min,1, function(x) E_1b(x)$value))
 ```
@@ -348,7 +353,7 @@ simula_recta <- function(intervalo){
   b <- puntos[1,2] - a * puntos[1,1]
 
   f <- vec3D_to_func2D(c(a,1,b), change_signs=TRUE)
-  return(f)
+  return(f)integer(f(x),minimo,maximo)
 }
 ```
 
@@ -371,7 +376,7 @@ Implementación del descenso del gradiente estocástico:
 ```{r}
 norm_v <- function(x) sqrt(sum(x^2))
 
-SGD <- function(datos, valores, max_iter, vini= c(1,1,1), 
+SGD <- function(datos, valores, max_iter, vini= c(0,0,0), 
                 lr = 0.01, draw_iterations = FALSE){
   sol <- vini
   iter <- 0
@@ -669,7 +674,8 @@ data_transf_5d <- cbind(means_train,sim_vertical_train,
                         means_train^2,sim_vertical_train^2,
                         means_train*sim_vertical_train,
                         means_train^3,sim_vertical_train^3,
-                        means_train^2*sim_vertical_train,means_train*sim_vertical_train^2)
+                        means_train^2*sim_vertical_train, 
+                        means_train*sim_vertical_train^2)
 
 coefs_rl_5d <- regress_lin(cbind(data_transf_5d,rep(1,length(number_train))), label_5)
 
@@ -713,10 +719,10 @@ Ahora calculamos las cotas para $E_{out}$ de la misma manera que antes:
 
 La dimensión es $\frac{Q(Q+3)}{2}+1$, para nuestro caso, $d_{VC}=10$ y entonces, acotando $m_\mathcal{H}(2N)$ por $(2N)^{d_{VC}}$:
   $$ E_{out}(g) \leq E_{in}(g) + 
-     \sqrt{\frac{8}{N}\log \frac{4 ((2N)^10+1)}{\delta}} $$
+     \sqrt{\frac{8}{N}\log \frac{4 ((2N)^{10}+1)}{\delta}} $$
   $N=599$, luego
   $$E_{out}(g) \leq E_{in}(g) + 
-     \sqrt{\frac{8}{599}\log \frac{4 ((2\cdot 599)^10+1)}{0.05}}$$
+     \sqrt{\frac{8}{599}\log \frac{4 ((2\cdot 599)^{10}+1)}{0.05}}$$
   $$ E_{out}(g) \leq  0.1285476 +1.002608 = 1.131156$$
   Pero esta cota sobrepasa 1, con lo que no nos aporta información. Miraremos ahora con la cota obtenida con $E_{test}$. Volvemos a usar la desigualdad de Hoeffding:
   
@@ -732,18 +738,15 @@ La dimensión es $\frac{Q(Q+3)}{2}+1$, para nuestro caso, $d_{VC}=10$ y entonces
 # B - SOBREAJUSTE
 
 ### 1.-Sobreajuste.
-**Vamos a construir un entorno que nos permita experimentar con los problemas de sobreajuste. Consideremos el espacio de entrada $\mathcal{X}=[-1,1]$  con una densidad de probabilidad uniforme, $f_U(x) = \frac{1}{2}$. Consideramos dos modelos $\mathcal{H}_2$ y $\mathcal{H}_10$ representando el conjunto de todos los polinomios de grado 2 y grado 10 respectivamente. La función objetivo es un polinomio de grado $Q_f$ que escribimos como $f(x)= \sum\limits_{q=0}^{Q_f} a_q L_q(x)$, donde $L_q(x)$ son los polinomios de Legendre (ver la relación de ejercicios 2). El conjunto de datos es $\mathcal{D} = \{(x_1, y_1), \dots , (x_N, y_N) \}$ donde $y_n = f(x_n) + \sigma_{\varepsilon_n}$ y las $\varepsilon_n$ son variables aleatorias i.i.d. $\mathcal{N}(0,1)$ y $\sigma^2$ la varianza del ruido.**
+**Vamos a construir un entorno que nos permita experimentar con los problemas de sobreajuste. Consideremos el espacio de entrada $\mathcal{X}=[-1,1]$  con una densidad de probabilidad uniforme, $f_U(x) = \frac{1}{2}$. Consideramos dos modelos $\mathcal{H}_2$ y $\mathcal{H}_{10}$ representando el conjunto de todos los polinomios de grado 2 y grado 10 respectivamente. La función objetivo es un polinomio de grado $Q_f$ que escribimos como $f(x)= \sum\limits_{q=0}^{Q_f} a_q L_q(x)$, donde $L_q(x)$ son los polinomios de Legendre (ver la relación de ejercicios 2). El conjunto de datos es $\mathcal{D} = \{(x_1, y_1), \dots , (x_N, y_N) \}$ donde $y_n = f(x_n) + \sigma_{\varepsilon_n}$ y las $\varepsilon_n$ son variables aleatorias i.i.d. $\mathcal{N}(0,1)$ y $\sigma^2$ la varianza del ruido.**
 
-**Comenzamos realizando un experimento donde suponemos que los valores de $Q_f, N, \sigma$, están especificados, para ello:** 
-* Generamos los coeficientes $a_q$ a partir de muestras de una distribución $\mathcal{N}(0, 1)$ y escalamos dichos coeficientes de manera que $\mathbb{E}_{a,x}[f^2]=1$. (Ayuda: Dividir los coeficientes por $\sqrt{\sum\limits_{q=0}^{Q_f} \frac{1}{2q+1}}$)
+**Comenzamos realizando un experimento donde suponemos que los valores de $Q_f, N, \sigma$, están especificados, para ello:**  
+* Generamos los coeficientes $a_q$ a partir de muestras de una distribución $\mathcal{N}(0, 1)$ y escalamos dichos coeficientes de manera que $\mathbb{E}_{a,x}[f^2]=1$. (Ayuda: Dividir los coeficientes por $\sqrt{\sum\limits_{q=0}^{Q_f} \frac{1}{2q+1}}$)  
 * Generamos un conjunto de datos $x_1, \dots, x_N$ muestreando de forma independiente $\mathbb{P}(x)$ y los valores $y_n=f(x_n)+\sigma \varepsilon_n$.  
 
-**Sean $g_2$ y $g_10$ los mejores ajustes a los datos usando $\mathcal{H}_2$ y $\mathcal{H}_10$ respectivamente y sean $E_{out}(g_2)$ y $E_{out}(g_{10})$ sus respectivos errores fuera de la muestra.**
+**Sean $g_2$ y $g_{10}$ los mejores ajustes a los datos usando $\mathcal{H}_2$ y $\mathcal{H}_{10}$ respectivamente y sean $E_{out}(g_2)$ y $E_{out}(g_{10})$ sus respectivos errores fuera de la muestra.**
 
-a. Calcular $g_2$ y $g_10$.  
-b. ¿Por qué normalizamos $f$? (Ayuda: interpretar el significado de $\sigma$)
-c. ¿Cómo podemos obtener $E_out$ analíticamnte para una $g_{10}$ dada?
-
+a. Calcular $g_2$ y $g_{10}$.  
 
 Comenzamos definiendo una función para obtener los multiplicadores de Lagrange:
 
@@ -778,9 +781,61 @@ sigma <- 0.1
 Generamos los coeficientes $a_q$:
 ```{r}
 a_Q <- rnorm(Q_f+1)/sqrt(sum(1/(2*0:Q_f+1)))
-f_obj <- function(x){  crossprod(a_Q, lagrange_poly(x,Q_f)) }
+f_obj <- function(x){  sapply(x, function(y) crossprod(a_Q,
+                                        lagrange_poly(y,Q_f))) }
 x <- runif(N, min=-1, max=1)
-y <- sapply(x, f_obj) + sigma*rnorm(N)
+y <- f_obj(x) + sigma*rnorm(N)
+```
+
+Para calcular $g_2$ y $g_{10}$, hacemos regresión lineal sobre los datos.
+
+```{r}
+coefs_g2 <- regress_lin(t(sapply(x,function(i) i^(0:2))), y)
+coefs_g10 <- regress_lin(t(sapply(x,function(i) i^(0:10))), y)
+
+g2 <- function(x){
+  sapply(x, function(y) crossprod(coefs_g2, y^(0:2)))
+}
+
+g10 <- function(x){
+  sapply(x, function(y) crossprod(coefs_g10, y^(0:10)))
+}
+
+plot(seq(-1,1,by=0.01), sapply(seq(-1,1,by=0.01), f_obj), type ="l", col=4)
+points(seq(-1,1,by=0.01), sapply(seq(-1,1,by=0.01), g2), type ="l", col=2)
+points(seq(-1,1,by=0.01), sapply(seq(-1,1,by=0.01), g10), type ="l", col=3)
+points(x,y)
+
+```
+
+b. ¿Por qué normalizamos $f$? (Ayuda: interpretar el significado de $\sigma$)
+
+$\sigma$ representa el peso del error introducido en los datos. La normalización de los datos de $f$ se realiza para reducir la variabilidad de los datos (especialmente en los extremos, donde se ve más la influencia de las mayores potencias o los polinomios de legendre de mayor grado).
+
+
+c. ¿Cómo podemos obtener $E_out$ analíticamente para una $g_{10}$ dada?
+
+La forma de obtener $E_out$ será, dada $g_{10}$, calcular $\mathbb{E}_x[( g_{10}(x) -f(x) )^2]$. Esto es, calcular el error fuera de la muestra, con varianza igual a 0, ya que $g_{10}$ es fijo. Vemos el error para la $g_{10}$ obtenida:
+
+```{r}
+integrate(function(x) (g10(x)-f_obj(x))^2,-1,1,subdivisions = 10000L)
 ```
 
 
+### Siguiendo con el punto anterior, generar múltiples combinaciones de $Q_f, N, \sigma$ y para cada combinación de parámetros ejecutar un número grande de experimentos $(>1000)$ calculando en cada caso $E_out(g_2)$ y $E_out(g_{10})$. Promediar todos los valores de error obtenidos para cada conjunto de hipótesis, es decir
+
+$$E_{out}(\mathcal{H_2}) = 
+  \textit{promedio sobre experimentos}( E_{out}(g_2) )$$
+$$E_{out}(\mathcal{H_{10}}) = 
+  \textit{promedio sobre experimentos}( E_{out}(g_{10}) )$$
+  
+  **Definimos una medida de sobreajuste como $E_{out}(g_{10}) - E_{out}(g_2)$**
+  
+  a. Argumentar por qué la medida dada puede medir el sobreajuste.
+
+
+  b. ¿Bajo qué condiciones esta medida es significativamente positiva (i.e. sobreajuste alto) y lo opuesto, significativamente negativa? Usar los valores $Q_f \in \{1,2, \dots, 100\},\ N \in \{20, 25, \dots,100\},\ \sigma \in \{0, 0.05, 0.1, \dots, 2\}$. Explicar lo que se observa.
+  
+```{r}
+
+```
