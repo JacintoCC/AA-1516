@@ -446,7 +446,7 @@ E_out_4c <- vector(mode="numeric", length = N)
 for( i in 1:100){
   recta_4c <- simula_recta(c(-1,1))
   muestra_4c <- simula_unif(N, 2, c(-1, 1))
-  etiquetas_4c <- apply(muestra_4c, 1, sign(recta_4c(X[1],X[2])))
+  etiquetas_4c <- apply(muestra_4c, 1, function(X) sign(recta_4c(X[1],X[2])))
   
   sol_4c <- SGD(muestra_4c, etiquetas_4c, 1000)$hyperplane
   g_4c <- vec3D_to_func2D(sol_4c)
@@ -454,7 +454,6 @@ for( i in 1:100){
   muestra_4c_out <- simula_unif(N, 2, c(-1,1))
   etiquetas_4c_out <- apply(muestra_4c_out, 1, 
                             function(X) sign(recta_4c(X[1],X[2])))
-  etiquetas_4c_out[etiquetas_4c_out<0] <- 0
 
   # Etiquetado según la regresión
   rl_etiquetas_4c_out <- apply(muestra_4c_out, 1, 
@@ -506,7 +505,7 @@ sim_vertical_train <- apply(pixels_train,3,simetria_vertical)
 sim_vertical_test <- apply(pixels_test,3,simetria_vertical)
 ```
 
-$\textit{Plantear un problema de clasificación binaria que considere el conjunto de entrenamiento como datos de entrada para aprender la función $g$. Usando el modelo de Regresión Lineal para clasificación seguido por PLA-Pocket como mejora. Responder a las siguientes cuestiones.}$
+*Plantear un problema de clasificación binaria que considere el conjunto de entrenamiento como datos de entrada para aprender la función $g$. Usando el modelo de Regresión Lineal para clasificación seguido por PLA-Pocket como mejora. Responder a las siguientes cuestiones.*
 
 Este problema consiste en, a partir de los datos de $\textit{train}$, obtener una función mediante regresión lineal y PLA que nos separe los datos, y ver su tasa de acierto en el conjunto de test. Incluimos las funciones de la primera práctica para hacer regresión lineal y el algoritmo PLA modificado:
 
@@ -614,7 +613,7 @@ data_list_test <- list('number'=number_test, 'pixels'=pixels_test,
 draw_function(c(-1,0.2),c(-260,10),vec3D_to_func2D(coefs_rl_5), col = 2)
 draw_function(c(-1,0.2),c(-260,10),vec3D_to_func2D(coefs_5), col=4, add=TRUE)
 points(data_list_test$mean, data_list_test$v_symmetry, col = data_list_test$colors )
-title(main="Datos Train")
+title(main="Datos Test")
 ```
 
 
@@ -623,7 +622,7 @@ title(main="Datos Train")
 ```{r}
 E_in_5b = count_errors(hypplane_to_func(coefs_5,TRUE),
                        cbind(means_train, sim_vertical_train), 
-                       label_5)
+                       label_5)/length(number_train)
 
 label_test_5 <- numeric(length(number_test))
 label_test_5[number_test==1] <- -1
@@ -631,13 +630,157 @@ label_test_5[number_test==5] <- 1
 
 E_test_5b = count_errors(hypplane_to_func(coefs_5,TRUE),
                          cbind(means_test, sim_vertical_test),
-                         label_test_5)
+                         label_test_5)/length(number_test)
 ```
 
 
 #### c) Obtener cotas sobre el verdadero valor de $E_{out}$. Pueden calcularse dos cotas una basada en $E_{in}$ y otra basada en $E_{test}$. Usar una tolerancia $\delta = 0.05$. ¿Qué cota es mejor?
 
+Para obtener la cota basada en $E_{in}$ usamos la desigualdad de  Vapnik-Chervonenkis generalizada:
+  $$ E_{out}(g) \leq E_{in}(g) + 
+     \sqrt{\frac{8}{N}\log \frac{4 m_\mathcal{H}(2N)}{\delta}} $$
+  Podemos, por mayor simplicidad, acotar $m_\mathcal{H}(2N)$ por $(2N)^{d_{VC}}$. Como en este caso $d_{VC}$ es 3,
+$$ E_{out}(g) \leq E_{in}(g) + 
+     \sqrt{\frac{8}{N}\log \frac{4 (2N)^3}{\delta}} $$
+  $N=599$, luego
+  $$E_{out}(g) \leq E_{in}(g) + 
+     \sqrt{\frac{8}{599}\log \frac{4 (2\cdot 599)^3}{0.05}}$$
+  $$ E_{out}(g) \leq 0.0951586 + 0.5852643 = 0.6804229$$
+  
+  Para obtener la cota basada en $E_{test}$ usamos la desigualdad de Hoeffding con una hipótesis, que será la producida por los datos de entrenamiento:
+  
+  $$ \mathbb{P}(\vert E_{in}(g)−E_{out}(g) \vert \ge \varepsilon)\leq 2 e^{-2\varepsilon^2N} $$
+  
+  Queremos hallar el $\varepsilon$ tal que la probabilidad de que estén a una distancia mayor que $\varepsilon$ sea menor que $0.05$, luego despejamos:
 
-#### d) Repetir los puntos anteriores pero usando una transformación polinómica de tercer orden($\Phi_3(x)$ en las transparencias de teoría)
+  $$ \mathbb{P}(\vert E_{test}(g) − E_{out}(g) \vert \ge \varepsilon) \leq 
+        2 e^{-2\varepsilon^2N}= 0.05 $$
+  
+  Despejando llegamos a  $\varepsilon = 0.194$. Por tanto, con probabilidad $0.95$, $\vert E_{test}(g) − E_{out}(g) \vert \le 0.194$. Esto significa que  $E_{out}(g) \leq E_{test}(g) + 0.194 = 0.2960553$.  
+  
+  Llegamos por tanto a una mejor cota de $E_{out}$
+  
+#### d) Repetir los puntos anteriores pero usando una transformación polinómica de tercer orden ($\Phi_3(x)$ en las transparencias de teoría).
+
+Denotamos por $\Phi_3(x)$ a la transformación $\Phi_3(x)= 1, x_1, x_2, x_1^2, x_2^2, x_1 x_2, x_1^3, x_2^3, x_1^2 x_2, x_1 x_2^2)$. Tenemos por tanto que realizar la regresión lineal para este modelo y ver el error dentro y fuera de la muestra:
+
+```{r}
+data_transf_5d <- cbind(means_train,sim_vertical_train,
+                        means_train^2,sim_vertical_train^2,
+                        means_train*sim_vertical_train,
+                        means_train^3,sim_vertical_train^3,
+                        means_train^2*sim_vertical_train,means_train*sim_vertical_train^2)
+
+coefs_rl_5d <- regress_lin(cbind(data_transf_5d,rep(1,length(number_train))), label_5)
+
+estimated_f_5d <- function(x,y){
+  coefs_rl_5d[1]*x + coefs_rl_5d[2]*y + coefs_rl_5d[3]*x^2 +
+    coefs_rl_5d[4]*y^2 + coefs_rl_5d[5]*x*y +
+    coefs_rl_5d[6]*x^3 + coefs_rl_5d[7]*y^3 +
+    coefs_rl_5d[8]* x^2*y + coefs_rl_5d[9]*x*y^2 + coefs_rl_5d[10]
+} 
+```
+
+Mostramos la gráfica obtenida con la regresión lineal
+
+```{r}
+draw_function(c(-1,0.2),c(-260,10),estimated_f_5d, col=4)
+points(data_list_train$mean, data_list_train$v_symmetry, col = data_list_train$colors)
+```
+```{r}
+draw_function(c(-1,0.2),c(-260,10),estimated_f_5d, col=4)
+points(data_list_test$mean, data_list_test$v_symmetry, col = data_list_test$colors)
+```
+
+Contamos los errores en los datos de entrenamiento y en los datos de test:
+```{r}
+E_in_5d = count_errors(hypplane_to_func(coefs_rl_5d,TRUE),
+                       data_transf_5d, 
+                       label_5)/length(number_train)
+
+data_transf_test_5d <- cbind(means_test, sim_vertical_test,
+                        means_test^2,sim_vertical_test^2,
+                        means_test*sim_vertical_test,
+                        means_test^3,sim_vertical_test^3,
+                        means_test^2*sim_vertical_test,means_test*sim_vertical_test^2)
+
+E_test_5d = count_errors(hypplane_to_func(coefs_rl_5d,TRUE),
+                         data_transf_test_5d,
+                         label_test_5)/length(number_test)
+```
+
+Ahora calculamos las cotas para $E_{out}$ de la misma manera que antes:
+
+La dimensión es $\frac{Q(Q+3)}{2}+1$, para nuestro caso, $d_{VC}=10$ y entonces, acotando $m_\mathcal{H}(2N)$ por $(2N)^{d_{VC}}$:
+  $$ E_{out}(g) \leq E_{in}(g) + 
+     \sqrt{\frac{8}{N}\log \frac{4 ((2N)^10+1)}{\delta}} $$
+  $N=599$, luego
+  $$E_{out}(g) \leq E_{in}(g) + 
+     \sqrt{\frac{8}{599}\log \frac{4 ((2\cdot 599)^10+1)}{0.05}}$$
+  $$ E_{out}(g) \leq  0.1285476 +1.002608 = 1.131156$$
+  Pero esta cota sobrepasa 1, con lo que no nos aporta información. Miraremos ahora con la cota obtenida con $E_{test}$. Volvemos a usar la desigualdad de Hoeffding:
+  
+  $$ \mathbb{P}(\vert E_{in}(g)−E_{out}(g) \vert \ge \varepsilon)\leq 2 e^{-2\varepsilon^2N} $$
+  
+  Despejamos de nuevo $\varepsilon$ y llegamos a  $\varepsilon = 0.194$. Por tanto, con probabilidad $0.95$, $\vert E_{test}(g) − E_{out}(g) \vert \le 0.194$. Esto significa que  $E_{out}(g) \leq E_{test}(g) + 0.194 = 0.3368571$.
+  
+#### e) Si tuviera que usar los resultados para dárselos a un potencial cliente, ¿usaría la transformación polinómica? Explicar la decisión.
+
+  No usaría la transformación polinómica, pues añade demasiada complejidad a un modelo que, a la vista de los resultados, se puede resolver con el modelo lineal. Como vemos, las cotas son mayores para el caso con la transformación cúbica e incluso para hallar la cota sólo en función del error dentro de la muestra, nos da un error mayor que 1.
+  
+  
+# B - SOBREAJUSTE
+
+### 1.-Sobreajuste.
+**Vamos a construir un entorno que nos permita experimentar con los problemas de sobreajuste. Consideremos el espacio de entrada $\mathcal{X}=[-1,1]$  con una densidad de probabilidad uniforme, $f_U(x) = \frac{1}{2}$. Consideramos dos modelos $\mathcal{H}_2$ y $\mathcal{H}_10$ representando el conjunto de todos los polinomios de grado 2 y grado 10 respectivamente. La función objetivo es un polinomio de grado $Q_f$ que escribimos como $f(x)= \sum\limits_{q=0}^{Q_f} a_q L_q(x)$, donde $L_q(x)$ son los polinomios de Legendre (ver la relación de ejercicios 2). El conjunto de datos es $\mathcal{D} = \{(x_1, y_1), \dots , (x_N, y_N) \}$ donde $y_n = f(x_n) + \sigma_{\varepsilon_n}$ y las $\varepsilon_n$ son variables aleatorias i.i.d. $\mathcal{N}(0,1)$ y $\sigma^2$ la varianza del ruido.**
+
+**Comenzamos realizando un experimento donde suponemos que los valores de $Q_f, N, \sigma$, están especificados, para ello:** 
+* Generamos los coeficientes $a_q$ a partir de muestras de una distribución $\mathcal{N}(0, 1)$ y escalamos dichos coeficientes de manera que $\mathbb{E}_{a,x}[f^2]=1$. (Ayuda: Dividir los coeficientes por $\sqrt{\sum\limits_{q=0}^{Q_f} \frac{1}{2q+1}}$)
+* Generamos un conjunto de datos $x_1, \dots, x_N$ muestreando de forma independiente $\mathbb{P}(x)$ y los valores $y_n=f(x_n)+\sigma \varepsilon_n$.  
+
+**Sean $g_2$ y $g_10$ los mejores ajustes a los datos usando $\mathcal{H}_2$ y $\mathcal{H}_10$ respectivamente y sean $E_{out}(g_2)$ y $E_{out}(g_{10})$ sus respectivos errores fuera de la muestra.**
+
+a. Calcular $g_2$ y $g_10$.  
+b. ¿Por qué normalizamos $f$? (Ayuda: interpretar el significado de $\sigma$)
+c. ¿Cómo podemos obtener $E_out$ analíticamnte para una $g_{10}$ dada?
+
+
+Comenzamos definiendo una función para obtener los multiplicadores de Lagrange:
+
+```{r}
+lagrange_poly <- function(x,k){
+  if (k ==0){
+    return( 1 )
+  }
+  else if (k ==1){
+    return( c(1,x) )
+  }
+
+  l_poly <- vector(mode="numeric", length = k+1)
+  l_poly[1] <- 1
+  l_poly[2] <- x
+  
+  for( i in 2:k){
+    l_poly[i+1] <- (2*i-1)/i*x*l_poly[i]*(i-1)/i*l_poly[i-1]
+  }
+  
+  return( l_poly )
+}
+```
+
+Definimos los valores usados para el experimento.
+```{r}
+Q_f <- 4
+N <- 50
+sigma <- 0.1
+```
+
+Generamos los coeficientes $a_q$:
+```{r}
+a_Q <- rnorm(Q_f+1)/sqrt(sum(1/(2*0:Q_f+1)))
+f_obj <- function(x){  crossprod(a_Q, lagrange_poly(x,Q_f)) }
+x <- runif(N, min=-1, max=1)
+y <- sapply(x, f_obj) + sigma*rnorm(N)
+```
 
 
