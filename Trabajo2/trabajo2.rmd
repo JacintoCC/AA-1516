@@ -353,7 +353,7 @@ simula_recta <- function(intervalo){
   b <- puntos[1,2] - a * puntos[1,1]
 
   f <- vec3D_to_func2D(c(a,1,b), change_signs=TRUE)
-  return(f)integer(f(x),minimo,maximo)
+  return(f)
 }
 ```
 
@@ -427,7 +427,7 @@ print(sol_4a$iterations)
 ```
 
 
-#### b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$( el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
+#### b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ (el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
 
 Generamos una muestra aleatoria, la etiquetamos según la función aleatoria y según la función obtenida de la regresión logística:
 
@@ -677,7 +677,8 @@ data_transf_5d <- cbind(means_train,sim_vertical_train,
                         means_train^2*sim_vertical_train, 
                         means_train*sim_vertical_train^2)
 
-coefs_rl_5d <- regress_lin(cbind(data_transf_5d,rep(1,length(number_train))), label_5)
+coefs_rl_5d <- regress_lin(cbind(data_transf_5d,
+                                 rep(1,length(number_train))), label_5)
 
 estimated_f_5d <- function(x,y){
   coefs_rl_5d[1]*x + coefs_rl_5d[2]*y + coefs_rl_5d[3]*x^2 +
@@ -691,11 +692,13 @@ Mostramos la gráfica obtenida con la regresión lineal
 
 ```{r}
 draw_function(c(-1,0.2),c(-260,10),estimated_f_5d, col=4)
-points(data_list_train$mean, data_list_train$v_symmetry, col = data_list_train$colors)
+points(data_list_train$mean, data_list_train$v_symmetry,
+       col = data_list_train$colors)
 ```
 ```{r}
 draw_function(c(-1,0.2),c(-260,10),estimated_f_5d, col=4)
-points(data_list_test$mean, data_list_test$v_symmetry, col = data_list_test$colors)
+points(data_list_test$mean, data_list_test$v_symmetry, 
+       col = data_list_test$colors)
 ```
 
 Contamos los errores en los datos de entrenamiento y en los datos de test:
@@ -764,7 +767,8 @@ lagrange_poly <- function(x,k){
   l_poly[2] <- x
   
   for( i in 2:k){
-    l_poly[i+1] <- (2*i-1)/i*x*l_poly[i]*(i-1)/i*l_poly[i-1]
+    l_poly[i+1] <- (2*i-1)/i*x*l_poly[i] - 
+      (i-1)/i*l_poly[i-1]
   }
   
   return( l_poly )
@@ -773,14 +777,14 @@ lagrange_poly <- function(x,k){
 
 Definimos los valores usados para el experimento.
 ```{r}
-Q_f <- 4
-N <- 50
+Q_f <- 20
+N <- 7
 sigma <- 0.1
 ```
 
 Generamos los coeficientes $a_q$:
 ```{r}
-a_Q <- rnorm(Q_f+1)/sqrt(sum(1/(2*0:Q_f+1)))
+a_Q <- rnorm(Q_f+1)/sqrt(sum(1/(2*(0:Q_f)+1)))
 f_obj <- function(x){  sapply(x, function(y) crossprod(a_Q,
                                         lagrange_poly(y,Q_f))) }
 x <- runif(N, min=-1, max=1)
@@ -833,9 +837,226 @@ $$E_{out}(\mathcal{H_{10}}) =
   
   a. Argumentar por qué la medida dada puede medir el sobreajuste.
 
+Esta medida puede medir el sobreajuste debido a que se trata de la diferencia entre $E_{out}(\mathcal{H}_{10})$ y $E_{out}(\mathcal{H}_{2})$, es decir, cuánto más hay de error al suponer la función objetivo está en $\mathcal{H}_{10}$ que suponer sólo que está en $\mathcal{H}_{2}$. Necesariamente el error dentro de la muestra será mejor o al menos igual de bueno para las funciones en $\mathcal{H}_{10}$ que en $\mathcal{H}_{2}$. Si hemos seleccionado el modelo $\mathcal{H}_{10}$ y la función pertenece a un espacio más pequeño, existirá ruido determinista.
 
   b. ¿Bajo qué condiciones esta medida es significativamente positiva (i.e. sobreajuste alto) y lo opuesto, significativamente negativa? Usar los valores $Q_f \in \{1,2, \dots, 100\},\ N \in \{20, 25, \dots,100\},\ \sigma \in \{0, 0.05, 0.1, \dots, 2\}$. Explicar lo que se observa.
   
 ```{r}
+Q_f = seq(1,100,by=9)
+N = seq(20,100,by=5)
+sigma = seq(0, 2, by=0.1)
+```
+
+```{r}
+getEout <- function(f_obj, f, range = c(-1,1)){
+  E_out = 0
+  pob = seq(-1,1,by=0.2)
+  for( i in 1:10){
+    E_out <- E_out + (f_obj(pob[i])-f(pob[i]))^2
+  }
+  
+  return( E_out/10 )
+}
+
+getAproxPolynom <- function(x,y,grade){
+  
+  coefs <- regress_lin(t(sapply(x,function(i) i^(0:grade))), y)
+  
+  polynom <- function(x){
+    sapply(x, function(y) crossprod(coefs, y^(0:grade)))
+  }
+  
+  return(polynom)
+}
 
 ```
+
+
+```{r}
+overfitting <- function(param, iterations){
+  Q_f <- param[1]
+  N <- param[2]
+  sigma <- param[3]
+  
+  diff_E_outs = vector(mode = "numeric", length = iterations)
+  
+  for( i in 1:iterations){
+    a_Q <- rnorm(Q_f+1)/sqrt(sum(1/(2*(0:Q_f)+1)))
+    f_obj <- function(x){ sapply(x, function(y) crossprod(a_Q,
+                                        lagrange_poly(y,Q_f))) }
+    x <- runif(N, min=-1, max=1)
+    y <- f_obj(x) + sigma*rnorm(N)
+    
+    g2 <- getAproxPolynom(x,y,2)
+    g10 <- getAproxPolynom(x,y,10) 
+    
+    E_out_g10 <- getEout(f_obj, g10)
+    E_out_g2 <- getEout(f_obj, g2)
+    
+    diff_E_outs[i] <- E_out_g10 - E_out_g2
+  }
+    
+  return(list('mean'=mean(diff_E_outs), 'aQ'=a_Q))
+}
+```
+
+```{r}
+d <- expand.grid(x = Q_f, y = N, z = sigma)
+sobreajuste_2b <- apply(d, 1, function(x){
+  print(x)
+  overfitting(x,100)
+  })
+```
+
+### 3.- Repetir el experimento descrito en los puntos anteriores pero para el caso de clasificación donde la función objetivo es un perceptron ruidoso $f(x)= sign(\sum\limits_{q=1}^{Q_f} a_q L_1(x) + \varepsilon)$. Notemos que $a_0 = 0$ y que las $a_q$ deben ser normalizadas para que $\mathbb{E}_{a,x}\left[(\sum\limits{q=1}^{Q_f} a_q L_q(x))^2\right] = 1$. En este caso los modelos $\mathcal{H}_2$ y $\mathcal{H}_{10}$ contienen el signo de los polinomios de segundo y décimo orden respectivamente. ( Atención: los datos no serán separables) (Ayuda: para la normalización adaptar la regla dada en el punto anterior)
+
+
+```{r}
+overfitting_3 <- function(param, iterations){
+  Q_f <- param[1]
+  N <- param[2]
+  sigma <- param[3]
+  
+  diff_E_outs = vector(mode = "numeric", length = iterations)
+  
+  for( i in 1:iterations){
+    a_Q <- rnorm(Q_f)/sqrt(sum(1/(2*(1:Q_f)+1)))
+    f_obj <- function(x){ sapply(x, function(y) sign(crossprod(a_Q,
+                                      lagrange_poly(y,Q_f)[2:Qf]) +
+                                      rnorm(1,sd=sigma)))}
+    x <- runif(N, min=-1, max=1)
+    y <- f_obj(x) + sigma*rnorm(N)
+    
+    g2 <- getAproxPolynom(x,y,2)
+    g10 <- getAproxPolynom(x,y,10) 
+    
+    E_out_g10 <- getEout(f_obj, g10)$value
+    E_out_g2 <- getEout(f_obj, g2)$value
+    
+    diff_E_outs[i] <- E_out_g10 - E_out_g2
+  }
+    
+  return(list('mean'=mean(diff_E_outs), 'aQ'=a_Q))
+}
+```
+
+```{r, eval=FALSE}
+sobreajuste_3 <- apply(d, 1, function(x) overfitting_3(x,100) )
+```
+
+
+# C - REGULARIZACIÓN Y SELECCIÓN DE MODELOS
+
+### 1.- Para $d=3$ (dimensión) generar un conjunto de $N$ datos aleatorios $\{x_n,y_n\}$de la siguiente forma. Para cada punto $x_n$ generamos sus coordenadas muestreando de forma independiente una $\mathit{N}(0,1)$. De forma similar generamos un vector de pesos de $d+1$ dimensiones $\mathbf{w}_f$, y el conjunto de valores $y_n = \mathbf{w}_f^T \mathbf{x}_n + \sigma \varepsilon_n$, donde $\varepsilon_n$ es un ruido que sigue también una $\mathit{N}(0,1)$ y $\sigma^2$ es la varianza del ruido; fijar $\sigma = 0.5$.
+**Usar regresión lineal con regularización $\textit{weight decay} para estimar $\mathbf{w}_f$ con $\mathbf{w}_{reg}$ . Fijar el parámetro de regularización a $0.05/N$**
+
+```{r}
+simula_gauss <- function(N, dim, sigma){
+  #Tomamos N*dim elementos de una normal, tomando la desviación estándar del vector sigma
+  lista <- matrix(rnorm(N*dim, sd = sigma), N, dim, byrow=TRUE)
+  return(lista)
+}
+
+N <- 100
+sigma <- 0.05
+d <- 3
+x <- simula_gauss(N, d, 1)
+w <- simula_gauss(1, d+1, 1)
+y <- apply(x, 1, function(x_i) 
+  crossprod(t(w),c(x_i,1))+rnorm(1,sd=sigma))
+wd_lamda <- sigma/N
+```
+
+```{r}
+regress_lin <- function(datos, label, weigth_decay = 1){
+  pseudo_inv <- pseudoinv(t(datos)%*%datos + 
+                            weigth_decay*diag(ncol(datos)))
+  return(pseudo_inv%*%t(datos)%*%label)
+}
+```
+
+
+```{r}
+coefs_rl_1 <- regress_lin(cbind(x,1), y, wd_lamda)
+```
+
+  a. Para $N \in \{ d+15, d+25, \dots, d+115\}$ calcular los errores $e_1, \dots, e_N$ de validación cruzada y $E_{cv}$.
+  
+```{r}
+for( N in seq(d+15, d+115, by=10) ){
+  x <- simula_gauss(N, d, 1)
+  w <- simula_gauss(1, d+1, 1)
+  y <- apply(x, 1, function(x_i)
+    crossprod(t(w),c(x_i,1))+rnorm(1,sd=sigma))
+  wd_lamda <- sigma/N
+  e <- vector(mode = "numeric", length = N)
+  for( n in 1:N ){
+    Dn = list('data'=cbind(x[1:N != rep(n,N),],1), 
+              'value'=y[1:N != rep(n,N)])
+    coefs <- regress_lin(Dn$data, Dn$value, wd_lamda)
+    e[n]= (y[n]-crossprod(coefs,c(x[n,],1)))^2
+  }
+  cat("For N=",N,"\t Ecv=",mean(e),"\n")
+}
+
+```
+
+
+  b. Repetir el experimento $10^3$ veces, anotando el promedio y la  varianza de $e_1$ , $e_2$ y $E_{cv}$ en todos los experimentos.
+  
+```{r, eval=FALSE}
+repetitions = 10**3
+for( N in seq(d+15, d+115, by=10) ){
+  e_1_vector = vector("numeric",length = repetitions)
+  e_2_vector = vector("numeric",length = repetitions)
+  E_N_vector = vector("numeric",length = repetitions)
+  for ( iter in 1:repetitions ){
+    x <- simula_gauss(N, d, 1)
+    w <- simula_gauss(1, d+1, 1)
+    y <- apply(x, 1, function(x_i)
+      crossprod(t(w),c(x_i,1))+rnorm(1,sd=sigma))
+    
+    wd_lamda <- sigma/N
+    
+    e <- vector(mode = "numeric", length = N)
+    for( n in 1:N ){
+      Dn = list('data'=cbind(x[1:N != rep(n,N),],1), 
+                'value'=y[1:N != rep(n,N)])
+      coefs <- regress_lin(Dn$data, Dn$value, wd_lamda)
+      e[n]= (y[n]-crossprod(coefs,c(x[n,],1)))^2
+    }
+    
+    e_1_vector[iter] = e[1]
+    e_2_vector[iter] = e[2]
+    E_N_vector[iter] = mean(e)
+  }
+  cat("For N=",N,
+      "\n\t e1=",mean(e_1_vector),
+      "\n\t e2=",mean(e_2_vector),
+      "\n\t Ecv=",mean(E_N_vector),"\n")
+}
+
+```
+  c. ¿Cuál debería de ser la relación entre el promedio de los valores de $e_1$ y el de los valores de $E_{cv}$? ¿y el de los valores de $e_2$? Argumentar la respuesta en base a los resultados de los experimentos.
+  
+  d. ¿Qué es lo que contribuye a la varianza de los valores de $e_1$?
+  
+  e. Si los errores de validación-cruzada fueran verdaderamente independientes, ¿cual sería la relación entre la varianza de los valores de $e_1$ y la varianza de los de $E_{cv}$ ?
+  
+  f. Una medida del número efectivo de muestras nuevas usadas en el cálculo de $E_{cv}$ es el cociente entre la varianza de $e_1$ y la varianza de $E_{cv}$ . Explicar por qué, y dibujar, respecto de $N$, el número efectivo de nuevos ejemplos($N_{ef f}$) como un porcentaje de $N$. NOTA: Debería de encontrarse que $N_{ef f}$ está cercano a $N$.
+  
+  g. Si se incrementa la cantidad de regularización, ¿debería $N_{ef f}$ subir o bajar?. Argumentar la respuesta. Ejecutar el mismo experimento con $\lambda = 2.5/N$ y comparar los
+resultados del punto anterior para verificar la conjetura.
+  
+### 2.- La técnica de validación cruzada da una estimación precisa de $\hat{E}_{out}(N - 1)$, pero puede ser demasiado inestable en problemas de selección de modelos. Una heurística común para regularizar validación cruzada en selección de modelos es usar una medida de su error $\sigma_{cv}(\mathcal{H})$.
+
+  a. Una elección para $\sigma_{cv}(\mathcal{H})$ es el uso de la desviación estandar de los errores por LOO ("leave-one-out") dividida por $\sqrt{N}$, $\sigma_{cv}(\mathcal{H}) \approx \frac{1}{\sqrt{N}} \sqrt{var(e_1, \dots, e_n)}$. ¿Por qué se divide por $\sqrt{N}$?
+  
+  b. Analizamos dos aproximaciones para la estimación:
+    i. Dado el mejor modelo $\mathcal{H}^\star$, la aproximación conservadora de $1-\sigma$ selecciona el modelo más simple a una distancia $\sigma_{cv}(\mathcal{H}^\star)$ del mejor.
+    ii. La aproximación que minimiza una cota selecciona el modelo que minimiza $E_{out}(\mathcal{H})+\sigma_{cv}(\mathcal{H})$.
+    
+Usar el diseño experimental del ejercicio sección 2.1 (sobreajuste) para comparar estas aproximaciones con la estimación "no regularizada" de validación cruzada. Para ello hacer lo siguiente:  
+      I. Fijar $Q_f=15,\ Q=20,\ \sigma = 1$.  
+      II. Aplicar cada una de las dos aproximaciones propuestas así como el estimador estándar de validación cruzada para seleccionar el valor óptimo del parámetro de regularización $\lambda$ en el conjunto $\{0.05, 0.1, 0.15, \dots,5\}$ usando regularización por "weight decay", $\Sigma(w) = \frac{\lambda}{N}w^Tw$.  
+      III. Dibujar el error fuera de la muestra para cada una de las técnicas, usando cada una de ellas como una función de $N$, con $N \in \{ 2 \times Q, 3 \times Q,  \dots,  10 \times Q,\}$. ¿Cuáles son sus conclusiones?.  
