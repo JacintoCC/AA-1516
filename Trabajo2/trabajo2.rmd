@@ -19,6 +19,7 @@ setwd("~/Documentos/Aprendizaje Automático/AA-1516/Trabajo2")
 
 
 ```{r}
+# Realiza una pausa durante la ejecución del código
 pause <- function(){
   cat("Pulse cualquier tecla")
   s <- scan()
@@ -28,29 +29,55 @@ pause <- function(){
 Como en la práctica 1 y para facilitar la visualización de los resultados, se incluye un método para dibujar funciones:
 
 ```{r}
-draw_function <- function(interval_x, interval_y, f, levels = 0, col = 1, 
-                          add = FALSE){
+# Función para pintar una función declarada de forma implícita en un
+# cierto intervalo
+# @param interval_x Extremo inicial del intervalo
+# @param interval_y Extremo final del intervalo
+# @param f Función declarada de forma implícita a representar
+# @param levels Niveles a pintar de la función. Por defecto, f = 0.
+# @param col Color en el que se pinta la función. Por defecto, negro.
+# @param add  Valor lógico que determina si la gráfica se añade al plot
+#             actual
+draw_function <- function(interval_x, interval_y, f, levels = 0, 
+                          col = 1, add = FALSE){
   x <- seq(interval_x[1],interval_x[2],length=1000)
   y <- seq(interval_y[1],interval_y[2],length=1000)
   z <- outer(x,y, f) # Matriz con los resultados de hacer f(x,y)
 
   # Levels = 0 porque queremos pintar f(x,y)=0
-  contour(x,y,z, levels=0, col = col, add = add)
+  contour(x,y,z, levels=0, col = col, add = add, drawlabels = FALSE,
+          ylab="", xlab="")
 }
 
+# Obtención de una función que recibe un vector como entrada
+# a partir de un hiperplano y devuelve el producto escalar con los
+# coeficientes del hiperplano.
+# @param vec Vector de coeficientes del hiperplano
+# @param change_signs Valor lógico que determina si debemos cambiar
+#                     el signo de los coeficientes del vector
+# @return función que realiza el producto escalar de un vector con 
+#         los coeficientes del hiperplano
 hypplane_to_func <- function( vec, change_signs = FALSE ){
   if(change_signs){
     vec[2:length(vec)] <- -vec[2:length(vec)]
   }
   f <- function(x){
-    return( vec[1]*x[1]+vec[2]*x[2]+vec[3]*x[3] )
+    # return( vec[1]*x[1]+vec[2]*x[2]+vec[3]*x[3] )
+    return( x %*% vec )
   }
   return(f)
 }
 
+# Obtención de una función que recibe coordenadas 2D como entrada
+# y devuelve el producto escalar con los coeficientes de una recta.
+# @param vec Vector de coeficientes de la recta
+# @param change_signs Valor lógico que determina si debemos cambiar
+#                     el signo de los coeficientes del vector
+# @return función que realiza el producto escalar de un vector con 
+#         los coeficientes del hiperplano
 vec3D_to_func2D <- function( vec, change_signs = FALSE ){
   if(change_signs){
-    vec[2:length(vec)] <- -vec[2:length(vec)]
+    vec[c(1,3)] <- -vec[c(1,3)]
   }
   f <- function(x,y){
     return( vec[1]*x+vec[2]*y+vec[3] )
@@ -61,9 +88,22 @@ vec3D_to_func2D <- function( vec, change_signs = FALSE ){
 ```
 
 
-### 1.- Gradiente Descendente. Implementar el algoritmo de gradiente descendiente.
+### 1.- Gradiente Descendente. Implementar el algoritmo de gradiente descendente.
 
 ```{r}
+# Método del gradiente descendente.
+# @param fun Función sobre la que aplicar método del gradiente descendente
+# @param v_ini Vector inicial
+# @param lr Tasa de aprendizaje
+# @param max_iterations Número máximo de iteraciones a realizar
+# @param dif  Diferencia entre dos iteraciones con la que determinamos si
+#             el método ha convergido
+# @param draw_iterations  Valor lógico que determina si dibujar el valor
+#                         de las iteraciones
+# @param print_iterations Valor lógico que determina si imprimir el valor
+#                         de las iteraciones
+# @return min Mínimo alcanzado
+# @return iterations Número de iteraciones realizadas
 gradientDescent <- function(fun, v_ini, lr, max_iterations, 
                             dif = 0, draw_iterations=FALSE, 
                             print_iterations=FALSE){
@@ -88,10 +128,11 @@ gradientDescent <- function(fun, v_ini, lr, max_iterations,
     values[iter]<- aux$value
     grad <-  aux$derivative_f
     
-    #Comprobamos si la diferencia entre dos iteraciones es menor a un umbral
+    # Comprobamos si la diferencia entre dos iteraciones es menor a un umbral
     if( abs(values[iter-1] - values[iter]) < dif){
       stopped <- TRUE
     }
+    # Imprimimos las iteraciones si se ha indicado así.
     if(print_iterations){
       cat("Iteration ",iter-1,"\n")
       print(w)
@@ -99,9 +140,9 @@ gradientDescent <- function(fun, v_ini, lr, max_iterations,
     }
     iter <- iter +1
   }
-  
+  # Dibujamos las iteraciones 
   if(draw_iterations){
-    plot(1:iter,values[1:iter])
+    plot(1:iter,values[1:iter], xlab=" ", ylab=" ")
   }
   
   return(list('min' = w, 'iterations' = iter-2))
@@ -115,17 +156,25 @@ gradientDescent <- function(fun, v_ini, lr, max_iterations,
 Debido a que es una función sencilla de derivar, lo incluimos directamente en la función en lugar de utilizar métodos numéricos de derivación:
 
   $$ w = (u,v); \quad \nabla E(w) = (\frac{\partial E}{\partial x},\frac{\partial E}{\partial y} )= 2(u e^v - 2v e^{-u})( e^v + 2 v e^{-u} , u e^v - 2 e^{-u})$$
+  
 ```{r}
+# Función E apartado 1a)
+# @param w Vector en 2D donde evaluamos la función
+# @return value Valor de la función en w
+# @return derivative_f Gradiente de f en w
 E_1a <- function(w){
   value <- (w[1]*exp(w[2]) - 2*w[2]*exp(-w[1]))^2
-  derivative_f<-c(2*(w[1]*exp(w[2])-2*w[2]*exp(-w[1]))*(exp(w[2])+ 2*w[2]*exp(-w[1])),
-                  2*(w[1]*exp(w[2])-2*w[2]*exp(-w[1]))*(w[1]*exp(w[2])- 2*exp(-w[1])))
+  derivative_f<-c(2*(w[1]*exp(w[2])-2*w[2]*exp(-w[1]))*
+                    (exp(w[2])+ 2*w[2]*exp(-w[1])),
+                  2*(w[1]*exp(w[2])-2*w[2]*exp(-w[1]))*
+                    (w[1]*exp(w[2])- 2*exp(-w[1])))
   return(list('value' = value, 'derivative_f'= derivative_f))
 }
 ```
 
 ```{r}
-results_1a <- gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, max_iterations = 15)
+results_1a <- gradientDescent(E_1a, v_ini = c(0,0.1), 
+                              lr = 0.1, max_iterations = 15)
 print(results_1a$iterations)
 print(results_1a$min)
 print(E_1a(results_1a$min)$value)
@@ -135,8 +184,7 @@ print(E_1a(results_1a$min)$value)
 
 ```{r}
 print(gradientDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, 
-                      max_iterations = 100, dif= 10^-14, 
-                      print_iterations = TRUE))
+                      max_iterations = 10, print_iterations = TRUE))
 ```
 
 Se comprueba que en la sexta iteración (séptima si contamos la evaluación del vector inicial) se obtiene un valor menor que $10^{-14}$
@@ -150,6 +198,11 @@ Se obtuvo $u=0.04864120$, $v=0.02621088$. No es el mínimo esperado, $(0,0)$, au
 
 Implementamos de nuevo la función y sus derivadas:
 ```{r}
+# Función E apartado 1b)
+# @param w Vector en 2D donde evaluamos la función
+# @return value Valor de la función en w
+# @return derivative_f Gradiente de f en w
+# @return hessian_f Matriz hessiana de f en w
 E_1b <- function(w){
   value <- w[1]^2 + 2*w[2]^2 + 2*sin(2*pi*w[1])*sin(2*pi*w[2])
   derivative_f <- c(2*w[1] + 4*pi*cos(2*pi*w[1])*sin(2*pi*w[2]),
@@ -157,8 +210,10 @@ E_1b <- function(w){
   hessian_f <- matrix(c(2 - 8*pi^2*cos(2*pi*w[1])*sin(2*pi*w[2]),
                         8*pi^2*cos(2*pi*w[1])*cos(2*pi*w[2]),
                         8*pi^2*cos(2*pi*w[1])*cos(2*pi*w[2]),
-                        4 - 8*pi^2*sin(2*pi*w[1])*sin(2*pi*w[2])),2,2,TRUE)
-  return(list('value' = value, 'derivative_f'= derivative_f, 'hessian_f'=hessian_f))
+                        4 - 8*pi^2*sin(2*pi*w[1])*sin(2*pi*w[2]))
+                      ,2,2,TRUE)
+  return(list('value' = value, 'derivative_f'= derivative_f,
+              'hessian_f' = hessian_f))
 }
 ```
 
@@ -167,7 +222,9 @@ E_1b <- function(w){
 
 ```{r}
 print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.01, 
-                      max_iterations = 50, draw_iterations = TRUE))
+                      max_iterations = 30, draw_iterations = TRUE))
+title(main="Grad. Desc. LR = 0.01", 
+      ylab = "Valor función", xlab = "Iteraciones")
 ```
 
 Con este valor de la tasa de aprendizaje la función converge a $0.5$.
@@ -175,6 +232,8 @@ Con este valor de la tasa de aprendizaje la función converge a $0.5$.
 ```{r}
 print(gradientDescent(E_1b, v_ini = c(1,1), lr = 0.1, 
                       max_iterations = 50, draw_iterations = TRUE))
+title(main="Grad. Desc. LR = 0.1", 
+      ylab = "Valor función", xlab = "Iteraciones")
 ```
 
 Con este valor de la tasa de aprendizaje, no existe la convergencia. Esto se debe a que la función tiene varios mínimos y máximos locales y la tasa de aprendizaje hace que el punto vaya de una región a otra, en lugar de, como en el caso anterior o en la primera función, converger hacia el mínimo más cercano.
@@ -195,6 +254,19 @@ Vemos como el mínimo es de entre los puntos es $-1.8$ y sin embargo un par de p
 ### 2. Coordenada descendente. En este ejercicio comparamos la eficiencia de la técnica de optimización de “coordenada descendente” usando la misma función del ejercicio 1.1a. En cada iteración, tenemos dos pasos a lo largo de dos coordenadas. En el Paso-1 nos movemos a lo largo de la coordenada $u$ para reducir el error (suponer que se verifica una aproximación de primer orden como en gradiente descendente), y el Paso-2 es para reevaluar y movernos a lo largo de la coordenada v para reducir el error ( hacer la misma hipótesis que en el paso-1). Usar una tasa de aprendizaje $\mu = 0.1$.
 
 ```{r}
+# Método de coordenada descendente.
+# @param fun Función sobre la que aplicar método de la coordenada descendente
+# @param v_ini Vector inicial
+# @param lr Tasa de aprendizaje
+# @param max_iterations Número máximo de iteraciones a realizar
+# @param dif  Diferencia entre dos iteraciones con la que determinamos si
+#             el método ha convergido
+# @param draw_iterations  Valor lógico que determina si dibujar el valor
+#                         de las iteraciones
+# @param print_iterations Valor lógico que determina si imprimir el valor
+#                         de las iteraciones
+# @return min Mínimo alcanzado
+# @return iterations Número de iteraciones realizadas
 coordinateDescent <- function(fun, v_ini, lr, max_iterations, 
                               dif = 0, draw_iterations=FALSE,
                               print_iterations=FALSE){
@@ -224,10 +296,13 @@ coordinateDescent <- function(fun, v_ini, lr, max_iterations,
     values[iter]<- aux$value
     grad_u <-  aux$derivative_f[1]
     
-    #Comprobamos si la diferencia entre dos iteraciones es menor a un umbral
+    # Comprobamos si la diferencia entre dos iteraciones es menor 
+    # a un umbral
     if( abs(values[iter-1] - values[iter]) < dif){
       stopped <- TRUE
     }
+    
+    # Mostramos el punto y su valor en la función en cada iteración
     if(print_iterations){
       cat("Iteration ",iter-1,"\n")
       print(w)
@@ -237,8 +312,9 @@ coordinateDescent <- function(fun, v_ini, lr, max_iterations,
     iter <- iter +1
   }
   
+  # Dibujamos las iteraciones si se ha indicado
   if(draw_iterations){
-    plot(1:iter,values[1:iter])
+    plot(1:iter,values[1:iter], ylab=" ", xlab=" ")
   }
   
   return(list('min' = w, 'iterations' = iter-2))
@@ -248,17 +324,32 @@ coordinateDescent <- function(fun, v_ini, lr, max_iterations,
 #### a) ¿Qué error E(u, v) se obtiene después de 15 iteraciones completas (i.e. 30 pasos) ?
 ```{r}
 min_2a <- coordinateDescent(E_1a, v_ini = c(0,0.1), lr = 0.1, 
-                            max_iterations = 15)$min
+                            max_iterations = 15, draw_iterations = TRUE)$min
+title(main="Coord. Desc. LR = 0.1", 
+      ylab = "Valor función", xlab = "Iteraciones")
 print(E_1a(min_2a)$value)
 ```
 
 #### b) Establezca una comparación entre esta técnica y la técnica de gradiente descendente.
 
-Obtenemos un error de $8.990612\cdot 10^{-20}$. Vemos como también se acerca al mínimo. Sin embargo, lo hace más lento que el método del gradiente descendiente, que en las mismas 15 iteraciones llegaba a un valor de $4.814825 \cdot 10^{-35}$. Esto se debe a que con la técnica del gradiente descendiente estamos bajando en ambas coordenadas por la mayor pendiente para cada punto, en lugar de bajar primero por la mayor pendiente para una dimensión, volver a evaluar, y bajar por la mayor pendiente para la otra dimensión.
+Obtenemos un error de $8.990612\cdot 10^{-20}$. Vemos como también se acerca al mínimo. Sin embargo, lo hace más lento que el método del gradiente descendente, que en las mismas 15 iteraciones llegaba a un valor de $4.814825 \cdot 10^{-35}$. Esto se debe a que con la técnica del gradiente descendente estamos bajando en ambas coordenadas por la mayor pendiente para cada punto, en lugar de bajar primero por la mayor pendiente para una dimensión, volver a evaluar, y bajar por la mayor pendiente para la otra dimensión.
 
 ### 3.- Método de Newton: Implementar el algoritmo de minimización de Newton y aplicarlo a la función $f(x,y)$ dada en el ejercicio 1b. Desarrolle los mismos experimentos usando los mismos puntos de inicio.
 
 ```{r}
+# Método de Newton.
+# @param fun Función sobre la que aplicar método de Newton
+# @param v_ini Vector inicial
+# @param lr Tasa de aprendizaje
+# @param max_iterations Número máximo de iteraciones a realizar
+# @param dif  Diferencia entre dos iteraciones con la que determinamos si
+#             el método ha convergido
+# @param draw_iterations  Valor lógico que determina si dibujar el valor
+#                         de las iteraciones
+# @param print_iterations Valor lógico que determina si imprimir el valor
+#                         de las iteraciones
+# @return min Mínimo alcanzado
+# @return iterations Número de iteraciones realizadas
 newtonMethod <- function(fun, v_ini, lr, max_iterations, dif = 0,
                          draw_iterations=FALSE,
                          print_iterations=FALSE){
@@ -283,10 +374,12 @@ newtonMethod <- function(fun, v_ini, lr, max_iterations, dif = 0,
     values[iter]<- aux$value
     increment <- solve(aux$hessian)%*%aux$derivative_f
     
-    #Comprobamos si la diferencia entre dos iteraciones es menor a un umbral
+    # Comprobamos si la diferencia entre dos iteraciones es menor 
+    # a un umbral
     if( abs(values[iter-1] - values[iter]) < dif){
       stopped <- TRUE
     }
+    # Mostramos el punto y su valor en la función en cada iteración
     if(print_iterations){
       cat("Iteration ",iter-1,"\n")
       print(w)
@@ -295,8 +388,9 @@ newtonMethod <- function(fun, v_ini, lr, max_iterations, dif = 0,
     iter <- iter +1
   }
   
+  # Dibujamos las iteraciones si se ha indicado
   if(draw_iterations){
-    plot(1:iter,values[1:iter])
+    plot(1:iter,values[1:iter], ylab=" ", xlab=" ")
   }
   
   return(list('min' = w, 'iterations' = iter-2))
@@ -309,6 +403,8 @@ newtonMethod <- function(fun, v_ini, lr, max_iterations, dif = 0,
 ```{r}
 print(newtonMethod(E_1b, v_ini = c(1,1), lr = 0.01, 
                    max_iterations =50, draw_iterations = TRUE))
+title(main = "Método de Newton", ylab = "Valor de la función",
+      xlab = "Iteraciones")
 ```
 
 Con este valor de la tasa de aprendizaje la función converge a $2.94$.
@@ -316,6 +412,8 @@ Con este valor de la tasa de aprendizaje la función converge a $2.94$.
 ```{r}
 print(newtonMethod(E_1b, v_ini = c(1,1), lr = 0.1, 
                    max_iterations = 50, draw_iterations = TRUE))
+title(main = "Método de Newton", ylab = "Valor de la función",
+      xlab = "Iteraciones")
 ```
 
 Con esta tasa de aprendizaje hay convergencia a $2.90$. Se comprueba que con este método es más difícil no quedarse en mínimos locales.
@@ -331,37 +429,50 @@ t(apply(vectors_min,1, function(x) E_1b(x)$value))
 
 #### b) Extraer conclusiones sobre las conductas de los algoritmos comparando la curva de decrecimiento de la función calculada en el apartado anterior y la correspondiente obtenida con gradiente descendente.
 
-La conclusión que se puede obtener es que este método garantiza también para una mayor tasa de aprendizaje la convergencia a un mínimo. Sin embargo, el hecho de que tenga en cuenta la matriz hessiana hace que el punto se mueva según la forma de la función, no sólo con respecto a la máxima pendiente.
+La conclusión que se puede obtener es que este método garantiza también para una mayor tasa de aprendizaje la convergencia a un mínimo. Sin embargo, el hecho de que tenga en cuenta la matriz hessiana hace que el punto se mueva según la forma de la función, no sólo con respecto a la máxima pendiente, con lo que se garantiza la convergencia a un mínimo local. En este caso en todos los puntos se ha convergido al mínimo local más cercano, siendo valores mayores que los puntos a los que convergía en el apartado previo.
 
 ### 4. Regresión Logística: En este ejercicio crearemos nuestra propia función objetivo $f$ (probabilidad en este caso) y nuestro conjunto de datos $\mathcal{D}$ para ver cómo funciona la regresión logística. Supondremos por simplicidad que $f$ es una probabilidad con valores $\{0,1\}$ y por tanto que $y$ es una función determinista de $x$.
 
-$\textit{Consideremos $d = 2$ para que los datos sean visualizables, y sea $\mathcal{X} = [-1, 1] \times [-1,1]$ con probabilidad uniforme de elegir cada $x \in \mathcal{X}$. Elegir una línea en el plano como la frontera entre $f(x) = 1$ (donde $y$ toma valores $+1$) y $f(x) = 0$ (donde $y$ toma valores $-1$), para ello seleccionar dos puntos aleatorios del plano y calcular la línea que pasa por ambos.}$  
-Seleccionar $N =100$ puntos aleatorios $\{x_n\}$ de $\mathcal{X}$ y evaluar las respuestas de todos ellos $\{y_n\}$ respecto de la frontera elegida.  
+* Consideremos $d = 2$ para que los datos sean visualizables, y sea $\mathcal{X} = [-1, 1] \times [-1,1]$ con probabilidad uniforme de elegir cada $x \in \mathcal{X}$. Elegir una línea en el plano como la frontera entre $f(x) = 1$ (donde $y$ toma valores $+1$) y $f(x) = 0$ (donde $y$ toma valores $-1$), para ello seleccionar dos puntos aleatorios del plano y calcular la línea que pasa por ambos.*
+*Seleccionar $N =100$ puntos aleatorios $\{x_n\}$ de $\mathcal{X}$ y evaluar las respuestas de todos ellos $\{y_n\}$ respecto de la frontera elegida.*
 
 Para este apartado usaré las funciones de la práctica 1 $\texttt{simula\_unif}$ y $\texttt{simula\_recta}$:  
 
 ```{r}
+# Obtención de una muestra de datos de una distribución uniforme de 
+# varias dimensiones
+# @param N  Número de datos de la muestra
+# @param dim  Dimensión de la muestra
+# @param rango  Rango de las dimensiones donde tomar la muestra
+# @return muestra Muestra generada
 simula_unif <- function(N, dim, rango){
   # Tomamos N*dim muestras de una uniforme de rango dado
-  lista <- matrix(runif(N*dim, min =  rango[1], max = rango[2]), N, dim)
-  return(lista)
+  muestra <- matrix(runif(N*dim, min =  rango[1], max = rango[2]), N, dim)
+  return(muestra)
 }
 
+# Obtención de una recta aleatoria (función lineal en 2D)
+# @param  intervalo Intervalo donde se generan dos puntos con los que se
+#         calculan los parámetros de la recta
+# @return f Recta
 simula_recta <- function(intervalo){
   puntos <- simula_unif(2,2,intervalo)
   a <- (puntos[2,2]-puntos[1,2])/(puntos[2,1]-puntos[1,1])
   b <- puntos[1,2] - a * puntos[1,1]
 
-  f <- vec3D_to_func2D(c(a,1,b), change_signs=TRUE)
+  f <- vec3D_to_func2D(c(a,1,b))
   return(f)
 }
 ```
 
+  Se genera una recta, una muestra uniforme de 100 puntos y se etiquetan según el signo que le corresponda con respecto a la recta:
+  
 ```{r}
 N <- 100
 recta_4a <- simula_recta(c(-1,1))
 muestra_4a <- simula_unif(N, 2, c(-1, 1))
-etiquetas_4a <- apply(muestra_4a, 1, function(X) sign(recta_4a(X[1],X[2])))
+etiquetas_4a <- apply(muestra_4a, 1, 
+                      function(X) sign(recta_4a(X[1],X[2])))
 ```
 
 #### a) Implementar Regresión Logística (RL) con Gradiente Descendente Estocástico (SGD) bajo las siguientes condiciones:
@@ -374,8 +485,21 @@ etiquetas_4a <- apply(muestra_4a, 1, function(X) sign(recta_4a(X[1],X[2])))
 
 Implementación del descenso del gradiente estocástico:
 ```{r}
+# Norma euclídea
+# @param x Vector
+# @return Norma euclídea del vector.
 norm_v <- function(x) sqrt(sum(x^2))
 
+# Método de gradiente descendiente estocástico
+# @param datos Datos clasificados de una población
+# @param valores  Etiquetas de los datos
+# @param max_iter Número máximo de iteraciones
+# @param vini Vector inicial
+# @param lr Tasa de aprendizaje
+# @param draw_iterations Valor lógico que determina si se dibuja cada
+#         iteración
+# @return hiperplane Hiperplano obtenido
+# @return iterations Iteraciones realizadas del método
 SGD <- function(datos, valores, max_iter, vini= c(0,0,0), 
                 lr = 0.01, draw_iterations = FALSE){
   sol <- vini
@@ -400,7 +524,8 @@ SGD <- function(datos, valores, max_iter, vini= c(0,0,0),
     if(draw_iterations){
       draw_function(c(-1,1), c(-1,1), vec3D_to_func2D(sol), 
                     col = 4)
-      title(main=paste("Iteración ", iter,sep=" "))
+      title(main=paste("Iteración ", iter,sep=" "), ylab ="Eje Y",
+            xlab = "Eje X")
       points(datos[,1], datos[,2], col = (valores+2))
       Sys.sleep(0.5)
     }
@@ -408,10 +533,11 @@ SGD <- function(datos, valores, max_iter, vini= c(0,0,0),
     iter <- iter+1
   }
 
-  #Normalizamos la solución.
+  # Normalizamos la solución.
   sol <- sol/sol[length(sol)-1]
 
-  #Devolvemos el hiperplano obtenido y el número de iteraciones realizadas
+  # Devolvemos el hiperplano obtenido y el número 
+  # de iteraciones realizadas
   return( list( hyperplane = sol, iterations = iter))
 }
 
@@ -419,43 +545,51 @@ SGD <- function(datos, valores, max_iter, vini= c(0,0,0),
 
 Cálculo de la función $g$ mediante la regresión logística:
 ```{r}
-sol_4a <- SGD(muestra_4a, etiquetas_4a, 15000)
+sol_4a <- SGD(muestra_4a, etiquetas_4a, 1000)
 g_4a <- vec3D_to_func2D(sol_4a$hyperplane)
 draw_function(c(-1,1),c(-1,1), g_4a)
 points(muestra_4a[,1],muestra_4a[,2],col=etiquetas_4a+3)
 print(sol_4a$iterations)
 ```
 
+Se observa que el método ha tardado 366 iteraciones en converger, pero con un buen resultado. Observando la ejecución del algoritmo se comprueba que las últimas iteraciones apenas tienen variaciones y también son buenas soluciones, con lo que podríamos pensar si reducir la diferencia entre iteraciones para considerar que se ha convergido.
 
-#### b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ (el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
+
+#### b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ usando para ello un número suficientemente grande de nuevas muestras.
 
 Generamos una muestra aleatoria, la etiquetamos según la función aleatoria y según la función obtenida de la regresión logística:
 
 ```{r}
-  muestra_4a_out <- simula_unif(N, 2, c(-1,1))
-  etiquetas_4a_out <- apply(muestra_4a_out, 1, 
-                            function(X) sign(recta_4a(X[1],X[2])))
-  
-  # Etiquetado según la regresión
-  rl_etiqueta_4a_out <- apply(muestra_4a_out, 1, function(X) sign(g_4a(X[1],X[2])))
+muestra_4a_out <- simula_unif(N, 2, c(-1, 1))
+etiquetas_4a_out <- apply(muestra_4a_out, 1, 
+                          function(X) sign(recta_4a(X[1],X[2])))
 
-  # Cálculo del error fuera de la muestra usada para la regresión
-  E_out <- sum(etiquetas_4a_out != rl_etiqueta_4a_out)/N*100
+# Etiquetado según la regresión
+rl_etiqueta_4a_out <- apply(muestra_4a_out, 1, 
+                            function(X) sign(g_4a(X[1],X[2])))
+
+# Cálculo del error fuera de la muestra usada para la regresión
+E_out <- sum(etiquetas_4a_out != rl_etiqueta_4a_out)/N*100
 ```
 
 #### c) Repetir el experimento 100 veces con diferentes funciones frontera y calcule el promedio. 
 
 ```{r}
-E_out_4c <- vector(mode="numeric", length = N)
+# Vector con los errores en cada iteración
+E_out_4c <- vector(mode="numeric", length = 100)
 
 for( i in 1:100){
+  # Generación de los datos para cada iteración
   recta_4c <- simula_recta(c(-1,1))
   muestra_4c <- simula_unif(N, 2, c(-1, 1))
-  etiquetas_4c <- apply(muestra_4c, 1, function(X) sign(recta_4c(X[1],X[2])))
+  etiquetas_4c <- apply(muestra_4c, 1, 
+                        function(X) sign(recta_4c(X[1],X[2])))
   
+  # Estimación de la función
   sol_4c <- SGD(muestra_4c, etiquetas_4c, 1000)$hyperplane
   g_4c <- vec3D_to_func2D(sol_4c)
   
+  # Etiquetado según el signo de la recta
   muestra_4c_out <- simula_unif(N, 2, c(-1,1))
   etiquetas_4c_out <- apply(muestra_4c_out, 1, 
                             function(X) sign(recta_4c(X[1],X[2])))
@@ -498,30 +632,48 @@ pixels_test <- array(t(datos_test[,2:257]), dim=c(16,16,nrow(datos_test)))
 Cálculo de la simetría vertical y la media de la intensidad.
 
 ```{r}
+# Cálculo de la simetría vertical dada una matriz
+# @param M matriz
+# @return Simetría vertical
 simetria_vertical <- function(M){
   -sum(apply(M, 1, function(x) sum(abs(x-x[length(x):1]))))
 }
 
-
+# Cálculo de las medias para cada imagen de test y train
 means_train <- apply(pixels_train, 3, mean)
 means_test <- apply(pixels_test, 3, mean)
 
+# Cálculo de la simetría vertical para cada imagen de test y train
 sim_vertical_train <- apply(pixels_train,3,simetria_vertical)
 sim_vertical_test <- apply(pixels_test,3,simetria_vertical)
 ```
 
 *Plantear un problema de clasificación binaria que considere el conjunto de entrenamiento como datos de entrada para aprender la función $g$. Usando el modelo de Regresión Lineal para clasificación seguido por PLA-Pocket como mejora. Responder a las siguientes cuestiones.*
 
-Este problema consiste en, a partir de los datos de $\textit{train}$, obtener una función mediante regresión lineal y PLA que nos separe los datos, y ver su tasa de acierto en el conjunto de test. Incluimos las funciones de la primera práctica para hacer regresión lineal y el algoritmo PLA modificado:
+Este problema consiste en, a partir de los datos de $\textit{train}$, obtener una función mediante regresión lineal y PLA que nos separe los datos, y ver su tasa de acierto en el conjunto de test. Incluimos las funciones de la primera práctica para hacer regresión lineal y el algoritmo PLA modificado:sapply(x, function(y) crossprod(coefs_g10, y^(0:20)))
 
 ```{r}
-count_errors <- function(f, datos, label){
+# Conteo de errores según el etiquetado de una función y las etiquetas reales
+# @param f Función que realizará el etiquetado
+# @param data Datos a etiquetar
+# @param label Etiquetas originales
+# @return Número de datos erróneamente etiquetados por f
+count_errors <- function(f, data, label){
   #Conteo de errores
-  signs <- apply(datos, 1, function(x) return(sign(f(c(x,1)))))
+  signs <- apply(data, 1, function(x) return(sign(f(c(x,1)))))
   return( sum(signs != label) )
 }
 
-ajusta_PLA_MOD <- function(datos, label, max_iter, vini, 
+# Método PLA Pocket
+# @param data Datos sobre los que se realiza el método PLA
+# @param label Etiqueta de estos datos
+# @param max_iter Número máximo de iteraciones
+# @param vini Vector inicial
+# @param draw_iterations Valor lógico que determina si se van dibujando
+#         las iteraciones
+# @return hyperplane Hiperplano solución obtenido
+# @return iterations Número de iteraciones
+ajusta_PLA_MOD <- function(data, label, max_iter, vini, 
                            draw_iterations = FALSE){
   sol <- vini
   iter <- 0
@@ -530,12 +682,12 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini,
 
   while ( iter < max_iter && changed){
     # Comprobaremos en cada vuelta si hemos hecho algún cambio
-    current_errors <- count_errors(hypplane_to_func(sol), datos, label )
+    current_errors <- count_errors(hypplane_to_func(sol), data, label )
     changed <- FALSE
 
-    for( inner_iter in 1:nrow(datos) ){
+    for( inner_iter in 1:nrow(data) ){
       # Añadimos coeficiente independiente
-      x <- c(datos[inner_iter,],1)
+      x <- c(data[inner_iter,],1)
 
       if( sign(crossprod(x,current_sol)) != label[inner_iter]){
         current_sol <- current_sol + label[inner_iter] * x
@@ -543,6 +695,7 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini,
       }
     }
 
+    # Dibujo de la solución actual y la mejor encontrada.
     if(draw_iterations){
       draw_function(c(-50,50), c(-50,50),vec3D_to_func2D(sol), col = 4)
       draw_function(c(-50,50), c(-50,50),vec3D_to_func2D(current_sol),
@@ -552,8 +705,9 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini,
       Sys.sleep(0.5)
     }
 
+    # Actualización de la mejor solución encontrada.
     if( current_errors >= count_errors(hypplane_to_func(current_sol),
-                                       datos, label )){
+                                       data, label )){
       sol <- current_sol
     }
 
@@ -564,25 +718,32 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini,
   return( list( hyperplane = sol, iterations = iter))
 }
 
+# Pseudoinversa de una matriz
+# @param X  Matriz de la que queremos calcular la pseudoinversa
+# @return matriz pseudoinversa de X
 pseudoinv <- function(X){
   desc <- svd(X)
   d <- round(desc$d, digits=5)
-  d[abs(d)>0] <- 1/d[abs(d)>0]
-  pseudo_inv <- desc$v %*% diag(d) %*% t(desc$u)
+  d[abs(d)>0] <- 1/d[abs(d)>0]^2
+  pseudo_inv <- desc$v %*% diag(d) %*% t(desc$v)
   return(pseudo_inv)
 }
 
+# Regresión lineal para ajustar unos datos a unos valores
+# @param datos Datos sobre los que se realiza la regresión lineal.
+# @param label Valores a los que ajustar la regresión.
+# @return Coeficientes obtenidos por la regresión lineal-
 regress_lin <- function(datos, label){
-  pseudo_inv <- pseudoinv(t(datos)%*%datos)
+  pseudo_inv <- pseudoinv(datos)
   return(pseudo_inv%*%t(datos)%*%label)
 }
 ```
 
-
+  Se asignan las etiquetas y se calculan los coeficientes en primer lugar por regresión, y en segundo lugar pasando por el PLA Pocket, que acaba rápidamente debido a que ya el vector obtenido por regresión es prácticamente la solución. 
 ```{r}
 label_5 <- numeric(length(number_train))
-label_5[number_train==1] <- -1
-label_5[number_train==5] <- 1
+label_5[number_train==1] <- 1
+label_5[number_train==5] <- -1
 
 coefs_rl_5 <- regress_lin(cbind(means_train,sim_vertical_train,
                                 rep(1,length(means_train))),
@@ -608,6 +769,8 @@ points(data_list_train$mean, data_list_train$v_symmetry, col = data_list_train$c
 title(main="Datos Train")
 ```
 
+  Observamos que la solución obtenida por regresión es la misma que devuelve el PLA Pocket (las líneas están superpuestas). La solución obtenida es la esperable observando los datos y no se puede obtener una solución mejor debido a que los datos no son separables linealmente.
+
 ```{r}
 n_test_colors <- numeric(length(number_test))
 n_test_colors[which(number_test==1)] <- 4
@@ -621,23 +784,28 @@ points(data_list_test$mean, data_list_test$v_symmetry, col = data_list_test$colo
 title(main="Datos Test")
 ```
 
+  Observando los datos de test, vemos que los datos de entrenamiento hacen obtener una buena solución, pues estos datos tampoco son separables linealmente y sí clasifica bien.
 
 #### b) Calcular $E_{in}$ y $E_{test}$ (error sobre los datos de test).
 
 ```{r}
-E_in_5b = count_errors(hypplane_to_func(coefs_5,TRUE),
+E_in_5b = count_errors(hypplane_to_func(coefs_5),
                        cbind(means_train, sim_vertical_train), 
                        label_5)/length(number_train)
 
 label_test_5 <- numeric(length(number_test))
-label_test_5[number_test==1] <- -1
-label_test_5[number_test==5] <- 1
+label_test_5[number_test==1] <- 1
+label_test_5[number_test==5] <- -1
 
-E_test_5b = count_errors(hypplane_to_func(coefs_5,TRUE),
+E_test_5b = count_errors(hypplane_to_func(coefs_5),
                          cbind(means_test, sim_vertical_test),
                          label_test_5)/length(number_test)
+
+cat("Ein: \t",E_in_5b,
+    "\nEtest: \t", E_test_5b)
 ```
 
+Se observa que el error obtenido en los datos de entrenamiento es del orden de $0.1\%$ y que el error en los datos de test es de $4\%$. Esto se debe a que sólo hubo un dato en train que no se pudiera clasificar, en cambio hay menos datos de train y dos valores no clasificables.
 
 #### c) Obtener cotas sobre el verdadero valor de $E_{out}$. Pueden calcularse dos cotas una basada en $E_{in}$ y otra basada en $E_{test}$. Usar una tolerancia $\delta = 0.05$. ¿Qué cota es mejor?
 
@@ -650,7 +818,7 @@ $$ E_{out}(g) \leq E_{in}(g) +
   $N=599$, luego
   $$E_{out}(g) \leq E_{in}(g) + 
      \sqrt{\frac{8}{599}\log \frac{4 (2\cdot 599)^3}{0.05}}$$
-  $$ E_{out}(g) \leq 0.0951586 + 0.5852643 = 0.6804229$$
+  $$ E_{out}(g) \leq 0.00169449 + 0.5852643 = 0.5869337$$
   
   Para obtener la cota basada en $E_{test}$ usamos la desigualdad de Hoeffding con una hipótesis, que será la producida por los datos de entrenamiento:
   
@@ -661,7 +829,7 @@ $$ E_{out}(g) \leq E_{in}(g) +
   $$ \mathbb{P}(\vert E_{test}(g) − E_{out}(g) \vert \ge \varepsilon) \leq 
         2 e^{-2\varepsilon^2N}= 0.05 $$
   
-  Despejando llegamos a  $\varepsilon = 0.194$. Por tanto, con probabilidad $0.95$, $\vert E_{test}(g) − E_{out}(g) \vert \le 0.194$. Esto significa que  $E_{out}(g) \leq E_{test}(g) + 0.194 = 0.2960553$.  
+  Despejando llegamos a  $\varepsilon = 0.194$. Por tanto, con probabilidad $0.95$, $\vert E_{test}(g) − E_{out}(g) \vert \le 0.194$. Esto significa que  $E_{out}(g) \leq E_{test}(g) + 0.194 = 0.2348163$.  
   
   Llegamos por tanto a una mejor cota de $E_{out}$
   
@@ -688,13 +856,14 @@ estimated_f_5d <- function(x,y){
 } 
 ```
 
-Mostramos la gráfica obtenida con la regresión lineal
+Mostramos la gráfica obtenida con la regresión lineal para los datos de entrenamiento y los datos de test:
 
 ```{r}
 draw_function(c(-1,0.2),c(-260,10),estimated_f_5d, col=4)
 points(data_list_train$mean, data_list_train$v_symmetry,
        col = data_list_train$colors)
 ```
+
 ```{r}
 draw_function(c(-1,0.2),c(-260,10),estimated_f_5d, col=4)
 points(data_list_test$mean, data_list_test$v_symmetry, 
@@ -703,7 +872,7 @@ points(data_list_test$mean, data_list_test$v_symmetry,
 
 Contamos los errores en los datos de entrenamiento y en los datos de test:
 ```{r}
-E_in_5d = count_errors(hypplane_to_func(coefs_rl_5d,TRUE),
+E_in_5d = count_errors(hypplane_to_func(coefs_rl_5d),
                        data_transf_5d, 
                        label_5)/length(number_train)
 
@@ -713,9 +882,12 @@ data_transf_test_5d <- cbind(means_test, sim_vertical_test,
                         means_test^3,sim_vertical_test^3,
                         means_test^2*sim_vertical_test,means_test*sim_vertical_test^2)
 
-E_test_5d = count_errors(hypplane_to_func(coefs_rl_5d,TRUE),
+E_test_5d = count_errors(hypplane_to_func(coefs_rl_5d),
                          data_transf_test_5d,
                          label_test_5)/length(number_test)
+
+cat("Ein: \t",E_in_5d,
+    "\nEtest: \t", E_test_5d)
 ```
 
 Ahora calculamos las cotas para $E_{out}$ de la misma manera que antes:
@@ -726,16 +898,16 @@ La dimensión es $\frac{Q(Q+3)}{2}+1$, para nuestro caso, $d_{VC}=10$ y entonces
   $N=599$, luego
   $$E_{out}(g) \leq E_{in}(g) + 
      \sqrt{\frac{8}{599}\log \frac{4 ((2\cdot 599)^{10}+1)}{0.05}}$$
-  $$ E_{out}(g) \leq  0.1285476 +1.002608 = 1.131156$$
+  $$ E_{out}(g) \leq  0.001669449 +1.002608 = 1.004277$$
   Pero esta cota sobrepasa 1, con lo que no nos aporta información. Miraremos ahora con la cota obtenida con $E_{test}$. Volvemos a usar la desigualdad de Hoeffding:
   
   $$ \mathbb{P}(\vert E_{in}(g)−E_{out}(g) \vert \ge \varepsilon)\leq 2 e^{-2\varepsilon^2N} $$
   
-  Despejamos de nuevo $\varepsilon$ y llegamos a  $\varepsilon = 0.194$. Por tanto, con probabilidad $0.95$, $\vert E_{test}(g) − E_{out}(g) \vert \le 0.194$. Esto significa que  $E_{out}(g) \leq E_{test}(g) + 0.194 = 0.3368571$.
+  Despejamos de nuevo $\varepsilon$ y llegamos a  $\varepsilon = 0.194$. Por tanto, con probabilidad $0.95$, $\vert E_{test}(g) − E_{out}(g) \vert \le 0.194$. Esto significa que  $E_{out}(g) \leq E_{test}(g) + 0.194 = 0.2348163$.
   
 #### e) Si tuviera que usar los resultados para dárselos a un potencial cliente, ¿usaría la transformación polinómica? Explicar la decisión.
 
-  No usaría la transformación polinómica, pues añade demasiada complejidad a un modelo que, a la vista de los resultados, se puede resolver con el modelo lineal. Como vemos, las cotas son mayores para el caso con la transformación cúbica e incluso para hallar la cota sólo en función del error dentro de la muestra, nos da un error mayor que 1.
+  No usaría la transformación polinómica, pues añade demasiada complejidad a un modelo que, a la vista de los resultados, se puede resolver con el modelo lineal. Como vemos, la cota usando la dimensión de Vapnik-Chervonenkis es menor para el modelo lineal, y con la transformación cúbica no se reduce el error en el test, luego la cota es la misma. Por tanto, no hay ningún dato que sea clasificado por el modelo cúbico y no por el lineal, así que no hay razón para preferir uno más complejo.
   
   
 # B - SOBREAJUSTE
@@ -765,21 +937,21 @@ lagrange_poly <- function(x,k){
   l_poly <- vector(mode="numeric", length = k+1)
   l_poly[1] <- 1
   l_poly[2] <- x
-  
+
   for( i in 2:k){
-    l_poly[i+1] <- (2*i-1)/i*x*l_poly[i] - 
+    l_poly[i+1] <- (2*i-1)/i*x*l_poly[i] -
       (i-1)/i*l_poly[i-1]
   }
-  
+
   return( l_poly )
 }
 ```
 
 Definimos los valores usados para el experimento.
 ```{r}
-Q_f <- 20
-N <- 7
-sigma <- 0.1
+Q_f <- 3
+N <- 10
+sigma <- 0.2
 ```
 
 Generamos los coeficientes $a_q$:
@@ -795,14 +967,14 @@ Para calcular $g_2$ y $g_{10}$, hacemos regresión lineal sobre los datos.
 
 ```{r}
 coefs_g2 <- regress_lin(t(sapply(x,function(i) i^(0:2))), y)
-coefs_g10 <- regress_lin(t(sapply(x,function(i) i^(0:10))), y)
+coefs_g10 <- regress_lin(t(sapply(x,function(i) i^(0:20))), y)
 
 g2 <- function(x){
   sapply(x, function(y) crossprod(coefs_g2, y^(0:2)))
 }
 
 g10 <- function(x){
-  sapply(x, function(y) crossprod(coefs_g10, y^(0:10)))
+  sapply(x, function(y) crossprod(coefs_g10, y^(0:20)))
 }
 
 plot(seq(-1,1,by=0.01), sapply(seq(-1,1,by=0.01), f_obj), type ="l", col=4)
@@ -814,7 +986,7 @@ points(x,y)
 
 b. ¿Por qué normalizamos $f$? (Ayuda: interpretar el significado de $\sigma$)
 
-$\sigma$ representa el peso del error introducido en los datos. La normalización de los datos de $f$ se realiza para reducir la variabilidad de los datos (especialmente en los extremos, donde se ve más la influencia de las mayores potencias o los polinomios de legendre de mayor grado).
+$\sigma$ representa el peso del error introducido en los datos. La normalización de los datos de $f$ se realiza para reducir la variabilidad de los datos (especialmente en los extremos, donde se ve más la influencia de las mayores potencias.
 
 
 c. ¿Cómo podemos obtener $E_out$ analíticamente para una $g_{10}$ dada?
@@ -822,16 +994,66 @@ c. ¿Cómo podemos obtener $E_out$ analíticamente para una $g_{10}$ dada?
 La forma de obtener $E_out$ será, dada $g_{10}$, calcular $\mathbb{E}_x[( g_{10}(x) -f(x) )^2]$. Esto es, calcular el error fuera de la muestra, con varianza igual a 0, ya que $g_{10}$ es fijo. Vemos el error para la $g_{10}$ obtenida:
 
 ```{r}
-integrate(function(x) (g10(x)-f_obj(x))^2,-1,1,subdivisions = 10000L)
+cat( "Error g10:\t", 
+     integrate(function(x) (g10(x)-f_obj(x))^2,-1,1,
+               subdivisions = 10000L)$value)
+cat( "Error g2:\t", 
+     integrate(function(x) (g2(x)-f_obj(x))^2,-1,1,
+               subdivisions = 10000L)$value)
 ```
 
 
-### Siguiendo con el punto anterior, generar múltiples combinaciones de $Q_f, N, \sigma$ y para cada combinación de parámetros ejecutar un número grande de experimentos $(>1000)$ calculando en cada caso $E_out(g_2)$ y $E_out(g_{10})$. Promediar todos los valores de error obtenidos para cada conjunto de hipótesis, es decir
+### 2. Siguiendo con el punto anterior, generar múltiples combinaciones de $Q_f, N, \sigma$ y para cada combinación de parámetros ejecutar un número grande de experimentos $(>100)$ calculando en cada caso $E_out(g_2)$ y $E_out(g_{10})$. Promediar todos los valores de error obtenidos para cada conjunto de hipótesis, es decir
 
 $$E_{out}(\mathcal{H_2}) = 
   \textit{promedio sobre experimentos}( E_{out}(g_2) )$$
 $$E_{out}(\mathcal{H_{10}}) = 
   \textit{promedio sobre experimentos}( E_{out}(g_{10}) )$$
+  
+  Establecemos los parámetros dados:
+  
+```{r}
+Q_f <- 20
+N <- 50
+sigma <- 1
+```
+
+  Realizamos 150 experimentos y obtenemos los datos referentes a los errores obtenidos con $g_2$ y $g_{10}$:
+  
+```{r}
+error_g2 = vector(mode = "numeric", length = 150)
+error_g10 =vector(mode = "numeric", length = 150)
+
+for(i in 1:150){
+  a_Q <- rnorm(Q_f+1)/sqrt(sum(1/(2*(0:Q_f)+1)))
+  f_obj <- function(x){  sapply(x, function(y) crossprod(a_Q,
+                                          lagrange_poly(y,Q_f))) }
+  x <- runif(N, min=-1, max=1)
+  y <- f_obj(x) + sigma*rnorm(N)
+  coefs_g2 <- regress_lin(t(sapply(x,function(i) i^(0:2))), y)
+  coefs_g10 <- regress_lin(t(sapply(x,function(i) i^(0:10))), y)
+  
+  g2 <- function(x){
+    sapply(x, function(y) crossprod(coefs_g2, y^(0:2)))
+  }
+  
+  g10 <- function(x){
+    sapply(x, function(y) crossprod(coefs_g10, y^(0:10)))
+  }
+  
+  error_g10[i] <- integrate(function(x) (g10(x)-f_obj(x))^2,
+                            -1,1,subdivisions = 100L)$value
+  error_g2[i]  <- integrate(function(x)  (g2(x)-f_obj(x))^2,
+                          -1,1,subdivisions = 100L)$value
+}
+```
+
+```{r}
+cat("Error medio en g10=\t", mean(error_g10))
+cat("Error medio en g2=\t", mean(error_g2))
+```
+
+  
   
   **Definimos una medida de sobreajuste como $E_{out}(g_{10}) - E_{out}(g_2)$**
   
@@ -840,13 +1062,17 @@ $$E_{out}(\mathcal{H_{10}}) =
 Esta medida puede medir el sobreajuste debido a que se trata de la diferencia entre $E_{out}(\mathcal{H}_{10})$ y $E_{out}(\mathcal{H}_{2})$, es decir, cuánto más hay de error al suponer la función objetivo está en $\mathcal{H}_{10}$ que suponer sólo que está en $\mathcal{H}_{2}$. Necesariamente el error dentro de la muestra será mejor o al menos igual de bueno para las funciones en $\mathcal{H}_{10}$ que en $\mathcal{H}_{2}$. Si hemos seleccionado el modelo $\mathcal{H}_{10}$ y la función pertenece a un espacio más pequeño, existirá ruido determinista.
 
   b. ¿Bajo qué condiciones esta medida es significativamente positiva (i.e. sobreajuste alto) y lo opuesto, significativamente negativa? Usar los valores $Q_f \in \{1,2, \dots, 100\},\ N \in \{20, 25, \dots,100\},\ \sigma \in \{0, 0.05, 0.1, \dots, 2\}$. Explicar lo que se observa.
-  
+
+Tomaremos menos datos para que dé tiempo a ejecutarse:
+
 ```{r}
 Q_f = seq(1,100,by=9)
-N = seq(20,100,by=5)
-sigma = seq(0, 2, by=0.1)
+N = seq(20,100,by=10)
+sigma = seq(0, 2, by=0.5)
 ```
 
+  Otra forma de tomar el error es ver la diferencia entre la función objetivo y la función estimada en ciertos puntos y sumarlo. Definimos una función para obtener la suma de la diferencia entre las funciones en varios puntos. 
+  
 ```{r}
 getEout <- function(f_obj, f, range = c(-1,1)){
   E_out = 0
@@ -958,32 +1184,54 @@ simula_gauss <- function(N, dim, sigma){
 }
 
 N <- 100
-sigma <- 0.05
+sigma <- 0.5
 d <- 3
 x <- simula_gauss(N, d, 1)
 w <- simula_gauss(1, d+1, 1)
 y <- apply(x, 1, function(x_i) 
   crossprod(t(w),c(x_i,1))+rnorm(1,sd=sigma))
-wd_lamda <- sigma/N
+wd_lamda <- 0.05/N
 ```
 
 ```{r}
-regress_lin <- function(datos, label, weigth_decay = 1){
-  pseudo_inv <- pseudoinv(t(datos)%*%datos + 
+regress_wd <- function(datos, label, weigth_decay = 0){
+  inv <- solve(t(datos)%*%datos + 
                             weigth_decay*diag(ncol(datos)))
-  return(pseudo_inv%*%t(datos)%*%label)
+  return(inv%*%t(datos)%*%label)
 }
 ```
 
 
 ```{r}
-coefs_rl_1 <- regress_lin(cbind(x,1), y, wd_lamda)
+coefs_rl_1 <- regress_wd(cbind(x,1), y, wd_lamda)
+e <- vector(mode = "numeric", length = N)
+for( n in 1:N ){
+  e[n]= (y[n]-crossprod(coefs_rl_1,c(x[n,],1)))^2
+}
+cat("Media de error: ",mean(e),"\n")
 ```
+
+  Mostramos ahora el error para lambda entre 0 y 1, y comprobamos que si el parámetro de regularización es muy grande el error también crece:
+  
+```{r}
+errores_lambda = vector(mode = "numeric", length = 21)
+for(lambda in seq(0,1,by=0.05)){
+  coefs_rl_1 <- regress_wd(cbind(x,1), y, lambda)
+  e <- vector(mode = "numeric", length = N)
+  for( n in 1:N ){
+    e[n]= (y[n]-crossprod(coefs_rl_1,c(x[n,],1)))^2
+  }
+  errores_lambda[20*lambda+1] = mean(e)
+}
+plot(seq(0,1,by=0.05),errores_lambda)
+```
+
 
   a. Para $N \in \{ d+15, d+25, \dots, d+115\}$ calcular los errores $e_1, \dots, e_N$ de validación cruzada y $E_{cv}$.
   
 ```{r}
-for( N in seq(d+15, d+115, by=10) ){
+N_values = seq(d+15, d+115, by=10)
+for( N in N_values){
   x <- simula_gauss(N, d, 1)
   w <- simula_gauss(1, d+1, 1)
   y <- apply(x, 1, function(x_i)
@@ -991,9 +1239,9 @@ for( N in seq(d+15, d+115, by=10) ){
   wd_lamda <- sigma/N
   e <- vector(mode = "numeric", length = N)
   for( n in 1:N ){
-    Dn = list('data'=cbind(x[1:N != rep(n,N),],1), 
-              'value'=y[1:N != rep(n,N)])
-    coefs <- regress_lin(Dn$data, Dn$value, wd_lamda)
+    Dn = list('data'=cbind(x[1:N != n,],1), 
+              'value'=y[1:N != n])
+    coefs <- regress_wd(Dn$data, Dn$value, wd_lamda)
     e[n]= (y[n]-crossprod(coefs,c(x[n,],1)))^2
   }
   cat("For N=",N,"\t Ecv=",mean(e),"\n")
@@ -1006,7 +1254,14 @@ for( N in seq(d+15, d+115, by=10) ){
   
 ```{r, eval=FALSE}
 repetitions = 10**3
-for( N in seq(d+15, d+115, by=10) ){
+e_1_means = vector(mode = "numeric", length = 11)
+e_2_means = vector(mode = "numeric", length = 11)
+E_N_means = vector(mode = "numeric", length = 11)
+e_1_vars = vector(mode = "numeric", length = 11)
+e_2_vars = vector(mode = "numeric", length = 11)
+E_N_vars = vector(mode = "numeric", length = 11)
+
+for( N in N_values ){
   e_1_vector = vector("numeric",length = repetitions)
   e_2_vector = vector("numeric",length = repetitions)
   E_N_vector = vector("numeric",length = repetitions)
@@ -1016,13 +1271,11 @@ for( N in seq(d+15, d+115, by=10) ){
     y <- apply(x, 1, function(x_i)
       crossprod(t(w),c(x_i,1))+rnorm(1,sd=sigma))
     
-    wd_lamda <- sigma/N
-    
     e <- vector(mode = "numeric", length = N)
     for( n in 1:N ){
-      Dn = list('data'=cbind(x[1:N != rep(n,N),],1), 
-                'value'=y[1:N != rep(n,N)])
-      coefs <- regress_lin(Dn$data, Dn$value, wd_lamda)
+      Dn = list('data'=cbind(x[1:N != n,],1), 
+                'value'=y[1:N != n])
+      coefs <- regress_wd(Dn$data, Dn$value, wd_lamda)
       e[n]= (y[n]-crossprod(coefs,c(x[n,],1)))^2
     }
     
@@ -1030,24 +1283,121 @@ for( N in seq(d+15, d+115, by=10) ){
     e_2_vector[iter] = e[2]
     E_N_vector[iter] = mean(e)
   }
-  cat("For N=",N,
-      "\n\t e1=",mean(e_1_vector),
-      "\n\t e2=",mean(e_2_vector),
-      "\n\t Ecv=",mean(E_N_vector),"\n")
+  e_1_means[(N-18)/10+1] = mean(e_1_vector)
+  e_2_means[(N-18)/10+1] = mean(e_2_vector)
+  E_N_means[(N-18)/10+1] = mean(E_N_vector)
+  e_1_vars[(N-18)/10+1] = var(e_1_vector)
+  e_2_vars[(N-18)/10+1] = var(e_2_vector)
+  E_N_vars[(N-18)/10+1] = var(E_N_vector)
+  cat("For N =",N,
+      "\n\t e1: mean = ",mean(e_1_vector),"\t\t var = ",var(e_1_vector),
+      "\n\t e2: mean = ",mean(e_2_vector),"\t\t var = ",var(e_2_vector),
+      "\n\t Ecv: mean = ",mean(E_N_vector),"\t var = ",
+                         var(E_N_vector),"\n")
 }
-
 ```
-  c. ¿Cuál debería de ser la relación entre el promedio de los valores de $e_1$ y el de los valores de $E_{cv}$? ¿y el de los valores de $e_2$? Argumentar la respuesta en base a los resultados de los experimentos.
+
+```{r}
+means_1 <- cbind(E_N_means,e_1_means,e_2_means)
+matplot(seq(d+15, d+115, by=10), means_1, type="l")
+```
+
+```{r}
+vars_1 <- cbind(E_N_vars,e_1_vars,e_2_vars)
+matplot(N_values, vars_1, type="l")
+```
+
+  c. ¿Cuál debería de ser la relación entre el promedio de los valores de $e_1$ y el de los valores de $E_{cv}$? ¿y el de los valores de $e_2$? Argumentar la respuesta en base a los resultados de los experimentos.  
   
-  d. ¿Qué es lo que contribuye a la varianza de los valores de $e_1$?
+  Los valores de los promedios de $e_1$, $e_2$ y $E_{cv}$ son similares, pues en cada iteración el valor de $e_i$ contribuye al valor de $E_{cv}$, por eso cabe pensar, y así se observa en los datos obtenidos, que el promedio del error al quitar un dato concreto (el cual no tiene ninguna característica que lo haga especial con respecto a los otros datos) se parezca a la media de entre los datos al ir quitando uno por uno. Sería lógico pensar que de incrementar el número de experimentos, la distancia se hará más pequeña.
   
-  e. Si los errores de validación-cruzada fueran verdaderamente independientes, ¿cual sería la relación entre la varianza de los valores de $e_1$ y la varianza de los de $E_{cv}$ ?
+  d. ¿Qué es lo que contribuye a la varianza de los valores de $e_1$?  
   
-  f. Una medida del número efectivo de muestras nuevas usadas en el cálculo de $E_{cv}$ es el cociente entre la varianza de $e_1$ y la varianza de $E_{cv}$ . Explicar por qué, y dibujar, respecto de $N$, el número efectivo de nuevos ejemplos($N_{ef f}$) como un porcentaje de $N$. NOTA: Debería de encontrarse que $N_{ef f}$ está cercano a $N$.
+  Sin embargo, para la varianza sí que influye observar únicamente el error de una variable y la media con respecto a todos los datos. La varianza para cada dato será lógicamente mayor, pues es posible que unas veces esté cerca del valor real, y otras más lejos, que es lo que influye en la varianza. Así como para la media, ésta era similar en cada ejecución a la media de los datos, este valor tendrá menos variabilidad al promediar en cada ejecución el error de los datos.  
   
-  g. Si se incrementa la cantidad de regularización, ¿debería $N_{ef f}$ subir o bajar?. Argumentar la respuesta. Ejecutar el mismo experimento con $\lambda = 2.5/N$ y comparar los
-resultados del punto anterior para verificar la conjetura.
+  e. Si los errores de validación cruzada fueran verdaderamente independientes, ¿cual sería la relación entre la varianza de los valores de $e_1$ y la varianza de los de $E_{cv}$ ?
   
+    Para esto usamos las siguientes propiedades de la varianza:
+  
+  $$ var(aX) = a^2 var(X)$$
+  $$ var(X+Y) = var(X) + var(Y)$$
+  $$ var(E_{cv})= var(\frac{\sum_{i=0}^N e_i}{N})=
+                  \frac{\sum_{i=0}^N var(e_i)}{N^2}$$
+  
+  Con lo que corroboramos matemáticamente la idea intuitiva del apartado anterior de que la varianza en $E_{cv}$ debe ser menor, en concreto, es la media de las varianzas partido por $N$.
+                  
+  f. Una medida del número efectivo de muestras nuevas usadas en el cálculo de $E_{cv}$ es el cociente entre la varianza de $e_1$ y la varianza de $E_{cv}$. Explicar por qué, y dibujar, respecto de $N$, el número efectivo de nuevos ejemplos($N_{eff}$) como un porcentaje de $N$. NOTA: Debería de encontrarse que $N_{eff}$ está cercano a $N$.
+  
+```{r}
+ratios = e_1_vars/(E_N_vars*N_values)
+plot(N_values, ratios)
+points(N_values,rep(1,length(N_values)),type="l",lty=2)
+points(N_values,rep(mean(ratios),length(N_values)),
+       type="l",lty=2, col=2)
+```
+
+  Se comprueba que el ratio efectivamente está en torno a 1 aunque la media sea un poco inferior. Si hacemos la media ponderada por el número de datos en cada caso, también la media de ratios es un poco menor que 1. 
+  
+  g. Si se incrementa la cantidad de regularización, ¿debería $N_{eff}$ subir o bajar?. Argumentar la respuesta. Ejecutar el mismo experimento con $\lambda = 2.5/N$ y comparar los resultados del punto anterior para verificar la conjetura.
+  
+```{r}
+wd_lamda <- 2.5/N
+repetitions = 10**3
+e_1_means_g = vector(mode = "numeric", length = 11)
+e_2_means_g = vector(mode = "numeric", length = 11)
+E_N_means_g = vector(mode = "numeric", length = 11)
+e_1_vars_g = vector(mode = "numeric", length = 11)
+e_2_vars_g = vector(mode = "numeric", length = 11)
+E_N_vars_g = vector(mode = "numeric", length = 11)
+
+for( N in N_values ){
+  e_1_vector_g = vector("numeric",length = repetitions)
+  e_2_vector_g = vector("numeric",length = repetitions)
+  E_N_vector_g = vector("numeric",length = repetitions)
+  for ( iter in 1:repetitions ){
+    x <- simula_gauss(N, d, 1)
+    w <- simula_gauss(1, d+1, 1)
+    y <- apply(x, 1, function(x_i)
+      crossprod(t(w),c(x_i,1))+rnorm(1,sd=sigma))
+    
+    e_g <- vector(mode = "numeric", length = N)
+    for( n in 1:N ){
+      Dn = list('data'=cbind(x[1:N != n,],1), 
+                'value'=y[1:N != n])
+      coefs <- regress_wd(Dn$data, Dn$value, wd_lamda)
+      e_g[n]= (y[n]-crossprod(coefs,c(x[n,],1)))^2
+    }
+    
+    e_1_vector_g[iter] = e_g[1]
+    e_2_vector_g[iter] = e_g[2]
+    E_N_vector_g[iter] = mean(e_g)
+  }
+  e_1_means_g[(N-18)/10+1] = mean(e_1_vector_g)
+  e_2_means_g[(N-18)/10+1] = mean(e_2_vector_g)
+  E_N_means_g[(N-18)/10+1] = mean(E_N_vector_g)
+  e_1_vars_g[(N-18)/10+1] = var(e_1_vector_g)
+  e_2_vars_g[(N-18)/10+1] = var(e_2_vector_g)
+  E_N_vars_g[(N-18)/10+1] = var(E_N_vector_g)
+  cat("For N =",N,
+      "\n\t e1: mean = ",mean(e_1_vector_g),
+      "\t\t var = ",var(e_1_vector_g),
+      "\n\t e2: mean = ",mean(e_2_vector_g),
+      "\t\t var = ",var(e_2_vector_g),
+      "\n\t Ecv: mean = ",mean(E_N_vector_g),"\t var = ",
+                         var(E_N_vector_g),"\n")
+}
+```
+
+```{r}
+ratios_g = e_1_vars_g/(E_N_vars_g*N_values)
+points(N_values, ratios_g, col=3)
+points(N_values,rep(mean(ratios_g),length(N_values)),
+       type="l",lty=2, col=4)
+```
+
+  Se observa que con mayor regularización el ratio aumenta. Esto significa que la variación de la varianza de $e_1$ con respecto a la media de las varianzas $e_i$ es menor a mayor regularización.
+
+ 
 ### 2.- La técnica de validación cruzada da una estimación precisa de $\hat{E}_{out}(N - 1)$, pero puede ser demasiado inestable en problemas de selección de modelos. Una heurística común para regularizar validación cruzada en selección de modelos es usar una medida de su error $\sigma_{cv}(\mathcal{H})$.
 
   a. Una elección para $\sigma_{cv}(\mathcal{H})$ es el uso de la desviación estandar de los errores por LOO ("leave-one-out") dividida por $\sqrt{N}$, $\sigma_{cv}(\mathcal{H}) \approx \frac{1}{\sqrt{N}} \sqrt{var(e_1, \dots, e_n)}$. ¿Por qué se divide por $\sqrt{N}$?
@@ -1057,6 +1407,13 @@ resultados del punto anterior para verificar la conjetura.
     ii. La aproximación que minimiza una cota selecciona el modelo que minimiza $E_{out}(\mathcal{H})+\sigma_{cv}(\mathcal{H})$.
     
 Usar el diseño experimental del ejercicio sección 2.1 (sobreajuste) para comparar estas aproximaciones con la estimación "no regularizada" de validación cruzada. Para ello hacer lo siguiente:  
-      I. Fijar $Q_f=15,\ Q=20,\ \sigma = 1$.  
+      I. Fijar $Q_f=15,\ N=20,\ \sigma = 1$.  
       II. Aplicar cada una de las dos aproximaciones propuestas así como el estimador estándar de validación cruzada para seleccionar el valor óptimo del parámetro de regularización $\lambda$ en el conjunto $\{0.05, 0.1, 0.15, \dots,5\}$ usando regularización por "weight decay", $\Sigma(w) = \frac{\lambda}{N}w^Tw$.  
       III. Dibujar el error fuera de la muestra para cada una de las técnicas, usando cada una de ellas como una función de $N$, con $N \in \{ 2 \times Q, 3 \times Q,  \dots,  10 \times Q,\}$. ¿Cuáles son sus conclusiones?.  
+      
+      
+```{r}
+Q_f <- 15
+N=20
+sigma = 1
+```
