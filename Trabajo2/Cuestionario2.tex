@@ -1,0 +1,311 @@
+\documentclass[11pt,leqno]{article}
+\usepackage[spanish,activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage[pdftex]{hyperref} 
+
+\title{Aprendizaje autom\'atico. Cuestionario de teor\'ia 2}
+\author{Jacinto Carrasco Castillo}
+
+\theoremstyle{definition}
+\begin{document}
+\maketitle
+
+\newtheorem{cuestion}{Cuestión}
+\newtheorem{solucion}{Solución}
+\newtheorem{cuestionopcional}{Cuestión Opcional}
+\newtheorem{solucionopcional}{Solución Opcional}
+
+\numberwithin{equation}{solucion}
+
+\begin{cuestion}
+Sean $\mathbf{x}$ e $\mathbf{y}$ dos vectores de observaciones de tamaño $N$. Sea
+\[ cov(\mathbf{x},\mathbf{y}) = 
+	\frac{1}{N} \sum\limits_{i=1}^N 
+			(x_i-\bar{x})(y_i - \bar{y}) \]
+la covarianza de dichos vectores, donde $\bar{z}$ representa el valor medio de los elementos de $\mathbf{z}$. Considere ahora una matriz $X$ cuyas columnas representan vectores de observaciones. La matriz de covarianzas asociadas a la matriz $X$ es el conjunto de covarianzas definidas por cada dos de sus vectores columnas. Defina la expresión matricial que expresa la matriz $cov(X)$ en función de la matriz $X$.
+\end{cuestion}
+
+\begin{solucion} 
+Al estar $X$ dada por columnas, la notaremos: 
+\[X= \left( x_{ij} \right)_{\substack{i=1,\dots,N\\j=1,\dots,d}} = 
+	\left(\begin{array}{cccc} x_1 & x_2 & \dots & x_d \end{array}\right)\]
+	
+Para definir la matriz de covarianzas nos hará falta también el vector de medias por columnas: 
+	\[ \mu = \left(\begin{array}{cccc} \bar{x}_1 & \bar{x}_2 & \dots & \bar{x}_d \end{array}\right)	\]
+
+Entonces, la matriz de covarianzas será:
+\begin{flalign*}
+cov(X) &= ( cov(x_i,x_j) )_{i,j=1,\dots,d} = 
+	\left(\frac{1}{N} \sum\limits_{k=1}^N (x_{ki}-\bar{x}_i)(x_{kj}-\bar{x}_j) \right)_{i,j=1,\dots,d}=\\\nonumber
+	&= \left( \frac{1}{N}\sum\limits_{k=1}^N \left( x_{ki}x_{kj} -\bar{x}_i x_{kj} - \bar{x}_jx_{ki} \right) +\bar{x}_i\bar{x}_j\right)_{i,j=1,\dots,d}=\\\nonumber
+	&= \left(  \frac{1}{N} x_i^Tx_j \right)_{i,j=1,\dots,d} - \left( \bar{x}_i \bar{x}_j \right)_{i,j=1,\dots,d}
+\end{flalign*}
+
+	Donde hemos usado que $\frac{1}{N}\sum\limits_{k=1}^N \bar{x}_i x_{kj} = \bar{x}_i\bar{x}_j$. Ahora observamos que en el primer término de la suma estamos multiplicando escalarmente columnas, lo que significa que estamos multiplicando $X^T$ por $X$. Entonces nos queda:
+	\[ cov(X) = \frac{1}{N} X^T X - \mu^T \mu\]
+\end{solucion}
+
+\begin{cuestion}
+Considerar la matriz \textit{hat} definida en regresión, 
+\[H=X(X^T X)^{-1}X^T \] donde $X$ es una matriz $N \times (d+1)$, y $X^TX$ es invertible.
+\begin{enumerate}[a]
+\item Mostrar que $H$ es simétrica
+\item Mostrar que $H^k=H$ para cualquier natural $k$
+\end{enumerate}
+\end{cuestion}
+
+\begin{solucion} 
+
+\begin{enumerate}[a] $\ $
+\item Para ver que $H$ es simétrica, la comparamos con su traspuesta:
+\begin{flalign*}
+ H^T &= (X(X^TX)^{-1} X^T)^T = (X^T)^T(X^TX)^{-T}X^T=\\\nonumber
+ 	&= X(X^TX)^{-1}X^T = H
+\end{flalign*}
+\item Lo probamos por inducción. Para $k=1$ es obviamente cierto. Supuesto cierto para $k$, lo probamos para $k+1$:
+\begin{flalign*} 
+H^{k+1} &= H^k H \overset{hip. ind.}{=} HH = X(X^TX)^{-1}X^T X(X^TX)^{-1}X^T= \\ &= X(X^TX)^{-1}X^T = H
+\end{flalign*}
+\end{enumerate}
+\end{solucion}
+
+\begin{cuestion}
+Resolver el siguiente problema; Encontrar el punto $(x_0,y_0)$ sobre la línea $ax+by+d=0$ que esté más cerca del punto $(x_1,y_1)$.
+\end{cuestion}
+
+\begin{solucion}
+
+Lo plantearemos como un problema con restricciones y lo resolveremos usando multiplicadores de Lagrange. La función a minimizar será la distancia entre un punto en $\mathbb{R}^2$ y $(x_1,y_1)$, $f(x,y)=\sqrt{(x-x_1)^2+(y-y_1)^2}$, sujeto a que el punto esté en la recta $ax+by+d = 0$. Por tanto, creamos la función $\mathcal{L}(x,y,\lambda) = f(x,y) + \lambda g(x,y) = f(x,y) + \lambda(ax+by+d)$. Para hallar el punto más cercano a $(x_1,y_1)$ en la recta, hallaremos el punto que cumpla $\bigtriangledown_{(x,y,\lambda)} \mathcal{L}(x,y,\lambda) = 0$
+
+	%1
+	\begin{equation}
+ 		\frac{\partial \mathcal{L}}{\partial x}(x,y,\lambda) =
+ 			\frac{2(x-x_1)}{\sqrt{(x-x_1)^2+(y-y_1)^2}} + a \lambda = 0
+	\end{equation}  
+
+ 	%2
+	\begin{equation}
+ 		\frac{\partial \mathcal{L}}{\partial y}(x,y,\lambda) =
+ 			\frac{2(y-y_1)}{\sqrt{(x-x_1)^2+(y-y_1)^2}} + b \lambda = 0
+	\end{equation}  
+	
+	%3
+	\begin{equation}
+ 		\frac{\partial \mathcal{L}}{\partial \lambda}(x,y,\lambda) = 
+ 			ax+by+d = 0
+	\end{equation}
+
+	Si igualamos la primera y la segunda ecuación obtenemos 
+	
+	%4
+	\begin{equation}
+		\frac{x-x_1}{a} = \frac{y-y_1}{b};\ x = \frac{a}{b}(y-y_1) + x_1
+	\end{equation}
+	
+	Si sustituimos $x$ en $(3)$:
+	
+	%5
+	\begin{equation}
+		\frac{a^2}{b}(y-y_1) + ax_1 + by + d = 0;
+		y = \frac{-abx_1 -db + a^2 y_1}{a^2} = -\frac{b}{a}{x_1} - \frac{db}{a^2} + y_1
+	\end{equation}		
+	
+	Y finalmente con el valor de $y_0$:
+	
+	%6
+	\begin{equation}
+		x_0 = \frac{a}{b}(-\frac{b}{a} x_1 - \frac{db}{a^2} + y_1 -y_1 + x_1) = \frac{a-b}{b} x_1 - \frac{db}{a^2}
+	\end{equation}
+	
+
+	Por lo que la solución resulta:
+	
+	\[ x_0 = \frac{a-b}{b} x_1 - \frac{db}{a^2}  \]
+	\[ y_0 =  -\frac{b}{a}{x_1} - \frac{db}{a^2} + y_1 \]
+	
+	
+\end{solucion}
+
+\begin{cuestion}
+Consideremos el problema de optimización lineal con restricciones definido por:
+
+\[ \min_z \mathbf{c}^T\mathbf{z} \]
+\[ \textsl{sujeto a } A\mathbf{z} \leq \mathbf{b} \]
+
+donde $\mathbf{c}$ y $\mathbf{b}$ son vectores y $A$ es una matriz.
+
+\begin{enumerate}
+\item Para un conjunto de datos linealmente separable, mostrar que para algún $\mathbf{w}$ se debe verificar la condición $y_n \mathbf{w}^T \mathbf{x}_n > 0$ para todo $(\mathbf{x}_n,y_n)$ del conjunto.
+\item Formular un problema de programación lineal que resuelva el problema de la búsqueda del hiperplano separador. Es decir, identifique quiénes son $A, \mathbf{z}, \mathbf{b}$ y $\mathbf{c}$ para este caso.
+\end{enumerate}
+\end{cuestion}
+
+\begin{solucion} $\ $
+\begin{enumerate}[a]
+\item Que los datos sean linealmente separables significa que $\exists w$ tal que $sign(w^T x_n) = y_n \forall n$. Esto es:
+\begin{itemize}
+\item Si $y_n=-1$, $w^T x_n < 0 \Rightarrow y_n w^T x_n > 0$
+\item Si $y_n= 1$, $w^T x_n > 0 \Rightarrow y_n w^T x_n > 0$
+\end{itemize} 
+Luego $\exists w \textit{ tal que } y_n w^T x_n > 0$
+
+\item La expresión del problema de programación lineal asociado a la clasificación se ve más clara si pensamos que los datos no son separables, aunque obviamente llegaremos a la solución si lo fuesen.\\
+Supongamos $\mathbf{x}, \mathbf{w}$ de dimensión $d$. Para cada dato $x_i$, suponiendo que no son linealmente separables, podríamos encontrar $\xi_i>0$ para el que se cumpla $y_i \mathbf{w}^T x_i + \xi_i>0$, es decir, una holgura que nos deje en la situación del apartado previo.
+Sea $\mathbf{\xi}$ el vector de dimensión $N$ con los $\xi_i$. 
+Llamamos $\mathbf{z} = \left( \begin{array}{c} \mathbf{w} \\ \mathbf{\xi} \end{array}\right)$. 
+Entonces, hallar $\min_{\mathbf{x},\mathbf{\xi}} \sum_{i=0}^N \xi_i$, es decir, el mínimo error (si los datos fuesen separables este error sería 0), equivale a hallar $\min_\mathbf{z} \underbrace{(0,\overset{d)}{\dots},0,1,\overset{N)}{\dots},1)^T}_{\mathbf{c}^T} \mathbf{z}$. Ahora resulta sencillo ver qué transformación hay que hacerle a la restricción del sistema de ecuaciones de la programación lineal:
+
+\[ 
+\underbrace{
+\left(\begin{array}{ccccccc}
+-y_1 x_1^{(1)} 	& \dots & -y_1 x_1^{(d)} & -1 & 0 	& \overset{N)}{\dots} 	& 0 \\
+-y_2 x_2^{(1)} 	& \dots & -y_2 x_2^{(d)} &  0 & -1 	& \overset{N)}{\dots} 	& 0 \\
+\vdots 			& \ddots & \vdots 		 &  \vdots&	 	& \ddots			& \vdots \\
+-y_N x_N^{(1)} 	& \dots & -y_N x_N^{(d)} & 0 & 0 	& \overset{N)}{\dots} 	& -1 \\
+0			 	& \dots & 0				 & -1 & 0 	& \overset{N)}{\dots} 	& 0 \\
+\vdots 			& \ddots & \vdots 		 &  \vdots&	 	& \ddots			& \vdots \\
+0				& \dots & 0				 & 0  & 0 	& \overset{N)}{\dots} 	& -1 \\
+\end{array}\right)}_A
+\underbrace{
+\left(
+\begin{array}{c}
+\mathbf{w}^{(1)} \\ \mathbf{w}^{(2)} \\ \vdots \\ \mathbf{w}^{(d)} \\ 
+\xi_1 \\ \vdots \\ \xi_N 
+\end{array}
+\right)}_\mathbf{z}
+\leq
+\underbrace{
+\left(
+\begin{array}{c}
+-1 \\ -1 \\ \vdots \\ -1 \\  0 \\ \vdots \\ 0
+\end{array}
+\right)}_\mathbf{b}
+\]
+
+\end{enumerate}
+\end{solucion}
+
+\begin{cuestion}
+Probar que en el caso general de funciones con ruido se verifica que $\mathbb{E}_\mathcal{D}[E_{out}(g^{(\mathcal{D})}] = \sigma^2 + bias + var$ (ver transparencias de clase).
+\end{cuestion}
+
+\begin{solucion}
+
+	Para este ejercicio consideraremos que la función con ruido que queremos ajustar es $f(x) + \varepsilon$. Entonces, calcular el error esperado fuera de la muestra será:
+	\[ \mathbb{E}_{\mathcal{D}} [ E_{out}(g^{(\mathcal{D})} ] =  
+	\mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[ (g^{(\mathcal{D})} -f(x)-\varepsilon)^2 ] ]	\]
+	
+	Si, al igual que para el caso sin ruido, introducimos la esperanza en $\mathcal(D)$ sumando y restando y desarrollamos el cuadrado de dentro de la esperanza en $x$ obtenemos:
+	
+\begin{flalign*}
+	& \mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[ (g^{(\mathcal{D})}(x) -f(x)-\varepsilon)^2 ]] =\\
+	& \mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[ (g^{(\mathcal{D})}(x) -\bar{g}(x) +\bar{g}(x) -f(x)-\varepsilon)^2 ]] =  \mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[ (g^{(\mathcal{D})}(x) -\bar{g}(x))^2]] +\\
+	& \mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[ (\bar{g}(x)-f(x))^2]] + \mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[\varepsilon^2]] +  \mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[ 2g^{(\mathcal{D})}(x)\bar{g}(x) -2g^{(\mathcal{D})}(x)f(x)\\
+	& -2g^{(\mathcal{D})}(x)\varepsilon -2\bar{g}(x)^2 +2\bar{g}(x)f(x) +2f(x)\varepsilon ]]= \mathbb{E}_x[var(x) + bias(x) + \varepsilon^2 + \\
+	& \mathbb{E}_{\mathcal{D}} [ -2g^{(\mathcal{D})}(x)\varepsilon  +2f(x)\varepsilon ]] = \\
+	& = var + bias + \varepsilon^2 + \varepsilon \mathbb{E}_x[ \bar{g}(x) - f(x)]
+\end{flalign*}
+	
+	Bien, este no es el resultado esperado, sin embargo hemos pasado algo por alto, el error fuera de la muestra depende de la distribución que siga el error introducido en la función objetivo, con lo que en realidad el error $\mathbb{E}_{\mathcal{D}} [ E_{out}(g^{(\mathcal{D})} ]$ no es $\mathbb{E}_{\mathcal{D}} [ \mathbb{E}_x[ (g^{(\mathcal{D})} -f(x)-\varepsilon)^2 ] ]$ sino $\mathbb{E}_{\mathcal{D}} [ \mathbb{E}_{x,\varepsilon} (g^{(\mathcal{D})} -f(x)-\varepsilon)^2 ] ]$. Entonces, si seguimos por la cuenta anterior haciendo también la esperanza con respecto de $\varepsilon$, partiendo de la hipótesis de que $\varepsilon$ tiene media $0$ y varianza $\sigma^2$ obtenemos, usando que $\varepsilon$ es independiente de $x$ y $f(x), \bar{g}(x)$ lo son de $\varepsilon$:
+\begin{flalign*}
+	& \mathbb{E}_{\mathcal{D}} [ \mathbb{E}_{x,\varepsilon} (g^{(\mathcal{D})} -f(x)-\varepsilon)^2 ] ] = \\
+	& = var + bias + \mathbb{E}_\varepsilon[\varepsilon^2] + \mathbb{E}_\varepsilon[ \varepsilon] \mathbb{E}_x[ \bar{g}(x) - f(x)]= \\
+	& = var + bias + \sigma^2
+\end{flalign*}
+\end{solucion}
+
+\begin{cuestion}
+Consideremos las mismas condiciones generales del enunciado del Ejercicio 2 del apartado de Regresión de la relación de ejercicios 2. Considerar ahora $\sigma = 0.1$ y $d = 8$, ¿cuál es el más pequeño tamaño muestral que resultará en un valor esperado de $E_{in}$ mayor de $0.008$?
+\end{cuestion}
+
+\begin{solucion}
+Por el ejercicio 2 del apartado de regresión tenemos que el error esperado de regresión lineal respecto a $\mathcal{D}$ es:
+\[ \mathbb{E}_\mathcal{D}[ E_{in}(\mathbf{w}_{lin})] =
+		\sigma^2 \left( 1 - \frac{d+1}{N} \right) \]
+		
+Entonces, sustituimos con los datos del enunciado imponiendo $E_{in} > 0.008$:
+
+\[ 0.008 < \sigma^2 \left( 1 - \frac{d+1}{N} \right) =
+			0.01 \left( 1 - \frac{9}{N} \right); \]
+\[ 0.8 < 1 - \frac{9}{N};\quad \frac{9}{N} < 0.2;\quad 45 < N 	\]
+
+Con lo que llegamos a que el tamaño muestral debe ser mayor de $45$.
+
+\end{solucion}
+
+% Hechos --------------------------------------------------------------------------------------------------------------------------
+
+\begin{cuestion}
+En regresión logística mostrar que
+\[ \bigtriangledown E_{in}(\mathbf{w})=
+		-\frac{1}{N} 
+		\sum\limits_{n=1}^N \frac{y_n \mathbf{x}_n}
+				{1+e^{y_n \mathbf{w}^T\mathbf{x}_n}} = 
+		\frac{1}{N}
+		\sum\limits_{n=1}^N - y_n\mathbf{x}_n
+					\sigma(-y_n\mathbf{w}^T\mathbf{x}_n) \]
+Argumentar que un ejemplo mal clasificado contribuye al gradiente más que un ejemplo bien clasificado.
+\end{cuestion}
+
+\begin{solucion}
+\end{solucion}
+
+\begin{cuestion}
+Definamos el error en un punto $(\mathbf{x}_n,y_n)$ por
+\[ \mathbf{e}_n(\mathbf{w}) = \max(0, -y_n\mathbf{w}^T\mathbf{x}_n)	\]
+Argumentar que el algoritmo \texttt{PLA} puede interpretarse como \texttt{SGD} sobre $\mathbf{e}_n$ con tasa de aprendizaje $\eta = 1$.
+\end{cuestion}
+
+\begin{solucion}
+\end{solucion}
+
+\begin{cuestion}
+El ruido determinista depende de $\mathcal{H}$, ya quede algunos modelos aproximan mejor $f$ que otros.
+\begin{enumerate}
+\item Suponer que $\mathcal{H}$ es fija y que incrementamos la complejidad de $f$.
+\item Suponer que $f$ es fija y decrementamos la complejidad de $\mathcal{H}$
+\end{enumerate}
+
+Contestar para ambos escenarios: ¿En general subirá o bajará el ruido determinista? ¿La tendencia a sobrejaustar será mayor o menor? (Ayuda: analizar los detalles que influyen en
+el sobreajuste)
+\end{cuestion}
+
+\begin{solucion} 
+\end{solucion}
+
+\begin{cuestion}
+La técnica de regularización de Tikhonov es bastante general al usar la condición
+\[ \mathbf{w}^T \Gamma^T \Gamma \mathbf{w} \leq C	\]
+que define relaciones entre las $w_i$. (La matriz $\Gamma_i$ se denomina regularizador de Tikhonov)
+\begin{enumerate}[a]
+\item Calcular $\Gamma$ cuando $\sum\limits_{q=0}^{Q_f} w_q^2 \leq C$
+\item Calcular $\Gamma$ cuando $(\sum\limits_{q=0}^{Q_f} w_q)^2 \leq C$
+
+Argumentar si el estudio de los regularizadores de Tikhonov puede hacerse a través de las propiedades algebraicas de las matrices $\Gamma$.
+
+\end{enumerate}
+\end{cuestion}
+
+\begin{solucion}
+\end{solucion}
+
+
+\begin{cuestionopcional}
+Considerar la matriz \textit{hat} $H = X(X^T X)^{-1}X^T$. Sea $X$ una matriz $N \times (d + 1)$, y $X^T X$
+invertible. Mostrar que $traza(H) = d + 1$, donde traza significa la suma de los elementos de la diagonal principal. 
+\end{cuestionopcional}
+
+\begin{solucionopcional}
+Este resultado es inmedito usando la propiedad de la traza:
+	\[ traza(AB) = traza(BA)	\]
+
+aplicándola a $H$:
+	\[ traza(H) = traza(X(X^T X)^{-1}X^T) = traza( X^T X (X^T X)^{-1}) = traza(I)	\]
+Ahora, $X^T X \in \mathcal{M}_{(d+1),(d+1)}$, luego la matriz identidad obtenida pertenece a $\mathcal{M}_{(d+1),(d+1)}$ y por tanto su traza es $d+1$.
+\end{solucionopcional}
+\end{document}
