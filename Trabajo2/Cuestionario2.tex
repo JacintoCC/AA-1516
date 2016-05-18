@@ -107,26 +107,18 @@ Lo plantearemos como un problema con restricciones y lo resolveremos usando mult
 		\frac{x-x_1}{a} = \frac{y-y_1}{b};\ x = \frac{a}{b}(y-y_1) + x_1
 	\end{equation}
 	
-	Si sustituimos $x$ en $(3)$:
+	Si sustituimos $x$ en (3.3):
 	
 	%5
+	\[ \frac{a^2}{b}(y-y_1) + ax_1 + by + d = 0 \]
 	\begin{equation}
-		\frac{a^2}{b}(y-y_1) + ax_1 + by + d = 0;
-		y = \frac{-abx_1 -db + a^2 y_1}{a^2} = -\frac{b}{a}{x_1} - \frac{db}{a^2} + y_1
-	\end{equation}		
-	
-	Y finalmente con el valor de $y_0$:
-	
-	%6
-	\begin{equation}
-		x_0 = \frac{a}{b}(-\frac{b}{a} x_1 - \frac{db}{a^2} + y_1 -y_1 + x_1) = \frac{a-b}{b} x_1 - \frac{db}{a^2}
+	y = \frac{b(\frac{a^2}{b}y_1 - ax_1-d)}{a^2+b^2} =
+		\frac{a^2y_1 - abx_1-bd}{a^2+b^2}
 	\end{equation}
+	Por lo que la solución resulta, sustituyendo y en (3.4):
 	
-
-	Por lo que la solución resulta:
-	
-	\[ x_0 = \frac{a-b}{b} x_1 - \frac{db}{a^2}  \]
-	\[ y_0 =  -\frac{b}{a}{x_1} - \frac{db}{a^2} + y_1 \]
+	\[ x_0 = \frac{b^2x_1 - aby_1-ad}{a^2+b^2} \]
+	\[ y_0 = \frac{a^2y_1 - abx_1-bd}{a^2+b^2} \]
 	
 	
 \end{solucion}
@@ -147,7 +139,7 @@ donde $\mathbf{c}$ y $\mathbf{b}$ son vectores y $A$ es una matriz.
 
 \begin{solucion} $\ $
 \begin{enumerate}[a]
-\item Que los datos sean linealmente separables significa que $\exists w$ tal que $sign(w^T x_n) = y_n \forall n$. Esto es:
+\item Que los datos sean linealmente separables significa que $\exists w$ tal que $sign(w^T$ $x_n) =$ $ y_n$ $ \forall n$. Esto es:
 \begin{itemize}
 \item Si $y_n=-1$, $w^T x_n < 0 \Rightarrow y_n w^T x_n > 0$
 \item Si $y_n= 1$, $w^T x_n > 0 \Rightarrow y_n w^T x_n > 0$
@@ -158,7 +150,7 @@ Luego $\exists w \textit{ tal que } y_n w^T x_n > 0$
 Supongamos $\mathbf{x}, \mathbf{w}$ de dimensión $d$. Para cada dato $x_i$, suponiendo que no son linealmente separables, podríamos encontrar $\xi_i>0$ para el que se cumpla $y_i \mathbf{w}^T x_i + \xi_i>0$, es decir, una holgura que nos deje en la situación del apartado previo.
 Sea $\mathbf{\xi}$ el vector de dimensión $N$ con los $\xi_i$. 
 Llamamos $\mathbf{z} = \left( \begin{array}{c} \mathbf{w} \\ \mathbf{\xi} \end{array}\right)$. 
-Entonces, hallar $\min_{\mathbf{x},\mathbf{\xi}} \sum_{i=0}^N \xi_i$, es decir, el mínimo error (si los datos fuesen separables este error sería 0), equivale a hallar $\min_\mathbf{z} \underbrace{(0,\overset{d)}{\dots},0,1,\overset{N)}{\dots},1)^T}_{\mathbf{c}^T} \mathbf{z}$. Ahora resulta sencillo ver qué transformación hay que hacerle a la restricción del sistema de ecuaciones de la programación lineal:
+Entonces, hallar $\min_{\mathbf{z}} \sum_{i=0}^N \xi_i$, es decir, el mínimo error (si los datos fuesen separables este error sería 0), equivale a hallar $\min_\mathbf{z} \underbrace{(0,\overset{d)}{\dots},0,1,\overset{N)}{\dots},1)^T}_{\mathbf{c}^T} \mathbf{z}$. Ahora resulta sencillo ver qué transformación hay que hacerle a la restricción del sistema de ecuaciones de la programación lineal:
 
 \[ 
 \underbrace{
@@ -182,7 +174,7 @@ Entonces, hallar $\min_{\mathbf{x},\mathbf{\xi}} \sum_{i=0}^N \xi_i$, es decir, 
 \underbrace{
 \left(
 \begin{array}{c}
--1 \\ -1 \\ \vdots \\ -1 \\  0 \\ \vdots \\ 0
+0 \\ 0 \\ \vdots \\ 0 \\  0 \\ \vdots \\ 0
 \end{array}
 \right)}_\mathbf{b}
 \]
@@ -238,8 +230,6 @@ Con lo que llegamos a que el tamaño muestral debe ser mayor de $45$.
 
 \end{solucion}
 
-% Hechos --------------------------------------------------------------------------------------------------------------------------
-
 \begin{cuestion}
 En regresión logística mostrar que
 \[ \bigtriangledown E_{in}(\mathbf{w})=
@@ -253,6 +243,16 @@ Argumentar que un ejemplo mal clasificado contribuye al gradiente más que un ej
 \end{cuestion}
 
 \begin{solucion}
+
+\begin{flalign*}
+&	\bigtriangledown_\mathbf{w} E_{in}(\mathbf{w}) = \left( \frac{1}{N} \sum\limits_{n=1}^N	\frac{\partial}{\partial \mathbf{w}_i} \log(1+e^{-y_n\mathbf{w}^T x_n})\right)_{i=1,...d} = \\
+&	= \left( \frac{1}{N} \sum\limits_{n=1}^N	\frac{\partial}{\partial \mathbf{w}_i} \log(1+e^{-y_n\mathbf{w}^T x_n})\right)_{i=1,...d} =\\
+&	= \frac{1}{N} \left(\sum\limits_{n=1}^N	\frac{-y_n x_{ni}e^{-y_n\mathbf{w}^T x_n}}{1+e^{-y_n\mathbf{w}^T x_n}}\right)_{i=1,...d} =  \frac{1}{N} \left(\sum\limits_{n=1}^N	\frac{-y_n x_{ni}}{1+e^{y_n\mathbf{w}^T x_n}}\right)_{i=1,...d} = \\
+&	= \frac{1}{N} \sum\limits_{n=1}^N \frac{-y_n x_n}{1+e^{-y_n\mathbf{w}^T x_n}}
+\end{flalign*}
+
+Para argumentar que un ejemplo mal clasificado contribuye al gradiente más que un ejemplo bien clasificado, vemos cómo $1+e^{y_n\mathbf{w}^T x_n} > 1+e^{y_m\mathbf{w}^T x_m}$ si el dato $m$ está clasificado y el dato $n$ no está clasificado, puesto que $y_n\mathbf{w}^T x_n<0$ y entonces $e^{y_n\mathbf{w}^T x_n} < e^{y_m\mathbf{w}^T x_m}$. Esto hace que el numerador sea más grande en el segundo caso y por tanto el gradiente y la contribución es menor si el dato está bien clasificado. No se puede hacer un argumento más elaborado ya que es posible que, aún estando el dato $m$ bien etiquetado, su contribución al gradiente sea mayor en término absoluto que la de un dato mal etiquetado y que, por tener el valor de la norma del punto (que influye en el numerador) sea muy pequeño y por tanto la contribución termine siendo menor pese a no estar clasificado. 
+	
 \end{solucion}
 
 \begin{cuestion}
@@ -262,6 +262,13 @@ Argumentar que el algoritmo \texttt{PLA} puede interpretarse como \texttt{SGD} s
 \end{cuestion}
 
 \begin{solucion}
+
+Si $-y_n\mathbf{w}^T\mathbf{x}_n<0$ significa que está bien clasificado, lo que significa que sólo estaremos usando para actualizar los datos mal clasificados. Si le hacemos el gradiente a la función $\mathbf{e}_n$, obtenemos:
+	\[ \bigtriangledown_\mathbf{w} \mathbf{e}_n = \left\lbrace
+	\begin{array}{cc} -y_n \mathbf{x}_n & si \ y_n\mathbf{w}^T\mathbf{x}_n  < 0 \\
+						0 & si \ y_n\mathbf{w}^T\mathbf{x}_n > 0 
+	\end{array}\right. \]
+	Y entonces la regla de actualización $\mathbf{w}_{old} = \mathbf{w} - \eta \bigtriangledown_\mathbf{w} \mathbf{e}_n$, la regla de actualización del $\mathbf{w}$ en \texttt{SGD} es justo la regla de actualización del algoritmo \texttt{PLA}.
 \end{solucion}
 
 \begin{cuestion}
@@ -271,27 +278,39 @@ El ruido determinista depende de $\mathcal{H}$, ya quede algunos modelos aproxim
 \item Suponer que $f$ es fija y decrementamos la complejidad de $\mathcal{H}$
 \end{enumerate}
 
-Contestar para ambos escenarios: ¿En general subirá o bajará el ruido determinista? ¿La tendencia a sobrejaustar será mayor o menor? (Ayuda: analizar los detalles que influyen en
-el sobreajuste)
+Contestar para ambos escenarios: ¿En general subirá o bajará el ruido determinista? ¿La tendencia a sobrejaustar será mayor o menor? (Ayuda: analizar los detalles que influyen en el sobreajuste)
 \end{cuestion}
 
 \begin{solucion} 
+\begin{enumerate}
+\item Si dejamos $\mathcal{H}$ fija e incrementamos la complejidad de $f$ el ruido determinista aumentará al salir $f$ del espacio de funciones de $\mathcal{H}$, habiendo una mayor diferencia cada vez entre la función en $\mathcal{H}$ que mejor aproxima y $f$. La tendencia a sobreajustar aumentará, ya que, aunque la varianza se mantenga constante (no hemos modificado $\mathcal{H}$, luego la diferencia entre las posibles $g^{(\mathcal{D})}$ y $\bar{g}$ será la misma), pero sí aumentarán las diferencias entre $\bar{g}$ y $f$.
+\item Si mantenemos la complejidad de $f$ y decrementamos la de $\mathcal{H}$ aumentará el ruido determinista, ya que nos iremos alejando de la posibilidad de que $\mathcal{H}$ contenga a $f$. En cambio, la posibilidad de sobreajuste sí disminuye, ya que aunque es cierto como en el caso anterior que el sesgo aumenta, ahora sí disminuye la varianza, puesto que al haber menos funciones $g$ donde escoger, la diferencia entre la función media y la función dada por los datos será menor.
+\end{enumerate}
 \end{solucion}
+
+
 
 \begin{cuestion}
 La técnica de regularización de Tikhonov es bastante general al usar la condición
 \[ \mathbf{w}^T \Gamma^T \Gamma \mathbf{w} \leq C	\]
-que define relaciones entre las $w_i$. (La matriz $\Gamma_i$ se denomina regularizador de Tikhonov)
+que define relaciones entre las $w_i$. (La matriz $\Gamma$ se denomina regularizador de Tikhonov)
 \begin{enumerate}[a]
 \item Calcular $\Gamma$ cuando $\sum\limits_{q=0}^{Q_f} w_q^2 \leq C$
-\item Calcular $\Gamma$ cuando $(\sum\limits_{q=0}^{Q_f} w_q)^2 \leq C$
+\item Calcular $\Gamma$ cuando $\left(\sum\limits_{q=0}^{Q_f} w_q\right)^2 \leq C$
+\end{enumerate}
 
 Argumentar si el estudio de los regularizadores de Tikhonov puede hacerse a través de las propiedades algebraicas de las matrices $\Gamma$.
 
-\end{enumerate}
 \end{cuestion}
 
-\begin{solucion}
+\begin{solucion} $\ $
+\begin{enumerate}[a]
+\item Para este primer caso queremos que la norma de $\mathbf{w}$ sea menor o igual que $C$. Esto es $\mathbf{w}^T\mathbf{w} \leq C$, lo que significa que $\Gamma^T \Gamma = I$, es decir, $\Gamma^T = \Gamma^{-1}$, con lo que necesitamos que $\Gamma$ sea ortogonal.
+\item Si es la norma de la suma al cuadrado lo que tenemos que acotar, podemos tomar $\Gamma = (1 \overset{(Q_f)}{\dots} 1)$ y obtenemos para  $\mathbf{w}^T \Gamma^T$ y  $\Gamma\mathbf{w}$ la la norma de la suma, con lo que la condición nos queda como esperábamos. 
+\end{enumerate}
+ 
+	Como se ve en el primer apartado, las propiedades algebraicas de $\Gamma$ influyen decisivamente en los regularizadores de Tickhonov. 
+	
 \end{solucion}
 
 
