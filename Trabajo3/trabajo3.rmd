@@ -1,37 +1,20 @@
 ---
 title: "Trabajo 3 Aprendizaje Automático"
 author: "Jacinto Carrasco Castillo"
-date: "9 de mayo de 2016"
+date: "1 de junio de 2016"
 output:
   pdf_document:
     latex_engine: xelatex
   html_document: default
 ---
 
-
-Como en las prácticas 1 y 2, para facilitar la visualización de los resultados, se incluye un método para dibujar funciones:
+Establecemos la semilla para poder reproducir los resultados
 
 ```{r}
-# Función para pintar una función declarada de forma implícita en un
-# cierto intervalo
-# @param interval_x Extremo inicial del intervalo
-# @param interval_y Extremo final del intervalo
-# @param f Función declarada de forma implícita a representar
-# @param levels Niveles a pintar de la función. Por defecto, f = 0.
-# @param col Color en el que se pinta la función. Por defecto, negro.
-# @param add  Valor lógico que determina si la gráfica se añade al plot
-#             actual
-draw_function <- function(interval_x, interval_y, f, levels = 0, 
-                          col = 1, add = FALSE){
-  x <- seq(interval_x[1],interval_x[2],length=1000)
-  y <- seq(interval_y[1],interval_y[2],length=1000)
-  z <- outer(x,y, f) # Matriz con los resultados de hacer f(x,y)
+set.seed(3141592)
+```
 
-  # Levels = 0 porque queremos pintar f(x,y)=0
-  contour(x,y,z, levels=0, col = col, add = add, drawlabels = FALSE,
-          ylab="", xlab="")
-}
-
+```{r}
 # Obtención de una función que recibe un vector como entrada
 # a partir de un hiperplano y devuelve el producto escalar con los
 # coeficientes del hiperplano.
@@ -50,57 +33,7 @@ hypplane_to_func <- function( vec, change_signs = FALSE ){
   }
   return(f)
 }
-
-# Obtención de una función que recibe coordenadas 2D como entrada
-# y devuelve el producto escalar con los coeficientes de una recta.
-# @param vec Vector de coeficientes de la recta
-# @param change_signs Valor lógico que determina si debemos cambiar
-#                     el signo de los coeficientes del vector
-# @return función que realiza el producto escalar de un vector con 
-#         los coeficientes del hiperplano
-vec3D_to_func2D <- function( vec, change_signs = FALSE ){
-  if(change_signs){
-    vec[c(1,3)] <- -vec[c(1,3)]
-  }
-  f <- function(x,y){
-    return( vec[1]*x+vec[2]*y+vec[3] )
-  }
-  return(f)
-}
-
-# Conteo de errores según el etiquetado de una función y las etiquetas reales
-# @param f Función que realizará el etiquetado
-# @param data Datos a etiquetar
-# @param label Etiquetas originales
-# @return Número de datos erróneamente etiquetados por f
-count_errors <- function(f, data, label){
-  #Conteo de errores
-  signs <- apply(data, 1, function(x) return(sign(f(c(x,1)))))
-  return( sum(signs != label) )
-}
 ```
-
-Se introduce también una función para obtener una partición:
-
-```{r}
-getPartition<- function(DB, parts = 5){
-  #Reordena aleatoriamente la base de datos
-  DB <-DB[sample(nrow(DB)),]
-
-  #Create parts equally size folds
-  folds <- cut(seq(1,nrow(DB)), breaks=parts,labels=FALSE)
-  
-  DB_folds <- sapply(1:parts, function(i) Boston[folds==i,])
-  return(DB_folds)
-}
-```
-
-Establecemos la semilla para poder reproducir los resultados
-
-```{r}
-set.seed(3141592)
-```
-
 
 # Ejercicio 1
 
@@ -144,10 +77,12 @@ Atendiendo a las gráficas que hemos visto en el apartado anterior, las variable
 En primer lugar barajamos simplemente los datos, dejando el primer $80\%$ para *train* y el último $20\%$ para *test*. Una vez que hayamos clasificado la población podremos hacer una partición de *train* y *test* con elementos de cada clase de manera equilibrada.
 
 ```{r}
-num_datos <- length(Auto)
-muestreo_total <- sample(Auto)
-data_train <- muestreo_total[1:round(num_datos*0.8)]
-data_test <- muestreo_total[(round(num_datos*0.8)+1):num_datos]
+num.datos <- length(Auto)
+train.index.Auto <- sample(1:num.datos, size = num.datos*0.8, 
+                           replace = F)
+
+train.Auto <- Auto[train.index.Auto,]
+test.Auto <- Auto[!train.index.Auto,]
 ```
 
 ### d) Crear una variable binaria, mpg01, que será igual 1 si la variable mpg contiene un valor por encima de la mediana, y -1 si mpg contiene un valor por debajo de la mediana. La mediana se puede calcular usando la función median(). (Nota: puede resultar útil usar la función data.frames() para unir en un mismo conjunto de datos la nueva variable mpg01 y las otras variables de Auto).
@@ -385,10 +320,9 @@ print(svm.results)
 ```
 
 ```{r}
-y.svm.pred = predict(svm.results , Boston.class)
+y.svm.pred = predict(svm.results, Boston.class)
 confusion.matrix <- table(predict= y.svm.pred, truth= Boston.class$y)
-E_in <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
-  sum(confusion.matrix)
+E_in <- (confusion.matrix[2,1]+confusion.matrix[1,2])/sum(confusion.matrix)
 ```
 
 Para ajustar el modelo, partimos en primer lugar en datos de entrenamiento y test:
@@ -475,44 +409,187 @@ E_out.sigmoid <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
 
 ```{r, message=FALSE, warning=FALSE}
 library(randomForest)
-library(gbm)
 ```
 
 #### 1) Dividir la base de datos en dos conjuntos de entrenamiento (80$\%$) y test (20$\%$).
 
 ```{r}
-reordered_3 <- sample(Boston)
-train_3 <- reordered_3[1:round(nrow(Boston)*0.8),]
-test_3 <- reordered_3[(round(nrow(Boston)*0.8)+1):
-                                  nrow(Boston),]
+train.index <- sample(1:nrow(Boston), size = nrow(Boston)*4/5)
 ```
 
 
-#### 2) Usando la variable medv como salida y el resto como predictoras, ajustar un modelo de regresión usando bagging. Explicar cada uno de los parámetros usados. Calcular el error del test.
+#### 2) Usando la variable *medv* como salida y el resto como predictoras, ajustar un modelo de regresión usando bagging. Explicar cada uno de los parámetros usados. Calcular el error del test.
 
 ```{r}
-
+bag.boston = randomForest(medv~., data=Boston, subset=train.index,
+                          mtry=13, importance = TRUE )
+y.pred.bag = predict( bag.boston, newdata=Boston[-train.index,])
+plot ( y.pred.bag, Boston[-train.index,"medv"] )
+abline (0 ,1)
+mean ( (y.pred.bag - Boston[-train.index,"medv"])^2 )
 ```
 
 
 #### 3) Ajustar un modelo de regresión usando ``Random Forest''. Obtener una estimación del número de árboles necesario. Justificar el resto de parámetros usados en el ajuste. Calcular el error de test y compararlo con el obtenido con bagging.
 
+```{r}
+error.stable <- FALSE
+best.ntree <- 10
+nTrees <- 10
+error.prev <- Inf
+error.best <- Inf
+  
+while( !error.stable ){
+  mtry <- tuneRF(Boston[train.index, 
+                        -which(names(Boston) %in% "medv")],
+                 Boston[train.index, "medv"], ntreeTry = nTrees)
+  mtry <- mtry[which.min(mtry[,2]),1]
+  bag.boston = randomForest(medv~., data=Boston, subset=train.index,
+                            mtry=mtry, importance = T, nTrees=nTrees)
+  y.pred.rf = predict( bag.boston, newdata=Boston[-train.index,])
+  error.current <- mean((y.pred.rf - Boston[-train.index,"medv"])^2)
+  
+  if(error.best > error.current){
+    best.ntree <- nTrees
+    error.best <- error.current
+  }
+  
+  if( abs(error.prev - error.current) < 0.005){
+    error.stable <- TRUE
+  }
+  else{
+    error.prev <- error.current
+    nTrees <- nTrees +10
+  }
+}
+```
+
+
+```{r}
+mtry <- tuneRF(Boston[train.index, -which(names(Boston) %in% "medv")],
+               Boston[train.index, "medv"], ntreeTry = nTrees)
+mtry <- mtry[which.min(mtry[,2]),1]
+bag.boston = randomForest(medv~., data=Boston, subset=train.index,
+                          mtry=mtry, importance = T, nTrees=nTrees)
+y.pred.rf = predict( bag.boston, newdata=Boston[-train.index,])
+mean((y.pred.rf - Boston[-train.index,"medv"])^2)
+```
+
 #### 4) Ajustar un modelo de regresión usando Boosting (usar *gbm* con $\texttt{distribution = 'gaussian'}$). Calcular el error de test y compararlo con el obtenido con *bagging* y Random Forest.
+
+```{r}
+detach("package:randomForest")
+library(gbm)
+library(caret)
+```
+
+
+```{r}
+boost.boston = gbm(medv~., data=Boston[train.index,],
+                    distribution="gaussian", n.trees=5000,
+                    interaction.depth =4)
+print(summary(boost.boston))
+```
+
+
+```{r}
+y.pred.boost = predict(boost.boston, newdata=Boston[-train.index,],
+                       n.trees = 5000)
+mean((y.pred.boost - Boston[-train.index,"medv"])^2)
+```
+
+
+```{r, eval=FALSE}
+train(Boston[train.index, -which(names(Boston) %in% "medv")],
+      Boston[train.index, "medv"], method = "gbm",
+      trControl = trainControl(method = "cv", number=5),
+      tuneGrid = expand.grid(interaction.depth = 1:5, 
+                             n.trees=seq(50,5000,by=200),
+                             shrinkage=seq(0.01,1,by=0.1),
+                             n.minobsinnode=1))
+```
+
+```{r}
+boost.boston = gbm(medv~., data=Boston[train.index,],
+                    distribution="gaussian", n.trees=4450,
+                    interaction.depth =5, shrinkage=0.01
+                   )
+y.pred.boost = predict(boost.boston, newdata=Boston[-train.index,],
+                       n.trees = 4450)
+mean((y.pred.boost - Boston[-train.index,"medv"])^2)
+```
+
+```{r}
+detach("package:gbm")
+detach("package:caret")
+```
 
 # Ejercicio 4
 
 ### Usar el conjunto de datos OJ que es parte del paquete $\texttt{ILSR}$
 
+```{r}
+library(ISLR)
+data("OJ")
+```
+
+
 #### 1) Crear un conjunto de entrenamiento conteniendo una muestra aleatoria de 800 observaciones, y un conjunto de test conteniendo el resto de las observaciones. Ajustar un árbol a los datos de entrenamiento, con *Purchase* como la variable respuesta y las otras variables como predictores (paquete $\texttt{tree}$ de R).
 
+```{r}
+library(tree)
+```
+
+
+```{r}
+train.OJ <- sample(1:nrow(OJ), size = 800, replace = FALSE)
+```
+
+
+```{r}
+tree.OJ <- tree(Purchase~., data=OJ, subset=train.OJ)
+```
 
 #### 2) Usar la función summary() para generar un resumen estadístico acerca del árbol y describir los resultados obtenidos: tasa de error de *training*, número de nodos del árbol, etc.
 
+```{r}
+summary(tree.OJ)
+```
 
 #### 3) Crear un dibujo del árbol e interpretar los resultados.
 
+```{r}
+plot(tree.OJ)
+text(tree.OJ, pretty =0)
+```
+
 #### 4) Predecir la respuesta de los datos de test, y generar e interpretar la matriz de confusión de los datos de test. ¿Cuál es la tasa de error del test? ¿Cuál es la precisión del test?
+
+```{r}
+tree.OJ.pred = predict(tree.OJ, OJ[-train.OJ,-1],type ="class")
+confusion.matrix.OJ <-table(tree.OJ.pred, OJ[-train.OJ,1] )
+cat("Precisión", 
+    100*sum(diag(confusion.matrix.OJ))/sum(confusion.matrix.OJ))
+```
+
 
 #### 5) Aplicar la función $\texttt{cv.tree()}$ al conjunto de *training* y determinar el tamaño óptimo del árbol. ¿Qué hace $\texttt{cv.tree}$?
 
+```{r}
+tree.cv.OJ <- cv.tree(tree.OJ, K=5)
+```
+
+```{r}
+prune.OJ <- prune.tree(tree.OJ, best=5)
+plot(prune.OJ)
+text(prune.OJ)
+```
+
+
 #### Bonus 4. Generar un gráfico con el tamaño del árbol en el eje x (número de nodos) y la tasa de error de validación cruzada en el eje y. ¿Qué tamaño de árbol corresponde a la tasa más pequeña de error de clasificación por validación cruzada?
+
+```{r}
+plot(tree.cv.OJ$size, tree.cv.OJ$dev, type="b",
+     col=(7:1==which.min(tree.cv.OJ$dev))[7:1]+1)
+```
+
