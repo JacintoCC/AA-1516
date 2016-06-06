@@ -1,0 +1,72 @@
+\documentclass[11pt,leqno]{article}
+\usepackage[spanish,activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{eurosym}
+\usepackage[pdftex]{hyperref} 
+
+\title{Aprendizaje autom\'atico. Cuestionario de teor\'ia 3}
+\author{Jacinto Carrasco Castillo}
+
+\theoremstyle{definition}
+\begin{document}
+\maketitle
+
+\newtheorem{cuestion}{Cuestión}
+\newtheorem{solucion}{Solución}
+\newtheorem{cuestionopcional}{Cuestión Opcional}
+\newtheorem{solucionopcional}{Solución Opcional}
+
+\numberwithin{equation}{solucion}
+
+% Cuestión 1
+\begin{cuestion}
+Consider los conjuntos de hipótesis $\mathcal{H}_1$ y $\mathcal{H}_{100}$ que contienen funciones \textit{booleanas} sobre 10 variables \textit{booleanas}, es decir $\mathcal{X} = \{-1, +1\}^{10}$. $\mathcal{H}_1$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en un único punto de $\mathcal{X}$ y $-1$ en el resto. $\mathcal{H}_{100}$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en exactamente $100$ puntos de $\mathcal{X}$ y $-1$ en el resto.
+\begin{enumerate}[a]
+\item ¿Cuántas hipótesis contienen $\mathcal{H}_1$ y $\mathcal{H}_{100}$?
+\item ¿Cuántos bits son necesarios para especificar una hipótesis en $\mathcal{H}_1$?
+\item ¿Cuántos bits son necesarios para especificar una hipótesis en $\mathcal{H}_{100}$?
+\end{enumerate}
+
+	Argumente sobre la relación entre la complejidad de una clase de funciones y la complejidad de sus componentes.
+\end{cuestion}
+
+% Solución 1 
+\begin{solucion} 
+\end{solucion}
+
+% Cuestión 2
+\begin{cuestion}
+Suponga que durante 5 semanas seguidas, recibe un correo postal que predice el resultado del partido de fútbol del domingo, donde hay apuestas sustanciosas. Cada lunes revisa la predicción y observa que la predicción es correcta en todas las ocasiones. El día de después del quinto partido recibe una carta diciéndole que si desea conocer la predicción de la semana que viene debe pagar 50.000\euro. ¿Pagaría?
+\begin{enumerate}[a]
+\item ¿Cuántas son las posibles predicciones gana-pierde para los cinco partidos?
+\item Si el remitente desea estar seguro de que al menos una persona recibe de él la predicción correcta sobre los 5 partidos, ¿cuál es el mínimo número de cartas que deberá de
+enviar?
+\item Después de la primera carta prediciendo el resultado del primer partido, ¿a cuántos de los seleccionados inicialmente deberá de enviarle la segunda carta?
+\item ¿Cuántas cartas en total se habrán enviado depués de las primeras cinco semanas?
+\item  Si el coste de imprimir y enviar las cartas es de $0.5$ \euro por carta, ¿cuánto ingresa el remitente si el receptor de las 5 predicciones acertadas decide pagar los $50.000$ \euro ?
+\item ¿Puede relacionar esta situación con la función de crecimiento y la credibilidad del ajuste a los datos?
+\end{enumerate}
+\end{cuestion}
+
+% Solución 2
+\begin{solucion}
+\end{solucion}
+
+% Cuestión 3
+\begin{cuestion}
+En un experimento para determinar la distribución del tamaño de los peces en un lago, se decide echar una red para capturar una muestra representativa. Así se hace y se obtiene una muestra suficientemente grande de la que se pueden obtener conclusiones estadísticas sobre los peces del lago. Se obtiene la distribución de peces por tamaño y se entregan las conclusiones. Discuta si las conclusiones obtenidas servirán para el objetivo que se persigue
+e identifique si hay que lo impida
+\end{cuestion}
+
+% Cuestión 4
+\begin{cuestion}
+Considere la siguiente aproximación al aprendizaje. Mirando los datos, parece que los datos son linealmente separables, por tanto decidimos usar un simple perceptron y obtenemos un error de entrenamiento cero con los pesos óptimos encontrados. Ahora deseamos obtener algunas conclusiones sobre generalización, por tanto miramos el valor $d_{VC}$ de nuestro modelo
+y vemos que es $d + 1$. Usamos dicho valor de $d_{VC}$ para obtener una cota del error de test. Argumente a favor o en contra de esta forma de proceder identificando los posible fallos si los hubiera y en su caso cuál hubiera sido la forma correcta de actuación.
+\end{cuestion}
+
+\end{document}

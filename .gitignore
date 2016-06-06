@@ -3,3 +3,6 @@
 *.synctex.gz
 *.aux
 *.Rhistory
+*.zip
+*.RData
+*.pdf

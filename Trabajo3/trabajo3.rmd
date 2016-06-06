@@ -14,6 +14,7 @@ Establecemos la semilla para poder reproducir los resultados
 set.seed(3141592)
 ```
 
+  Defino la función que pasa un hiperplano a una función usada en prácticas anteriorores:
 ```{r}
 # Obtención de una función que recibe un vector como entrada
 # a partir de un hiperplano y devuelve el producto escalar con los
@@ -58,7 +59,7 @@ pairs(Auto)
 
 Las características que parecen más útiles a simple vista para la predicción de *mpg* son *displacement*, *horsepower* y *weight*. Para las tres características la relación es inversamente proporcional; se aprecia menor *mpg*, es decir, mayor consumo, conforme crece *displacement*, la potencia del coche y el peso. Para las demás categorías, también se ve correlación con el año o el número de cilindros.  
 
-Para usar el método $\texttt{boxplot}$ y decidir qué variables son las más relevantes, esperaremos a haber clasificado los datos según su consumo sea alto o bajo. Ahora podríamos aplicar $\texttt{boxplot}$ a unos *mpg* con respecto a *cylinders* por ejemplo:
+Para usar el método $\texttt{boxplot}$ y decidir qué variables son las más relevantes, esperaremos a haber clasificado los datos según su consumo sea alto o bajo. Ahora podríamos aplicar $\texttt{boxplot}$ a *mpg* con respecto a *cylinders*, por ejemplo:
 
 ```{r}
 boxplot(Auto$mpg ~ Auto$cylinders, main = "Boxplot MPG ~ cylinders",
@@ -70,11 +71,11 @@ Se observa mucho solapamiento de todos las clases de cilindros en torno al 20 de
 
 ### b) Seleccionar las variables predictoras que considere más relevantes.
 
-Atendiendo a las gráficas que hemos visto en el apartado anterior, las variables más relevantes serán *displacement*, *horsepower* y *weight*.
+Atendiendo a las gráficas que hemos visto en el apartado anterior, las variables más relevantes serán *displacement*, *cylinders*, *horsepower* y *weight*.
 
 ### c) Particionar el conjunto de datos en un conjunto de entrenamiento ($80\%$) y otro de test ($20\%$). Justificar el procedimiento usado.
 
-En primer lugar barajamos simplemente los datos, dejando el primer $80\%$ para *train* y el último $20\%$ para *test*. Una vez que hayamos clasificado la población podremos hacer una partición de *train* y *test* con elementos de cada clase de manera equilibrada.
+Obtenemos el número de datos en la BD y se toma una muestra de entre los índices de tamaño el $80\%$ del total. Esto nos permite obtener fácilmente la partición de entrenamiento y la de test.
 
 ```{r}
 num.datos <- length(Auto)
@@ -82,21 +83,22 @@ train.index.Auto <- sample(1:num.datos, size = num.datos*0.8,
                            replace = F)
 
 train.Auto <- Auto[train.index.Auto,]
-test.Auto <- Auto[!train.index.Auto,]
+test.Auto <- Auto[-train.index.Auto,]
 ```
 
 ### d) Crear una variable binaria, mpg01, que será igual 1 si la variable mpg contiene un valor por encima de la mediana, y -1 si mpg contiene un valor por debajo de la mediana. La mediana se puede calcular usando la función median(). (Nota: puede resultar útil usar la función data.frames() para unir en un mismo conjunto de datos la nueva variable mpg01 y las otras variables de Auto).
 
-Para crear una variable $\texttt{mpg01}$ aplicamos directamente la función $\texttt{sign}$
+Para crear una variable *mpg01* aplicamos directamente la función $\texttt{sign}$. Entonces sustituimos en el $\texttt{dataframe}$ la columna *mpg* por la *mpg01*
 
 ```{r}
 mpg01 <- sign(Auto$mpg - median(Auto$mpg))
-Auto <- data.frame(cbind(Auto,mpg01))
+Auto <- data.frame(cbind(mpg01,Auto[-1]))
 ```
 
   Repetimos ahora el análisis con $\texttt{boxplot}$ de las variables seleccionadas:
   
 ```{r}
+par(mfrow=c(2,2))
 boxplot(Auto$mpg01 ~ Auto$cylinders, main = "Boxplot MPG ~ cylinders",
         xlab = "cylinders", ylab = "MPG01")
 boxplot(Auto$displacement ~ Auto$mpg01, 
@@ -108,6 +110,7 @@ boxplot(Auto$weight ~ Auto$mpg01,
 boxplot(Auto$horsepower ~ Auto$mpg01, 
         main = "Boxplot horsepower ~  MPG01",
         ylab = "horsepower", xlab = "MPG01")
+par(mfrow=c(1,1))
 ```
 
   Se observa que siempre existe solapamiento en los diferentes *boxplot* para la clase 1 y la clase -1, aunque para estas variables el solapamiento es inferior al de otras, por ejemplo para la aceleración:
@@ -118,114 +121,189 @@ boxplot( Auto$acceleration ~ Auto$mpg01,
         ylab = "Aceleración", xlab = "MPG01")
 ```
 
-  + Ajustar un modelo de regresión logística a los datos de entrenamiento y predecir *mpg01* usando las variables seleccionadas en b). ¿Cuál es el error de test del modelo? Justificar la respuesta.
-  
+  +. Ajustar un modelo de regresión logística a los datos de entrenamiento y predecir *mpg01* usando las variables seleccionadas en b). ¿Cuál es el error de test del modelo? Justificar la respuesta.
 
-
-  Ahora podemos hacer una partición de los datos de manera que estén repartidas las categorías en el test:
+  Ahora podemos hacer una partición de los datos de manera que estén repartidas las categorías en la partición de entrenamiento y la de test:
   
 ```{r}
-high_mpg <- Auto[Auto$mpg01==1,]
-low_mpg <- Auto[Auto$mpg01==-1,]
-data_train <- rbind(high_mpg[1:round(nrow(high_mpg)*0.8),],
-                    low_mpg[1:round(nrow(low_mpg)*0.8),])
-data_test <- rbind(high_mpg[(round(nrow(high_mpg)*0.8)+1):
-                                   nrow(high_mpg),],
-                   low_mpg[(round(nrow(low_mpg)*0.8)+1):
-                                  nrow(low_mpg),])
-data_test <- data_test[sample(1:nrow(data_test)),]
-data_train <- data_train[sample(1:nrow(data_train)),]
+high_mpg <- Auto[Auto$mpg01==1,
+                 c("mpg01","displacement", "cylinders", 
+                   "horsepower", "weight")]
+low_mpg <- Auto[Auto$mpg01==-1,
+                c("mpg01","displacement", "cylinders", 
+                  "horsepower", "weight")]
 
-train <- data_train[,c(2,3,4,5)]
-test <-  data_test[,c(2,3,4,5)]
-label_train <- data_train[,10]
-label_test <- data_test[,10]
+train.index.h <- sample(1:nrow(high_mpg), size = 0.8*nrow(high_mpg),
+                        replace = F)
+train.index.l <- sample(1:nrow(low_mpg), size = 0.8*nrow(low_mpg),
+                        replace = F)
+
+train.Auto <- rbind(high_mpg[train.index.h,],
+                    low_mpg[train.index.l,])
+test.Auto <- rbind(high_mpg[-train.index.h,],
+                    low_mpg[-train.index.l,])
 ```
 
+Sin embargo, cuando ajustamos el modelo a los datos de entrenamiento, no conocemos toda la muestra. Por tanto, ajustamos las etiquetas de los datos de entrenamiento según la mediana de los mismos datos de entrenamiento. Hacemos lo mismo para los datos de test.
+
+```{r}
+train.Auto[,1] <- sign(train.Auto[,1]-median(train.Auto[,1]))
+test.Auto[,1] <- sign(test.Auto[,1]-median(test.Auto[,1]))
+```
+
+
+  Cargamos las bibliotecas requeridas.
+  
 ```{r, message=FALSE, warning=FALSE}
 library(e1071)
 library(ROCR)
 ```
 
+Aplicamos la función $\texttt{glm}$, obteniendo un modelo.
+
 ```{r}
-resume <- glm(label_train ~ train$cylinders + train$displacement +
-                 train$horsepower + train$weight)
-coefs <- as.vector(resume$coefficients)
+glm.model <- glm(as.factor(mpg01) ~ horsepower + weight + 
+                   displacement + cylinders,
+                 data = Auto, family = "binomial")
+coefs <- coef(glm.model)
 ```
 
-```{r}
-prob_1_glm <- apply(cbind(test$cylinders,test$displacement,
-                        test$horsepower,test$weight,1),
-                    1,function(x) 
-                      1/(1+exp(-hypplane_to_func(coefs[c(2:5,1)])(x))))
-pred_label_glm <- prob_1_glm > 0.5
-pred_glm <- prediction(prob_1_glm,label_test)
-E <- sum(pred_label_glm != (label_test==1))/length(label_test)*100
-cat("Error de test para regresión logística: ", E)
+  Con $\texttt{predict}$ podemos obtener, para los datos de test, bien la probabilidad de pertenecer a una clase si le pasamos el argumento $\texttt{type=response}$ o bien el valor esperado (con lo que podemos obtener la clase a la que sería asignado cada valor aplicándole la función signo). La primera de las opciones nos permite ajustar el nivel de probabilidad a partir del cual nos decantamos por una de las opciones. Esto sería interesante si una de las clases conllevara un mayor riesgo equivocarnos o tuviéramos conocimiento sobre la distribución de los datos. Asignaremos la clase 1 si la probabilidad es mayor que $0.5$, pues es lo habitual y en este caso no cuentan más unos errores que otros.
 
+```{r}
+prob.1.glm <- predict.glm(glm.model, newdata = test.Auto, 
+                          type = "response")
+pred.label.glm <- ifelse(prob.1.glm > 0.5, 1, -1)
+prediction.glm <- prediction(prob.1.glm,test.Auto[,1])
+E.test <- sum(pred.label.glm != test.Auto["mpg01"])/nrow(test.Auto)*100
+cat("Error de test para regresión logística: ", E.test)
 ```
   
-  + Ajustar un modelo K-NN a los datos de entrenamiento y predecir mpg01
-usando solamente las variables seleccionadas en b). ¿Cuál es el error de test en el modelo? ¿Cuál es el valor de $K$ que mejor ajusta los datos? Justificar la respuesta. (Usar el paquete class de R)
+  El error de test es de un $5\%$, que es una buena medida teniendo en cuenta los datos de los que partimos y que no se ha realizado un estudio en profundidad sobre las variables seleccionadas.
+  
+  +. Ajustar un modelo K-NN a los datos de entrenamiento y predecir *mpg01* usando solamente las variables seleccionadas en b). ¿Cuál es el error de test en el modelo? ¿Cuál es el valor de $K$ que mejor ajusta los datos? Justificar la respuesta. (Usar el paquete class de R)
 
+  Cargamos la biblioteca *class* para usar $\texttt{knn}$.
+  
 ```{r, message=FALSE, warning=FALSE}
 library(class)
-result_knn <- knn(train, test, label_train, k=3, prob = TRUE)
-pred_label_knn <- sign(as.numeric(result_knn)-1.5)
-prob_1_knn <- sapply(1:length(result_knn), function(i)
-  if(pred_label_knn[i]==1)  return(attr(result_knn,"prob")[i])
-  else return(1- attr(result_knn,"prob")[i]))
-E <- sum(label_test != pred_label_knn)/length(label_test)*100
-cat("Error de test para 3-NN: ", E)
-
-tune.knn(train, label_train==1, k=1:10, 
-         tunecontrol = tune.control(sampling = "boot"))
-result_knn <- knn(train, test, label_train, k=7, prob = TRUE)
-pred_label_knn <- sign(as.numeric(result_knn)-1.5)
-prob_1_knn <- sapply(1:length(result_knn), function(i)
-  if(pred_label_knn[i]==1)  return(attr(result_knn,"prob")[i])
-  else return(1- attr(result_knn,"prob")[i]))
-pred_knn <- prediction(prob_1_knn,label_test)
-E <- sum(label_test != pred_label_knn)/length(label_test)*100
-cat("Error de test para 3-NN: ", E)
 ```
 
-  + Pintar las curvas ROC (instalar paquete $\texttt{ROCR}$ en R) y comparar y valorar los resultados obtenidos para ambos modelos.
+  Comenzamos escalando los datos para que los rangos de los atributon no influyan:
   
 ```{r}
-perf.glm <- performance(pred_glm,"tpr","fpr")
+scale.factor <- scale(train.Auto[-1])
+train.Auto[-1] <- scale.factor
+test.Auto[-1] <- scale(test.Auto[-1], 
+                       center = attr(scale.factor,"scaled:center"),
+                       scale = attr(scale.factor,"scaled:scale"))
+```
+
+
+  Antes de pasar a ajustar el parámetro $k$, vemos el resultado de realizar $\texttt{1-NN}$. Tomamos las etiquetas dadas y la probabilidad de asignarle 1 a un dato (el atributo *prob* del modelo devuelto por $\texttt{knn}$ devuelve la probabilidad de asignación a la clase dada, con lo que tenemos que cambiarla).
+  
+```{r}
+knn.model <- knn(train.Auto[,-1], test.Auto[,-1], train.Auto[,1],
+                 k=1, prob = TRUE)
+pred.label.knn <- sign(as.numeric(knn.model)-1.5)
+prob.1.knn <- sapply(1:length(knn.model), function(i)
+  if(pred.label.knn[i]==1)  return(attr(knn.model,"prob")[i])
+  else return(1- attr(knn.model,"prob")[i]))
+E.test <-sum(test.Auto[,"mpg01"]!=pred.label.knn)/nrow(test.Auto)*100
+cat("Error de test para 1-NN: ", E.test)
+```
+
+Para $k=1$ se obtiene un error considerablemente mayor que para $\texttt{glm}$. Veremos cuál es el resultado ajustando un número de vecinos a considerar en la votación:
+
+```{r}
+tuned.knn <- tune.knn(as.matrix(train.Auto[,-1]),
+                      as.factor(train.Auto[,1]), 
+                      k=1:10,
+                      tunecontrol = tune.control(sampling = "cross"))
+best.k <- tuned.knn$best.parameters[1]
+best.model.knn <- knn(train.Auto[,-1], test.Auto[,-1], 
+                      train.Auto[,1], k=best.k, prob = TRUE)
+
+pred.label.knn <- sign(as.numeric(best.model.knn)-1.5)
+prob.1.knn <- sapply(1:nrow(test.Auto), function(i)
+  if(pred.label.knn[i]==1)  return(attr(best.model.knn,"prob")[i])
+  else return(1- attr(best.model.knn,"prob")[i]))
+
+prediction.knn <- prediction(prob.1.knn,test.Auto[,1])
+E.test <- sum(test.Auto[,1] != pred.label.knn)/nrow(test.Auto)*100
+cat("Error en test", paste(best.k,"-NN: ",sep=""), E.test)
+```
+
+  Hemos reducido el error ajustando el parámetro $k$ hasta un $10\%$, con lo que nos acercamos al dato obtenido por $\texttt{glm}$. Para realizar una mejor comparación, compararemos las curvas ROC.
+
+  +. Pintar las curvas ROC (instalar paquete $\texttt{ROCR}$ en R) y comparar y valorar los resultados obtenidos para ambos modelos.
+  
+```{r}
+perf.glm <- performance(prediction.glm,"tpr","fpr")
+auc.glm <- performance(prediction.glm,"auc")@y.values[[1]]
 plot(perf.glm@x.values[[1]],perf.glm@y.values[[1]],type='l', 
-     main = 'Área Bajo la Curva GLM', xlab='Tasa falsos positivos',
+     main = paste('Área Bajo la Curva GLM:', auc.glm), 
+     xlab='Tasa falsos positivos',
      ylab = 'Tasa verdaderos positivos')
-abline(a=0, b= 1, col=3)
+segments(0,0,1,1, col=3)
 ```
 
 ```{r}
-perf.knn <- performance(pred_knn,"tpr","fpr")
+perf.knn <- performance(prediction.knn,"tpr","fpr")
+auc.knn <- performance(prediction.knn,"auc")@y.values[[1]]
 plot(perf.knn@x.values[[1]],perf.knn@y.values[[1]],type='l', 
-     main = 'Área Bajo la Curva KNN', xlab='Tasa falsos positivos',
+     main = paste('Área Bajo la Curva KNN:', auc.knn),
+     xlab='Tasa falsos positivos',
      ylab = 'Tasa verdaderos positivos')
-abline(a=0, b= 1, col=3)
+segments(0,0,1,1, col=3) 
 ```
+
+ Pintamos ambas gráficas superpuestas para compararlas
+
+```{r}
+plot(perf.glm@x.values[[1]],perf.glm@y.values[[1]],type='l', 
+     main = 'Curvas ROC GLM y KNN', xlab='Tasa falsos positivos',
+     ylab = 'Tasa verdaderos positivos')
+points(perf.knn@x.values[[1]],perf.knn@y.values[[1]],type='l', col=4)
+segments(0,0,1,1, col=3)
+```
+
+  Las curvas y las áreas debajo de las curvas nos dan resultados distintos a los de los errores de test obtenidos (no es significativo puesto que sólo se ha obtenido un error de test), con mejores resultados para KNN.
 
 ### e) Bonus 1. Estimar el error de test de ambos modelos (RL, K-NN) pero usando validación cruzada de 5-particiones. Comparar con los resultados obtenidos en el punto anterior. 
 
 ### f) Bonus 2. Ajustar el mejor modelo de regresión posible considerando la variable *mpg* como salida y el resto como predictoras. Justificar el modelo ajustado en base al patrón de los residuos. Estimar su error de entrenamiento y test.
 
+
+
+```{r}
+detach("package:ROCR")
+detach("package:e1071")
+detach("package:ISLR")
+detach("package:class")
+```
+
 # Ejercicio 2
 ## Usar la base de datos *Boston* (en el paquete $\texttt{MASS}$ de $\texttt{R}$) para ajustar un modelo que prediga si dado un suburbio este tiene una tasa de criminalidad (*crim*) por encima o por debajo de la mediana. Para ello considere la variable *crim* como la variable salida y el resto como variables predictoras.
+
+En primer lugar se establece de nuevo la semilla para poder realizar un análisis sin ejecutar todo el código previo.
+```{r}
+set.seed(3141592)
+```
 
 
 ```{r, message=FALSE, warning=FALSE}
 library(MASS)
 library(glmnet)
+```
+
+```{r}
 data("Boston")
-label.crim <- sign(Boston$crim - median(Boston$crim))
 ```
 
 #### a) Encontrar el subconjunto óptimo de variables predictoras a partir de un modelo de regresión-LASSO (usar paquete *glmnet* de R) donde seleccionamos sólo aquellas variables con coeficiente mayor de un umbral prefijado.
 
-Comenzamos generando las matrices que nos permitirán un más cómodo manejo de los datos, quitando los datos no disponibles y las variables cualitativas:
+Comenzamos generando las matrices que nos permitirán un más cómodo manejo de los datos para las funciones a utilizar en este apartado.
 
 ```{r}
 x <- model.matrix(crim~., Boston)[,-1]
@@ -242,7 +320,7 @@ lambda.min <- cv.lasso$lambda.min
 cat("Lambda con menor error: ", lambda.min)
 ```
 
-Ahora, fijado $\lambda$, separamos los datos en *train* y *test*, fijamos un umbral a partir del cual considerar relevantes las variables 
+Ahora, separamos los datos en *train* y *test* de la misma manera que en el ejercicio anterior y, fijado $\lambda$, fijamos un umbral a partir del cual considerar relevantes las variables.
 
 ```{r}
 train.index <- sample(1:nrow(x), size = nrow(x)*4/5)
@@ -255,7 +333,7 @@ y.test.boston <- y[-train.index]
 ```
 
 ```{r}
-threshold <- 0.4
+threshold <- 0.5
 lasso.model <- glmnet(x.train.boston, y.train.boston, 
                       lambda = lambda.min)
 lasso.coef <- predict(lasso.model, type = "coeff", s=lambda.min)[1:14,]
@@ -264,7 +342,7 @@ selected.var <- names(lasso.coef[abs(lasso.coef) > threshold])[-1]
 
 #### b) Ajustar un modelo de regresión regularizada con “weight-decay” (ridge-regression) y las variables seleccionadas. Estimar el error residual del modelo y discutir si el comportamiento de los residuos muestran algún indicio de “underfitting”.
 
-Ahora, una vez seleccionadas las variables a considerar (*chas*, *nox*, *dis*, *rad*), estimamos de nuevo el mejor $\lambda$, ahora para el modelo *weight decay*:
+Ahora, una vez seleccionadas las variables a considerar (*chas*, *nox*, *dis*, *rad*), estimamos de nuevo el mejor $\lambda$ para el modelo *weight decay*:
 
 ```{r}
 x <- model.matrix(crim~., Boston[c("crim",selected.var)])[,-1]
@@ -279,14 +357,21 @@ lambda.min <- cv.wdecay$lambda.min
 cat("Lambda con menor error: ", lambda.min)
 ```
 
+Fijado $\lambda$ y las variables seleccionadas, vemos su error cuadrático medio: 
+
 ```{r}
 ridge.mod = glmnet(x, y, alpha=0, lambda=lambda.min)
 ridge.pred = predict (ridge.mod, s=lambda.min, newx=x.test.boston)
-mean((ridge.pred - y.test.boston)^2)
+cat("MSE óptimo", mean((ridge.pred - y.test.boston)^2))
 ```
 
-Para ver si hay *underfitting*, repetimos el experimento con todas las variables:
+Para ver si hay *underfitting*, repetimos el experimento con todas las variables y sin parámetro $\lambda$:
 
+```{r}
+ridge.mod = glmnet(x, y, alpha=0, lambda=0)
+ridge.pred = predict (ridge.mod, s=lambda.min, newx=x.test.boston)
+cat("MSE (lambda=0)", mean((ridge.pred - y.test.boston)^2))
+```
 
 ```{r}
 x <- model.matrix(crim~., Boston)[,-1]
@@ -304,25 +389,34 @@ cat("Lambda con menor error: ", lambda.min)
 ```{r}
 ridge.mod = glmnet(x, y, alpha=0, lambda=lambda.min)
 ridge.pred = predict (ridge.mod, s=lambda.min, newx=x.test.boston)
-mean((ridge.pred - y.test.boston)^2)
+cat("MSE todos los param:", mean((ridge.pred - y.test.boston)^2))
 ```
 
+  Los errores obtenidos son mayores, con lo que deducimos que el modelo está bien ajustado y no hay *underfitting*.
+  
 #### c) Definir una nueva variable con valores -1 y 1 usando el valor de la mediana de la variable *crim* como umbral. Ajustar un modelo SVM que prediga la nueva variable definida. (Usar el paquete e1071 de R). Describir con detalle cada uno de los pasos dados en el aprendizaje del modelo SVM. Comience ajustando un modelo lineal y argumente si considera necesario usar algún núcleo. Valorar los resultados del uso de distintos núcleos.
 
 Comenzamos cargando el paquete $\texttt{e1071}$ y creando el $\texttt{data frame}$ que contenga la etiqueta correspondiente al valor *crim* de cada dato. Comenzamos aplicando SVM directamente, usando un núcleo lineal. Posteriormente veremos la influencia de los parámetros y los ajustaremos haciendo validación cruzada:
 
 ```{r, message=FALSE, warning=FALSE}
 library(e1071)
-
-Boston.class <- data.frame(x=Boston[-1], y=as.factor(label.crim))
-svm.results  <- svm(y~., data = Boston.class, kernel="linear")
-print(svm.results)
 ```
 
+
 ```{r}
-y.svm.pred = predict(svm.results, Boston.class)
+label.crim <- sign(Boston$crim - median(Boston$crim))
+Boston.class <- data.frame(x=Boston[-1], y=as.factor(label.crim))
+svm.model  <- svm(y~., data = Boston.class, kernel="linear")
+```
+
+Una vez obtenido el modelo *SVM*, lo aplicamos sobre los datos y se obtiene la matriz de contingencia, de donde sacamos el error dentro de la muestra:
+
+```{r}
+y.svm.pred = predict(svm.model, Boston.class)
 confusion.matrix <- table(predict= y.svm.pred, truth= Boston.class$y)
 E_in <- (confusion.matrix[2,1]+confusion.matrix[1,2])/sum(confusion.matrix)
+print(confusion.matrix)
+cat("Ein", E_in*100)
 ```
 
 Para ajustar el modelo, partimos en primer lugar en datos de entrenamiento y test:
@@ -343,8 +437,8 @@ Realizamos el ajuste sobre la penalización sobre los datos mal clasificados, *c
 tune.out <- tune(svm, y~., data = train.boston, kernel="linear",
                  ranges=list(cost= c(0.001, 0.01, 0.1, 1, 5, 10, 100))
                  )
-summary(tune.out)
 best.cost.svm <- tune.out$best.parameters[,1]
+cat("Mejor valor del parámetro cost:", best.cost.svm)
 ```
 
 Observamos la influencia sobre los datos de test:
@@ -354,8 +448,10 @@ svm.model  <- svm(y~., data = train.boston, kernel="linear")
 y.svm.pred = predict(svm.model , test.boston)
 
 confusion.matrix <- table(predict=y.svm.pred, truth=test.boston$y)
-E_out.linear <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
+E_test.linear <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
   sum(confusion.matrix)
+print(confusion.matrix)
+cat("E_test para núcleo lineal", E_test.linear*100)
 ```
 
 Repetimos ahora el experimento para los distintos núcleos:
@@ -364,71 +460,89 @@ Repetimos ahora el experimento para los distintos núcleos:
 tune.out <- tune(svm, y~., data = train.boston, kernel="polynomial",
                  ranges=list(cost= c(0.001, 0.01, 0.1, 1, 5, 10, 100))
                  )
-summary(tune.out)
 best.cost.svm <- tune.out$best.parameters[,1]
 svm.model  <- svm(y~., data = train.boston, kernel="polynomial")
 y.svm.pred = predict(svm.model , test.boston)
 
 confusion.matrix <- table(predict=y.svm.pred, truth=test.boston$y)
-E_out.polynomial <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
+E_test.polynomial <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
   sum(confusion.matrix)
+print(confusion.matrix)
+cat("E_test para núcleo polinómico", E_test.polynomial*100)
 ```
 
 ```{r}
 tune.out <- tune(svm, y~., data = train.boston, kernel="radial",
                  ranges=list(cost= c(0.001, 0.01, 0.1, 1, 5, 10, 100))
                  )
-summary(tune.out)
 best.cost.svm <- tune.out$best.parameters[,1]
 svm.model  <- svm(y~., data = train.boston, kernel="radial")
 y.svm.pred = predict(svm.model , test.boston)
 
 confusion.matrix <- table(predict=y.svm.pred, truth=test.boston$y)
-E_out.radialbasis <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
+E_test.radial <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
   sum(confusion.matrix)
+print(confusion.matrix)
+cat("E_test para núcleo de base radial", E_test.radial*100)
 ```
 
 ```{r}
 tune.out <- tune(svm, y~., data = train.boston, kernel="sigmoid",
                  ranges=list(cost= c(0.001, 0.01, 0.1, 1, 5, 10, 100))
                  )
-summary(tune.out)
 best.cost.svm <- tune.out$best.parameters[,1]
 svm.model  <- svm(y~., data = train.boston, kernel="sigmoid")
 y.svm.pred = predict(svm.model , test.boston)
 
 confusion.matrix <- table(predict=y.svm.pred, truth=test.boston$y)
-E_out.sigmoid <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
+E_test.sigmoid <- (confusion.matrix[2,1]+confusion.matrix[1,2])/
   sum(confusion.matrix)
+print(confusion.matrix)
+cat("E_test para núcleo sigmoidal", E_test.sigmoid*100)
 ```
+
+  El mejor resultado se da para el núcleo de base radial. Por contra, el peor resultado se da para el núcleo sigmoidal.
+  
 #### Bonus. Estimar el error de entrenamiento y test por validación cruzada de 5 particiones.
+
+
+```{r}
+detach("package:MASS")
+detach("package:glmnet")
+detach("package:e1071")
+```
+
 
 # Ejercicio 3
 
 ### Usar el conjunto de datos Boston y las librerías randomForest y gbm de R.
 
 ```{r, message=FALSE, warning=FALSE}
+library(MASS)
 library(randomForest)
 ```
 
 #### 1) Dividir la base de datos en dos conjuntos de entrenamiento (80$\%$) y test (20$\%$).
 
-```{r}
-train.index <- sample(1:nrow(Boston), size = nrow(Boston)*4/5)
-```
+Comenzamos haciendo la partición de la misma manera que en los apartados previos y reestableciendo la semilla.
 
+```{r}
+set.seed(31415926)
+data("Boston")
+train.boston <- sample(1:nrow(Boston), size = nrow(Boston)*0.8)
+```
 
 #### 2) Usando la variable *medv* como salida y el resto como predictoras, ajustar un modelo de regresión usando bagging. Explicar cada uno de los parámetros usados. Calcular el error del test.
 
 ```{r}
-bag.boston = randomForest(medv~., data=Boston, subset=train.index,
-                          mtry=13, importance = TRUE )
-y.pred.bag = predict( bag.boston, newdata=Boston[-train.index,])
-plot ( y.pred.bag, Boston[-train.index,"medv"] )
-abline (0 ,1)
-mean ( (y.pred.bag - Boston[-train.index,"medv"])^2 )
+bag.boston = randomForest(medv~., data=Boston, subset=train.boston,
+                          importance = TRUE )
+y.pred.bag = predict( bag.boston, newdata=Boston[-train.boston,])
+plot(y.pred.bag, Boston[-train.boston,"medv"],
+     main="Pred. medv vs real", xlab = "Predicted", ylab = "Medv")
+abline(0 ,1)
+cat("MSE", mean ((y.pred.bag-Boston[-train.boston,"medv"])^2))
 ```
-
 
 #### 3) Ajustar un modelo de regresión usando ``Random Forest''. Obtener una estimación del número de árboles necesario. Justificar el resto de parámetros usados en el ajuste. Calcular el error de test y compararlo con el obtenido con bagging.
 
@@ -439,22 +553,22 @@ nTrees <- 10
 error.prev <- Inf
 error.best <- Inf
   
-while( !error.stable ){
-  mtry <- tuneRF(Boston[train.index, 
-                        -which(names(Boston) %in% "medv")],
-                 Boston[train.index, "medv"], ntreeTry = nTrees)
+while( !error.stable && nTrees < 5000){
+  mtry <- tuneRF(Boston[train.boston, -14], 
+                 Boston[train.boston, "medv"],
+                 ntreeTry = nTrees, trace = FALSE, plot = FALSE)
   mtry <- mtry[which.min(mtry[,2]),1]
-  bag.boston = randomForest(medv~., data=Boston, subset=train.index,
+  bag.boston <- randomForest(medv~., data=Boston, subset=train.boston,
                             mtry=mtry, importance = T, nTrees=nTrees)
-  y.pred.rf = predict( bag.boston, newdata=Boston[-train.index,])
-  error.current <- mean((y.pred.rf - Boston[-train.index,"medv"])^2)
+  y.pred.rf <- predict( bag.boston, newdata=Boston[-train.boston,])
+  error.current <- mean((y.pred.rf - Boston[-train.boston,"medv"])^2)
   
   if(error.best > error.current){
     best.ntree <- nTrees
     error.best <- error.current
   }
   
-  if( abs(error.prev - error.current) < 0.005){
+  if( abs(error.prev - error.current) < 0.01){
     error.stable <- TRUE
   }
   else{
@@ -464,17 +578,21 @@ while( !error.stable ){
 }
 ```
 
+Paramos la ejecución cuando llegamos a que el error varía menos de un umbral, obteniendo $280$ como mejor valor para *ntree*. Entonces ajustamos *mtry* para este número de árboles.
 
 ```{r}
-mtry <- tuneRF(Boston[train.index, -which(names(Boston) %in% "medv")],
-               Boston[train.index, "medv"], ntreeTry = nTrees)
+mtry <- tuneRF(Boston[train.boston, -which(names(Boston) %in% "medv")],
+               Boston[train.boston, "medv"], ntreeTry = best.ntree,
+               trace = FALSE, plot=FALSE)
 mtry <- mtry[which.min(mtry[,2]),1]
-bag.boston = randomForest(medv~., data=Boston, subset=train.index,
-                          mtry=mtry, importance = T, nTrees=nTrees)
-y.pred.rf = predict( bag.boston, newdata=Boston[-train.index,])
-mean((y.pred.rf - Boston[-train.index,"medv"])^2)
+bag.boston = randomForest(medv~., data=Boston, subset=train.boston,
+                          mtry=mtry, importance = T, nTrees=best.ntree)
+y.pred.rf = predict( bag.boston, newdata=Boston[-train.boston,])
+cat("MSE:", mean((y.pred.rf - Boston[-train.boston,"medv"])^2))
 ```
 
+  Vemos que se obtiene un error similar al obtenido con los valores por defecto, y es que estos parámetros ofrecen buenos resultados.
+  
 #### 4) Ajustar un modelo de regresión usando Boosting (usar *gbm* con $\texttt{distribution = 'gaussian'}$). Calcular el error de test y compararlo con el obtenido con *bagging* y Random Forest.
 
 ```{r}
@@ -483,25 +601,29 @@ library(gbm)
 library(caret)
 ```
 
+  Realizamos en primer lugar *boosting* con los datos de entrenamiento. Probaremos a pasarle como parámetros $5000$ árboles con $4$ niveles de profundidad.
 
 ```{r}
-boost.boston = gbm(medv~., data=Boston[train.index,],
+boost.boston = gbm(medv~., data=Boston[train.boston,],
                     distribution="gaussian", n.trees=5000,
-                    interaction.depth =4)
+                    interaction.depth=4)
 print(summary(boost.boston))
 ```
 
+Se observa que las variables más importantes (mucho más que las demás) son *rm* y *lstat* con lo que es de esperar que sean las que determinen los nodos del árbol.
 
 ```{r}
-y.pred.boost = predict(boost.boston, newdata=Boston[-train.index,],
+y.pred.boost = predict(boost.boston, newdata=Boston[-train.boston,],
                        n.trees = 5000)
-mean((y.pred.boost - Boston[-train.index,"medv"])^2)
+cat("MSE:",mean((y.pred.boost - Boston[-train.boston,"medv"])^2))
 ```
 
 
+Evaluamos ahora con diferentes parámetros para el número de árboles, la profundidad y el parámetro de disminución. La ejecución no se incluye en el informe porque es muy costosa en tiempo. Los resultados obtenidos son *n.trees*$=4450$, *shrinkage*$=0.01$ y *depth*$=5$.
+
 ```{r, eval=FALSE}
-train(Boston[train.index, -which(names(Boston) %in% "medv")],
-      Boston[train.index, "medv"], method = "gbm",
+train(Boston[train.boston, -which(names(Boston) %in% "medv")],
+      Boston[train.boston, "medv"], method = "gbm",
       trControl = trainControl(method = "cv", number=5),
       tuneGrid = expand.grid(interaction.depth = 1:5, 
                              n.trees=seq(50,5000,by=200),
@@ -510,15 +632,17 @@ train(Boston[train.index, -which(names(Boston) %in% "medv")],
 ```
 
 ```{r}
-boost.boston = gbm(medv~., data=Boston[train.index,],
+boost.boston = gbm(medv~., data=Boston[train.boston,],
                     distribution="gaussian", n.trees=4450,
                     interaction.depth =5, shrinkage=0.01
-                   )
-y.pred.boost = predict(boost.boston, newdata=Boston[-train.index,],
-                       n.trees = 4450)
-mean((y.pred.boost - Boston[-train.index,"medv"])^2)
+                   ) 
+y.pred.boost = predict(boost.boston, newdata=Boston[-train.boston,],
+                       n.trees = 4450) 
+cat("MSE:",mean((y.pred.boost - Boston[-train.boston,"medv"])^2))
 ```
 
+  Vemos que el error es significativamente menor si ajustamos los parámetros, pasando de 16 a 11, reduciéndose así también el error obtenido con *random forest*
+  
 ```{r}
 detach("package:gbm")
 detach("package:caret")
@@ -531,6 +655,7 @@ detach("package:caret")
 ```{r}
 library(ISLR)
 data("OJ")
+set.seed(3241592)
 ```
 
 
@@ -541,11 +666,14 @@ library(tree)
 ```
 
 
+  Comenzamos tomando un conjunto de entrenamiento de tamaño 800:
+  
 ```{r}
 train.OJ <- sample(1:nrow(OJ), size = 800, replace = FALSE)
 ```
 
 
+  Ponemos *Purchase* como variable a estudiar en función de las demás y generamos el árbol con la función *tree*
 ```{r}
 tree.OJ <- tree(Purchase~., data=OJ, subset=train.OJ)
 ```
@@ -556,6 +684,8 @@ tree.OJ <- tree(Purchase~., data=OJ, subset=train.OJ)
 summary(tree.OJ)
 ```
 
+  Vemos que el número de nodos terminales es 8 y que las variables que realmente se usan para la clasificación son *LoyalCH* y *PriceDiff*. El error obtenido en train es del $14.5\%$.
+  
 #### 3) Crear un dibujo del árbol e interpretar los resultados.
 
 ```{r}
@@ -563,33 +693,56 @@ plot(tree.OJ)
 text(tree.OJ, pretty =0)
 ```
 
+Se observa cómo realmente el árbol no es minimal, sino que en la rama dada por $LoyalCH<0.5036$, se divide de nuevo por $LoyalCH<0.276142$ y divide otra vez pero da lugar a dos nodos terminales con la misma etiqueta, por lo que se podría ahorrar un nodo. Pasa algo análogo en la rama de $LoyalCH>0.5036$, pues podría diferenciar las categorías cuando está en la rama $LoyalCH<0.76452$ poniendo directamente $PriceDiff<-0.165$.
+
 #### 4) Predecir la respuesta de los datos de test, y generar e interpretar la matriz de confusión de los datos de test. ¿Cuál es la tasa de error del test? ¿Cuál es la precisión del test?
 
 ```{r}
 tree.OJ.pred = predict(tree.OJ, OJ[-train.OJ,-1],type ="class")
 confusion.matrix.OJ <-table(tree.OJ.pred, OJ[-train.OJ,1] )
+print(confusion.matrix.OJ)
 cat("Precisión", 
     100*sum(diag(confusion.matrix.OJ))/sum(confusion.matrix.OJ))
 ```
 
+Se observa cómo se han predicho acertadamente 127 datos para la clase *CH* y se han etiquetado como *CH* siendo *MM* 37 datos. En cambio para *MM* se han acertado 84 datos y se han etiquetado como *MM* siendo *CH* 22 datos. La precisión es del $78.1\%$, que significa que hay casi un $22\%$ de error. Probamos ahora con *cv.tree* para ajustar el número óptimo de nodos terminales.
 
 #### 5) Aplicar la función $\texttt{cv.tree()}$ al conjunto de *training* y determinar el tamaño óptimo del árbol. ¿Qué hace $\texttt{cv.tree}$?
 
+Hacemos *CV* sobre *tree* obteniendo los errores y los tamaños con los que se han obtenido, pudiendo elegir aquel con menor error
 ```{r}
 tree.cv.OJ <- cv.tree(tree.OJ, K=5)
+size.min.OJ <- tree.cv.OJ$size[which.min(tree.cv.OJ$dev)]
 ```
 
 ```{r}
-prune.OJ <- prune.tree(tree.OJ, best=5)
+prune.OJ <- prune.tree(tree.OJ, best=size.min.OJ)
 plot(prune.OJ)
 text(prune.OJ)
 ```
 
+```{r}
+tree.OJ.pred = predict(prune.OJ, OJ[-train.OJ,-1],type ="class")
+confusion.matrix.OJ <-table(tree.OJ.pred, OJ[-train.OJ,1] )
+print(confusion.matrix.OJ)
+cat("Precisión", 
+    100*sum(diag(confusion.matrix.OJ))/sum(confusion.matrix.OJ))
+```
 
+  Hemos reducido en un nodo el tamaño del árbol y en cambio hay una pérdida de precisión en torno al $1\%$.
+  
 #### Bonus 4. Generar un gráfico con el tamaño del árbol en el eje x (número de nodos) y la tasa de error de validación cruzada en el eje y. ¿Qué tamaño de árbol corresponde a la tasa más pequeña de error de clasificación por validación cruzada?
 
+Ya hemos visto que podemos acceder al vector con los errores y tamaños, así que simplemente hay que hacer plot. El mínimo está puesto en rojo:
+
 ```{r}
-plot(tree.cv.OJ$size, tree.cv.OJ$dev, type="b",
+plot(tree.cv.OJ$size, tree.cv.OJ$dev, type="b", ylab = "Error",
+     main = "Error según nodos terminales", xlab = "Número de nodos",
      col=(7:1==which.min(tree.cv.OJ$dev))[7:1]+1)
+```
+
+```{r}
+detach("package:tree")
+detach("package:ISLR")
 ```
 
