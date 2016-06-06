@@ -69,4 +69,47 @@ Considere la siguiente aproximación al aprendizaje. Mirando los datos, parece q
 y vemos que es $d + 1$. Usamos dicho valor de $d_{VC}$ para obtener una cota del error de test. Argumente a favor o en contra de esta forma de proceder identificando los posible fallos si los hubiera y en su caso cuál hubiera sido la forma correcta de actuación.
 \end{cuestion}
 
+% Cuestión 5
+\begin{cuestion}
+Suponga que separamos $100$ ejemplos de un conjunto $\mathcal{D}$ que no serán usados para entrenamiento sino que serán usados para seleccionar una de las tres hipótesis finales $g_1$, $g_2$ y $g_3$ producidas por tres algoritmos de aprendizaje distintos entrenados sobre el resto de datos.
+Cada algoritmo trabaja con un conjunto $\mathcal{H}$ de tamaño 500. Nuestro deseo es caracterizar la precisión de la estimación $E_{out}(g)$ sobre la hipótesis final seleccionada cuando usamos los mismos 100 ejemplos para hacer la estimación.
+\begin{enumerate}[a]
+\item ¿Qué expresión usaría para calcular la precisión? Justifique la decisión
+\item ¿Cuál es el nivel de contaminación de estos 100 ejemplos comparándolo con el caso donde estas muestras fueran usadas en el entrenamiento en lugar de en la selección final?
+\end{enumerate}
+\end{cuestion}
+
+
+% Cuestión 6
+
+\begin{cuestion}
+Considere la tarea de seleccionar una regla del vecino más cercano. ¿Qué hay de erróneo en la siguiente lógica que se aplica a la selección de $k$? (Los límites son cuando $N \rightarrow \infty$).
+Considere la posibilidad de establecer la clase de hipótesis $H_{NN}$ con $N$ reglas, las $k-NN$ hipótesis, usando $k =1,\dots,N$. Use el error dentro de la muestra para elegir un valor de $k$ que minimiza $E_{in}$. Utilizando el error de generalización para $N$ hipótesis, obtenemos la conclusión
+de que $E_{in} \rightarrow E_{out}$ porque $\log N/N \rightarrow 0$. Por lo tanto concluimos que asintóticamente,
+estaremos eligiendo el mejor valor de $k$, basándonos sólo en $E_{in}$.
+\end{cuestion}
+
+
+% Cuestión 9
+  \begin{cuestion}
+    Sea $V$ y $Q$ el número de nodos y pesos en una red neuronal,
+
+    $$ V = \sum_{l=0}^L d^{(l)}, \; \; Q = \sum_{l=1}^L d^{(l)} \left( d^{(l+1)} + 1\right) $$
+
+    En términos de $V$ y $Q$, ¿cuántas operaciones se realizan en un pase hacia adelante (sumas, multiplicaciones, y evaluaciones de $\theta$)? Ayuda: Analizar la complejidad en términos de $V$ y de $Q$.
+  \end{cuestion}
+
+  \begin{solucion}
+  \end{solucion}
+
+% Cuestión 10
+  \begin{cuestion}
+    Para el perceptrón sigmoidal $h(x) = tanh(x^Tw)$, sea el error de ajuste $E_{in}(w) = \frac{1}{N}\sum_{n=1}^N \left( tanh(x_n^Tw) - y_n \right)^2$. Mostrar que
+
+    $$ \nabla E_{in}(w) = \frac{2}{N} \sum_{n=1}^N \left( tanh(x_n^Tw) - y_n \right) \left( 1 - tanh(x_n^Tw)^2 \right) x_n $$
+
+    Si $w \rightarrow \infty$, ¿qué le sucede al gradiente? ¿Cómo se relaciona esto con la dificultad de optimizar el perceptrón multicapa?
+
+  \end{cuestion}
+
 \end{document}
