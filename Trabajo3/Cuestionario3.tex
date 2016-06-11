@@ -7,12 +7,28 @@
 \usepackage{amsthm}
 \usepackage{amsmath}
 \usepackage{eurosym}
+\usepackage{mathtools}
 \usepackage[pdftex]{hyperref} 
 
 \title{Aprendizaje autom\'atico. Cuestionario de teor\'ia 3}
 \author{Jacinto Carrasco Castillo}
 
 \theoremstyle{definition}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}%
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}%
+
+% Swap the definition of \abs* and \norm*, so that \abs
+% and \norm resizes the size of the brackets, and the 
+% starred version does not.
+\makeatletter
+\let\oldabs\abs
+\def\abs{\@ifstar{\oldabs}{\oldabs*}}
+%
+\let\oldnorm\norm
+\def\norm{\@ifstar{\oldnorm}{\oldnorm*}}
+\makeatother
+
 \begin{document}
 \maketitle
 
@@ -25,7 +41,7 @@
 
 % Cuestión 1
 \begin{cuestion}
-Consider los conjuntos de hipótesis $\mathcal{H}_1$ y $\mathcal{H}_{100}$ que contienen funciones \textit{booleanas} sobre 10 variables \textit{booleanas}, es decir $\mathcal{X} = \{-1, +1\}^{10}$. $\mathcal{H}_1$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en un único punto de $\mathcal{X}$ y $-1$ en el resto. $\mathcal{H}_{100}$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en exactamente $100$ puntos de $\mathcal{X}$ y $-1$ en el resto.
+Considere los conjuntos de hipótesis $\mathcal{H}_1$ y $\mathcal{H}_{100}$ que contienen funciones \textit{booleanas} sobre 10 variables \textit{booleanas}, es decir $\mathcal{X} = \{-1, +1\}^{10}$. $\mathcal{H}_1$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en un único punto de $\mathcal{X}$ y $-1$ en el resto. $\mathcal{H}_{100}$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en exactamente $100$ puntos de $\mathcal{X}$ y $-1$ en el resto.
 \begin{enumerate}[a]
 \item ¿Cuántas hipótesis contienen $\mathcal{H}_1$ y $\mathcal{H}_{100}$?
 \item ¿Cuántos bits son necesarios para especificar una hipótesis en $\mathcal{H}_1$?
@@ -37,6 +53,25 @@ Consider los conjuntos de hipótesis $\mathcal{H}_1$ y $\mathcal{H}_{100}$ que c
 
 % Solución 1 
 \begin{solucion} 
+
+	Comenzamos por formalizar cuáles son los espacios de hipótesis:
+	\begin{itemize}
+		\item $\mathcal{H}_1 = \{f:\mathcal{X} \rightarrow \{-1, +1\}; \exists_1 x \in \mathcal{X}, f(x)=1 \} $
+		\item $\mathcal{H}_{100} = \{f:\mathcal{X} \rightarrow \{-1, +1\}; \exists X \subset \mathcal{X}, card(X)=100, f(x)=1 \Leftrightarrow x \in X \} $
+	\end{itemize}
+	
+	Notemos que el espacio $\mathcal{X}$ tiene $2^{10}$ puntos.
+	
+	\begin{enumerate}[a]
+
+	\item El número de funciones en cada espacio se corresponde con la asignación del valor positivo a 1 ó 100 puntos respectivamente y por tanto viene dado por $\binom{1}{2^{10}}$ para $\mathcal{H}_1$, $\binom{100}{2^{10}}$ para $\mathcal{H}_{100}$.
+	\item Para especificar una hipótesis en $\mathcal{H}_1$ nos basta con indicar el punto $x \in \mathcal{X}$ para el que la función toma valor 1, así que nos bastan los 10 bits necesarios para representar un punto en $\mathcal{X}$. 
+	\item Para $\mathcal{H}_{100}$ nos hacen falta 1000 bits, pues tenemos que indicar los 100 puntos que toman valor 1.
+	\end{enumerate}
+	
+	Asociamos con la complejidad de una clase de funciones el tamaño de ésta. Es decir, cuando una clase de funciones es mayor, tiene más funciones, diremos que es más grande. Cuanto más funciones tenga dicho espacio, también requeriremos de más espacio para representarlas, esto es, más parámetros se irán añadiendo para poder escribir las funciones. Finalmente, que haya más parámetros a tener en cuenta tiene como consecuencia que las componentes vean aumentada su complejidad.
+	
+	
 \end{solucion}
 
 % Cuestión 2
@@ -55,20 +90,39 @@ enviar?
 
 % Solución 2
 \begin{solucion}
+No, no pagaría. Basta pensar en qué probabilidad hay de acertar en 5 ocasiones consecutivas. Al imaginar el árbol de posibilidades, se deduce que se comenzó enviando un correo a $2^5= 32$ personas, $16$ con un resultado y $16$ con el otro. A quienes se les enviaron las cartas con el resultado que se produjo, se les enviaron otras cartas, 8 con un resultado y 8 con otro. Así, hasta que a una persona le llegan durante 5 semanas los resultados correctos y se le plantea la oportunidad de pagar dinero para esa estafa. Este argumento también sale en \textit{The Simpsons} o en \textit{Sé lo que estás pensando}, novela de Jhon Verdon.
+
+\begin{enumerate}[a]
+\item Las posibilidades, al considerar que los posibles resultados para un partido son \textit{victoria/derrota}, $0/1$, las posibles combinaciones son $2^5=32$
+\item En la primera ronda deberá mandar $2^5$, en la segunda $2^4$... En total, serían $\sum\limits_{i=1}^5 2^i = 2^6-2 = 62$, $63$ cartas si contamos la que recibe el día después del último partido con la oferta.
+\item Deberá enviar 16 cartas a aquellas personas a las que se le mandó la carta con el resultado que finalmente salió.
+\item Como se ha respondido antes, 63.
+\item  Ingresará $50000$\euro $-0.5 \cdot 63$\euro $= 49968,5$ \euro
+\item Entendemos como la credibilidad el porcentaje total de personas que han recibido los resultados correctos. Esta función será  $f_{cred}(i) = \frac{100}{2^i}$, siendo el parámetro el número de partidos llevados a cabo. El número de cartas a enviar (esperando que sea una persona la que reciba las predicciones correctas y mandarle la oferta) será $f_{cartas}(i) = 2^{i+1}-1$ en función del número de partidos que esperemos acertar. Por tanto la función de beneficios, suponiendo que el interesado paga $50000$\euro es $f_{beneficio}(i)=50000 - 0.5 \cdot (2^{i+1}-1)$. La función de crecimiento es $m_\mathcal{H}(N) = 2^N$, pues el estafador quiere asegurarse de que siempre hay una función que asigna a un punto (es decir, el resultado de $N$ partidos) el resultado correcto. 
+\end{enumerate}
 \end{solucion}
 
 % Cuestión 3
 \begin{cuestion}
-En un experimento para determinar la distribución del tamaño de los peces en un lago, se decide echar una red para capturar una muestra representativa. Así se hace y se obtiene una muestra suficientemente grande de la que se pueden obtener conclusiones estadísticas sobre los peces del lago. Se obtiene la distribución de peces por tamaño y se entregan las conclusiones. Discuta si las conclusiones obtenidas servirán para el objetivo que se persigue
-e identifique si hay que lo impida
+	En un experimento para determinar la distribución del tamaño de los peces en un lago, se decide echar una red para capturar una muestra representativa. Así se hace y se obtiene una muestra suficientemente grande de la que se pueden obtener conclusiones estadísticas sobre los peces del lago. Se obtiene la distribución de peces por tamaño y se entregan las conclusiones. Discuta si las conclusiones obtenidas servirán para el objetivo que se persigue e identifique si hay algo que lo impida.
 \end{cuestion}
 
+% Solución 3
+  \begin{solucion}
+	  El objetivo del experimento es conocer la distribución del tamaño de los peces en un lago. Por los conocimientos que tenemos sobre cómo se ha realizado el experimento no podemos estar seguros de que realmente la muestra obtenida sea representativa, pues no sabemos si la red se ha echado en distintas zonas del lago, con distintas profundidades, y no sabemos cuál es el tamaño mínimo de pez que atrapa esta red, pues podría dejar escapar a peces pequeños, provocando que la muestra estuviese sesgada y apuntase en la dirección de que hay un mayor número de peces de mayor tamaño en proporción del que hay realmente.
+  
+  \end{solucion}
+  
 % Cuestión 4
 \begin{cuestion}
-Considere la siguiente aproximación al aprendizaje. Mirando los datos, parece que los datos son linealmente separables, por tanto decidimos usar un simple perceptron y obtenemos un error de entrenamiento cero con los pesos óptimos encontrados. Ahora deseamos obtener algunas conclusiones sobre generalización, por tanto miramos el valor $d_{VC}$ de nuestro modelo
-y vemos que es $d + 1$. Usamos dicho valor de $d_{VC}$ para obtener una cota del error de test. Argumente a favor o en contra de esta forma de proceder identificando los posible fallos si los hubiera y en su caso cuál hubiera sido la forma correcta de actuación.
+	Considere la siguiente aproximación al aprendizaje. Mirando los datos, parece que los datos son linealmente separables, por tanto decidimos usar un simple perceptron y obtenemos un error de entrenamiento cero con los pesos óptimos encontrados. Ahora deseamos obtener algunas conclusiones sobre generalización, por tanto miramos el valor $d_{VC}$ de nuestro modelo y vemos que es $d + 1$. Usamos dicho valor de $d_{VC}$ para obtener una cota del error de test. Argumente a favor o en contra de esta forma de proceder identificando los posible fallos si los hubiera y en su caso cuál hubiera sido la forma correcta de actuación.
 \end{cuestion}
 
+% Solución 4
+  \begin{solucion}
+  	Estamos basando nuestra hipótesis en los datos obtenidos, algo sobre lo que se ha hecho hincapié durante todo el curso  para que no se haga. Lo que se debería haber hecho es, en primer lugar, no decidir el método de clasificación por los datos obtenidos sino por la información previa que tuviéramos del problema. Además, estamos usando todo el conjunto de datos para el entrenamiento del perceptron en lugar de separar en conjunto de entrenamiento y de test, lo que hace que, además, el modelo se ajuste aún más a los datos. 
+  \end{solucion}
+  
 % Cuestión 5
 \begin{cuestion}
 Suponga que separamos $100$ ejemplos de un conjunto $\mathcal{D}$ que no serán usados para entrenamiento sino que serán usados para seleccionar una de las tres hipótesis finales $g_1$, $g_2$ y $g_3$ producidas por tres algoritmos de aprendizaje distintos entrenados sobre el resto de datos.
@@ -79,37 +133,112 @@ Cada algoritmo trabaja con un conjunto $\mathcal{H}$ de tamaño 500. Nuestro des
 \end{enumerate}
 \end{cuestion}
 
-
+% Solución 5
+  \begin{solucion} $ $
+  \begin{enumerate}[a]
+  	\item Puesto que los tres algoritmos trabajan con un conjunto $\mathcal{H}$ finito, la cota que debemos usar para el $E_{out}$ es la desigualdad de Hoeffding. Ahora nos cuestionamos qué constante $|\mathcal{H}|$ debemos usar. Puesto que en realidad hemos usado los tres algoritmos, cada uno con su modelo, no podemos decir que $|\mathcal{H}|=3$ porque finalmente miremos únicamente entre 3 funciones, sino que $|\mathcal{H}| = \sum\limits_{i=1}^3 |\mathcal{H}_i| = 1500$. Esto se debe a que las tres funciones propuestas $g_1$, $g_2$ y $g_3$ no han sido propuestas por intuición, sino en base a los datos. 
+  	\item La contaminación en el caso de que los 100 datos excluidos del entrenamiento seleccionen el modelo es mayor debido a que la selección del modelo es más dependiente de ellos. De entre tres funciones se escoge una función, en cambio si estos 100 datos hubieran sido usados también en entrenamiento, tendríamos que una parte de los datos habrían servido de entrenamiento y test (también habría \textit{snooping}), pero cada dato de estos 100 tendría menos impacto en la selección definitiva del modelo.
+  \end{enumerate}
+  \end{solucion}  
+  
 % Cuestión 6
 
 \begin{cuestion}
 Considere la tarea de seleccionar una regla del vecino más cercano. ¿Qué hay de erróneo en la siguiente lógica que se aplica a la selección de $k$? (Los límites son cuando $N \rightarrow \infty$).
-Considere la posibilidad de establecer la clase de hipótesis $H_{NN}$ con $N$ reglas, las $k-NN$ hipótesis, usando $k =1,\dots,N$. Use el error dentro de la muestra para elegir un valor de $k$ que minimiza $E_{in}$. Utilizando el error de generalización para $N$ hipótesis, obtenemos la conclusión
-de que $E_{in} \rightarrow E_{out}$ porque $\log N/N \rightarrow 0$. Por lo tanto concluimos que asintóticamente,
-estaremos eligiendo el mejor valor de $k$, basándonos sólo en $E_{in}$.
+Considere la posibilidad de establecer la clase de hipótesis $\mathcal{H}_{NN}$ con $N$ reglas, las $k-NN$ hipótesis, usando $k =1,\dots,N$. Use el error dentro de la muestra para elegir un valor de $k$ que minimiza $E_{in}$. Utilizando el error de generalización para $N$ hipótesis, obtenemos la conclusión de que $E_{in} \rightarrow E_{out}$ porque $\log N/N \rightarrow 0$. Por lo tanto concluimos que asintóticamente, estaremos eligiendo el mejor valor de $k$, basándonos sólo en $E_{in}$.
 \end{cuestion}
 
+% Solución 6
+  \begin{solucion}
+  	Lo erróneo está en basarnos en los propios datos que definen las hipótesis para la selección del modelo. Si esto fuese cierto, puesto que el mejor error de entrenamiento se da para $k=1$, $E_{in}=0$ porque para cada dato de entrenamiento el dato más cercano es él mismo, tendríamos el mejor clasificador posible para cualquier caso (algo que sabemos imposible). Por tanto la selección de $k$ se debería hacer no mediante el error de entrenamiento sino según $E_{cv}$.
+  \end{solucion}
 
+% Cuestión 7
+
+\begin{cuestion} $ $
+\begin{enumerate}[a]
+\item Considere un núcleo Gaussiano en un modelo de base radial. ¿Qué representa $g(x)$ (ecuación 6.2 del libro LfD) cuando $||x|| \rightarrow \infty$ para el modelo RBF no-paramétrico versus el modelo RBF paramétrico, asumiendo los $\mathbf{w}_n$ fijos?
+\item Sea $Z$ una matriz cuadrada de características definida por $Z_{nj} = \Phi_j(\mathbf{x}_n)$ donde $\Phi_j(\mathbf{x})$ representa una transformación no lineal. Suponer que $Z$ es invertible. Mostrar que un modelo paramétrico de base radial, con $g(\mathbf{x}) = \mathbf{w}^T \Phi(\mathbf{x})$ y $\mathbf{w} = Z^{-1}\mathbf{y}$, interpola los puntos de forma exacta. Es decir, que $g(\mathbf{x}_n) = \mathbf{y}_n$, con $E_{in}(g)=0$.
+\item ¿Se verifica siempre que $E_{in}(g)=0$ en el modelo no-paramétrico?
+\end{enumerate}
+\end{cuestion}
+
+% Solución 7
+  \begin{solucion}
+  \end{solucion}
+
+% Cuestion 8
+\begin{cuestion}
+	Verificar que la función $sign$ puede ser aproximada por la función $tanh$. Dados $\mathbf{w}_1$ y $\epsilon > 0$, encontrar $\mathbf{w}_2$ tal que $|sign(\mathbf{x}_n^T \mathbf{w}_1) - tanh(\mathbf{x}_n^T \mathbf{w}_2)| \leq \epsilon$ para $x_n \in \mathcal{D}$ (Ayuda: analizar la función $tanh(\alpha \mathbf{x}), \alpha \in \mathbb{R}$).
+\end{cuestion}
+
+% Solución 8
+  \begin{solucion}
+  	Queremos ver que podemos aproximar la función $tanh$ por la función la función $sign$. Esto es: 
+  	\[ \forall x \in \mathcal{D}, \varepsilon>0, \mathbf{w}_1, \exists \mathbf{w}_2: \ |sign(\mathbf{x}^T \mathbf{w}_1) - 
+  			tanh(\mathbf{x}^T \mathbf{w}_2)| \leq \epsilon\]
+  	Dado $\mathbf{w}_1$, $\epsilon > 0$, buscaremos $\mathbf{w}_2$ de la forma $\mathbf{w}_2 = k \mathbf{w}_1, k>0$. Usaremos la notación $y=\mathbf{x}_n^T \mathbf{w}_1$.
+  	
+  	\begin{align*}  	
+  	& \abs{ sign(\mathbf{x}^T \mathbf{w}_1) - tanh(\mathbf{x}^T \mathbf{w}_2) }= \abs{ sign(y)-tanh(ky)} = \\
+  	& = \abs{ sign(y) - \frac{e^{ky} - e^{-ky}}{e^{ky} + e^{-ky}} } = \abs{ sign(y) - \frac{1 - e^{-2ky}}{1 + e^{-2ky}} }
+  	\end{align*}
+  	
+  	Ahora distinguimos el caso en que $y>0$ del caso en que $y<0$. El caso $y=0$ no tiene interés ya que las dos funciones valen 0.
+  	\begin{enumerate}[a]
+  	\item $y<0, sign(y)=-1$:
+  	\begin{align*} 
+  	  & \abs{ -1 - \frac{1 - e^{-2ky}}{1 + e^{-2ky}} }  = \abs{ \frac{-2}{1+e^{-2ky}} } \leq \varepsilon \Rightarrow \frac{2}{1+e^{-2ky}} \leq \varepsilon \Rightarrow \frac{2}{\varepsilon}-1 \leq e^{-2ky} \Rightarrow  \\ 
+  	  & k \leq \frac{\log(\frac{2}{\varepsilon}-1)}{2y}
+  	\end{align*} 
+  	Con lo que hemos encontrado $\mathbf{w}_2$
+  	\item $y>0, sign(y)=1$:
+  	\begin{align*} 
+  	  & \abs{ 1 - \frac{1 - e^{-2ky}}{1 + e^{-2ky}} }  = \abs{ \frac{-2}{1+e^{2ky}} } \leq \varepsilon \Rightarrow \frac{2}{1+e^{2ky}} \leq \varepsilon \Rightarrow \frac{2}{\varepsilon}-1 \leq e^{2ky} \Rightarrow  \\ 
+  	  & k \geq \frac{\log(\frac{2}{\varepsilon}-1)}{2y}
+  	\end{align*} 
+  	\end{enumerate}
+  \end{solucion}
+  
+  Por tanto, hemos encontrado $\mathbf{w}_2$ para que ocurra tal cosa.
+  
 % Cuestión 9
   \begin{cuestion}
     Sea $V$ y $Q$ el número de nodos y pesos en una red neuronal,
 
-    $$ V = \sum_{l=0}^L d^{(l)}, \; \; Q = \sum_{l=1}^L d^{(l)} \left( d^{(l+1)} + 1\right) $$
+    $$ V = \sum_{\ell=0}^L d^{(\ell)}, \; \; Q = \sum_{\ell=1}^L d^{(\ell)} \left( d^{(\ell-1)} + 1\right) $$
 
     En términos de $V$ y $Q$, ¿cuántas operaciones se realizan en un pase hacia adelante (sumas, multiplicaciones, y evaluaciones de $\theta$)? Ayuda: Analizar la complejidad en términos de $V$ y de $Q$.
   \end{cuestion}
 
   \begin{solucion}
+  		\begin{enumerate}
+	\item	En primer lugar nos fijamos en el número de evaluaciones de $\theta$. Por cada pase hacia adelante tendremos que evaluar todos los nodos que incluyen la función $\theta$, luego $\sum\limits_{\ell=1}^L d^{(\ell)} = V-d^{(0)}$. La complejidad será $O(V)$.
+	\item Habrá una multiplicación por cada peso de la red, luego hay exactamente $Q$ multiplicaciones. La complejidad será $O(Q)$.
+	\item Por cada nodo con la función $\theta$ en la capa $\ell$ hay una suma de $d^{(\ell-1)}$ elementos. Los elementos a sumar son por tanto las multiplicaciones contadas en el apartado anterior, $Q$. Si contamos como una operación suma la suma de dos sumandos, se realizarán  $\sum_{\ell=1}^L d^{(\ell)} d^{(\ell-1)}$. En cualquier caso en términos de complejidad, $O(Q)$. 
+	\end{enumerate}
+	Por tanto el número total de operaciones es $V+2Q-d^{(0)}$.
   \end{solucion}
 
 % Cuestión 10
   \begin{cuestion}
-    Para el perceptrón sigmoidal $h(x) = tanh(x^Tw)$, sea el error de ajuste $E_{in}(w) = \frac{1}{N}\sum_{n=1}^N \left( tanh(x_n^Tw) - y_n \right)^2$. Mostrar que
+    Para el perceptrón sigmoidal $h(x) = \tanh(x^T\mathbf{w})$, sea el error de ajuste $E_{in}(\mathbf{w}) = \frac{1}{N}\sum\limits_{n=1}^N \left( \tanh(x_n^T\mathbf{w}) - y_n \right)^2$. Mostrar que
 
-    $$ \nabla E_{in}(w) = \frac{2}{N} \sum_{n=1}^N \left( tanh(x_n^Tw) - y_n \right) \left( 1 - tanh(x_n^Tw)^2 \right) x_n $$
+    \[ \nabla E_{in}(\mathbf{w}) = \frac{2}{N} \sum_{n=1}^N \left(  \tanh(x_n^T\mathbf{w}) - y_n \right) \left( 1 - \tanh(x_n^T\mathbf{w})^2 \right) x_n \]
 
-    Si $w \rightarrow \infty$, ¿qué le sucede al gradiente? ¿Cómo se relaciona esto con la dificultad de optimizar el perceptrón multicapa?
+    Si $\mathbf{w} \rightarrow \infty$, ¿qué le sucede al gradiente? ¿Cómo se relaciona esto con la dificultad de optimizar el perceptrón multicapa?
 
   \end{cuestion}
 
+  \begin{solucion}
+  Para hallar $\nabla E_{in}(\mathbf{w})$ usamos $\tanh(x) = \frac{\sinh(x)}{\cosh(x)}, \cosh'(x) = \sinh(x), \sinh'(x)=\cosh(x)$:
+  
+  \begin{align*}  
+   \nabla E_{in}(\mathbf{w}) &= \frac{2}{N} \sum_{n=1}^N \left(  \tanh(x_n^T\mathbf{w}) - y_n \right)\left( \frac{\cosh(x_n^T \mathbf{w})^2- \sinh(x_n^T \mathbf{w})^2}{\cosh(x_n^T \mathbf{w})^2} \right)  x_n = \\
+   &= \frac{2}{N} \sum_{n=1}^N \left(  \tanh(x_n^T\mathbf{w}) - y_n \right) \left( 1 - \tanh(x_n^T\mathbf{w})^2 \right) x_n
+   \end{align*}   	
+   
+   Cuando $\mathbf{w} \rightarrow \infty$, como hemos visto en el ejercicio 8, podemos aproximar $sign(x)$ por $\tanh(x)$, luego $\left( 1 - \tanh(x_n^T\mathbf{w})^2 \right) \rightarrow 0$ y el gradiente se anula. Esto provoca, como vimos en clase, que haya una gran dificultad para modificar los pesos del perceptrón multicapa, y es por lo que en la búsqueda iterativa de los pesos de $\mathbf{w}$ se parte de una solución inicial muy pequeña.
+  \end{solucion}
+  
 \end{document}
