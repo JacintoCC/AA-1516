@@ -1,0 +1,772 @@
+---
+title: "Proyecto final - Aprendizaje automático"
+author: "Jacinto Carrasco Castillo"
+date: "30 de junio de 2016"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+---
+
+
+# 1. Definición del problema a resolver y enfoque elegido
+
+La base de datos utilizada es [*Forest Fires Data Set*][1], disponible en la UCI. Es un problema de regresión donde el objetivo es predecir la extensión del área quemada en un incendio en el parque natural de *Montesinho*, situado en el noreste de Portugal. Para hacerlo usaremos datos de carácter metereológico e índices sobre el terreno y la vegetación. Estos índices pertenecen al sistema canadiense [FWI][2] (*Forest Fire Weather Index*).
+
+[1]:https://archive.ics.uci.edu/ml/datasets/Forest+Fires
+[2]:http://cwfis.cfs.nrcan.gc.ca/background/summary/fwi
+
+# 2. Codificación de los datos de entrada para hacerlos útiles a los algoritmos
+
+Los datos de entrada son, para cada dato:
+
+  *  Coordenada X en el mapa del parque (1-9)
+  *  Coordenada Y en el mapa del parque (2-9)
+  *  Mes del año en el que se produce el incendio
+  *  Día de la semana en el que se produce el incendio
+  *  FFMC, DMC, DC, ISI: Índices del sistema FWI
+  *  Temperatura ($Cº$)
+  *  Humedad relativa ($\%$)
+  *  Velocidad del viento ($Km/h$)
+  *  Lluvia tenida lugar media hora antes del incendio ($mm/mm^2$)
+  *  Área quemada: Variable de salida, área quemada en el bosque ($ha$)
+  
+Establecemos el directorio de trabajo y leemos la base de datos
+  
+```{r setwd - leer csv}
+setwd("~/Documentos/Aprendizaje Automático/AA-1516/Proyecto")
+ForestFires <- read.csv("forestfires.csv")
+```
+
+  Comenzamos a tratar los datos para que nos sean de utilidad. Puesto que hemos considerado relevantes la fecha en la que se produjo el incendio y, pese a que son etiquetas es una variable ordinal (hay un orden y una distancia entre los diferentes meses y los distintos días de la semana que es la que nos induce a pensar que puede ser relevante guardar esta información). Pasamos el día de la semana y el mes a números.
+  
+```{r}
+months.names = c("jan","feb","mar","apr","may","jun",
+                 "jul","aug","sep","oct","nov","dec")
+
+month.n <- sapply(ForestFires$month, function(x) which(months.names==x))
+```
+
+```{r}
+dow.names = c("mon","tue","wed","thu","fri","sat","sun")
+
+day.n <- sapply(ForestFires$day, function(x) which(dow.names==x))
+```
+
+  Modificamos el $\texttt{data.frame}$ para cambiar las variables existentes por las creadas.
+  
+```{r}
+ForestFires <- data.frame(cbind(ForestFires[c(1,2)],month.n,
+                                day.n,ForestFires[5:13]))
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+rm("day.n","dow.names", "month.n", "months.names")
+```
+
+Como es lógico, separamos en datos de entrenamiento y test, que no tocaremos hasta que debamos obtener el error del modelo que surja de estos datos. Establecemos también una semilla para que los resultados sean reproducibles. Obtenemos la matriz de los datos de entrenamiento y de test para usar de manera más cómoda el modelo.
+  
+```{r}
+set.seed(3141592)
+index.train <- sample(1:nrow(ForestFires), 
+                      size=0.8*nrow(ForestFires))
+
+FF.train <- ForestFires[index.train,]
+FF.test <- ForestFires[-index.train,]
+
+FF.train.data <- model.matrix(area ~ ., FF.train)[,-1]
+FF.test.data <- model.matrix(area ~ ., FF.test)[,-1]
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+rm("index.train")
+```
+
+# 3. Valoración del interés de las variables para el problema y selección de un subconjunto (en su caso)
+
+  En un principio podemos considerar relevantes todas las variables disponibles, puesto que las coordenadas influirán en el tipo de vegetación, accesibilidad para los bomberos que extinguirán el fuego o el tipo de terreno. En el caso del mes, los incendios mayores tendrán lugar en verano, y el día de la semana influirá en que haya mayor afluencia en el parque natural en fin de semana, con lo que habrá un mayor número de incendios. Los índices del sistema FWI tratan sobre la composición del suelo y combinaciones de estos índices con los metereológicos. El viento y las altas temperaturas harán que los incendios sean mayores, por contra la lluvia puede facilitar la extinción. Durante el desarrollo de la actividad, se estudiará la influencia de cada variable según los datos disponibles.   
+
+  Se realizará el estudio también utilizando únicamente las variables metereológicas y los índices del sistema FWI calculados a partir de las variables disponibles.  
+
+  Se propone finalmente usar el índice FWI, calculado a partir de los índices y variables metereológicas de la BD. Este índice no fue considerado  incluirlo quienes realizaron la base de datos debido a que es composición. Se verá si se tiene una diferencia a tener en cuenta con respecto a los valores que agrupa.
+
+# 4. Normalización de las variables (en su caso)
+
+  Normalizamos las variables para que las variables tengan la misma influencia. Ya hemos realizado la transformación de las etiquetas con meses y días de la semana y no podemos obviar que esta transformación (pese a ser la más natural) influiría en los resultados si no normalizásemos.
+
+```{r}
+scale.factor <- scale(FF.train.data)
+FF.train.data <- scale.factor
+FF.test.data <- scale(FF.test.data,
+                      center = attr(scale.factor,"scaled:center"),
+                      scale = attr(scale.factor,"scaled:scale"))
+```
+
+  Nótese que la normalización se realiza una vez se ha separado en datos de entrenamiento y de test para que así los datos de test no influyan en la escala y poder asegurar que los resultados no están sesgados.  
+  
+  Para justificar la decisión inicial de utilizar todos los datos, observamos la correlación de todas las variables con respecto a la extensión quemada:
+  
+```{r}
+cor(FF.train.data, FF.train$area)
+```
+
+  La correlación para todas las variables es muy pequeña:
+  
+```{r}
+sapply( 1:12, function(i) cor.test(FF.train.data[,i],
+                                   FF.train$area)$p.value)
+```
+
+  De hecho, si realizamos un test para rechazar o no rechazar la hipótesis de que la correlación entre cada variable y el área quemada sea 0, la única variable para la que se rechaza esta hipótesis con un nivel de significación de $0.05$ es la temperatura, y queda cerca de ser también rechazada para la humedad relativa.  
+  
+  Antes de continuar, instalamos los paquetes que se usarán en el proyecto si fuera necesario hacerlo:
+  
+```{r, message=FALSE, warning=FALSE}
+list.of.packages <- c("glmnet","randomForest","dismo",
+                      "nnet","RSNNS","e1071")
+new.packages <- list.of.packages[!(list.of.packages %in% 
+                                    installed.packages()[,"Package"])]
+
+if(length(new.packages)) 
+  install.packages(new.packages)
+```
+  
+# 5. Selección de las técnicas y su valoración de la idoneidad de la misma.
+
+## Modelo paramétrico 
+
+  La técnica paramétrica seleccionada es regresión con *weight decay*. La decisión se debe a que la correlación de las variables con el área es muy pequeña, con lo que tratamos de evitar el ruido que pudieran introducir las variables con menor influencia. El motivo por el que no se ha utilizado la regresión con regularización LASSO es que, basándonos en la correlación, no hay ningun subconjunto de variables que sea realmente influyente, con lo que al usar LASSO podríamos quedarnos con un modelo con una o ninguna variable.  
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(glmnet)
+```
+  
+  Haremos validación cruzada utilizando la función $\texttt{cv.glmnet}$ de la biblioteca $\texttt{glmnet}$. De esta manera, se pretende ajustar el parámetro de regularización $\lambda$.
+  
+```{r}
+cv.wdecay <- cv.glmnet(FF.train.data, FF.train$area,
+                       family = "gaussian", alpha=0)
+lambda.min <- cv.wdecay$lambda.min
+ridge.mod = glmnet(FF.train.data, FF.train$area, alpha=0,
+                   lambda=lambda.min)
+```
+
+  Una vez que tenemos el modelo con el $\lambda_{\min}$ obtenemos los valores predichos y calculamos el $MSE$, $RSME$ y el $MAD$:
+  
+```{r}
+ridge.pred = predict(ridge.mod, s=lambda.min, newx=FF.test.data)
+
+MSE.ridge.all <- mean((ridge.pred - FF.test$area)^2) 
+RMSE.ridge.all <- sqrt(mean((ridge.pred - FF.test$area)^2))
+
+abs.error.ridge <- abs(ridge.pred - FF.test$area)
+abs.error.ridge <- abs.error.ridge[order(abs.error.ridge)]
+MAD.ridge.all <- mean(abs.error.ridge)
+  
+cat("MSE", MSE.ridge.all)
+cat("RMSE", RMSE.ridge.all)
+cat("MAD", MAD.ridge.all)
+
+plot(FF.test$area, ridge.pred,
+     main="Pred. área vs real - Regresión lineal", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.ridge, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.ridge < abs.error.ridge[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Regresión lineal", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+  Mostramos una gráfica con la comparación del valor predicho por el modelo con el valor real. En este caso se observa como hay un valor para el que se ha predicho una extensión negativa, algo que no tiene sentido. Para buena parte de los datos (que tienen valor 0) se sobreestima la extensión, en cambio, como veremos con los demás métodos, es difícil predecir los incendios más graves y se le da un valor mucho menor.  
+  En la segunda gráfica se observa cómo casi la totalidad de los datos tiene un error absoluto de menos de 25. Aunque es cierto que esto es fácil si tenemos en cuenta que la mayoría de los valores son pequeños, sí que se aprecia como los valores mayores que 0 y menores de 50 tienden a estar bien representados. 
+  
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+detach("package:glmnet")
+```
+
+## Modelo no paramétrico: *random forest*
+  
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(randomForest)
+library(dismo)
+```
+
+  Como modelo no paramétrico usaremos en primer lugar *random forest*. La elección de este modelo se debe aque se pretende identificar los valores de los atributos de los mayores incendios, que son aquellos que contribuyen en mayor medida.  
+  Ajustamos en primer lugar el número de variables a usar, es decir el parámetro $\texttt{mtry}$ mediante validación cruzada con la función  $\texttt{rfcv}$. 
+  
+```{r CV random forest mtray}
+cv.rf <- rfcv(FF.train.data, FF.train$area)
+mtray.min <- unname(which.min(cv.rf$error.cv))
+```
+
+  Una vez obtenemos que el mejor resultado se obtiene cuando se seleccionan 3 variables, ajustamos el número de árboles implementando la validación cruzada.
+
+```{r CV random forest ntree}
+k <- 5
+folds <- kfold(FF.train, k = k)
+
+CV.error.ntree <- sapply( seq(100, 700, by=10),
+        function(x){
+          MSE <- 0
+          for( i in 1:k ){
+            rf.model <- randomForest(area ~ ., data=FF.train,
+                                    subset=which(folds!=i), 
+                                    importance = TRUE, mtray=mtray.min,
+                                    ntree=x)
+            pred.area.rf <- predict( rf.model,
+                                     newdata=FF.train[which(folds==i),])
+            MSE <- MSE + mean((pred.area.rf -
+                                 FF.train$area[which(folds==i)])^2)
+          }
+          
+          return(MSE/k)
+        }
+      )
+best.ntree <- seq(100, 700, by=10)[which.min(CV.error.ntree)]
+```
+
+  Entrenamos y ejecutamos el modelo con los parámetros obtenidos:
+
+```{r}
+rf.model <- randomForest(area ~ ., data=FF.train, 
+                                    importance = TRUE, mtray=mtray.min,
+                                    ntree=best.ntree)
+pred.area.rf <- predict( rf.model, newdata=FF.test.data)
+``` 
+
+```{r}
+MSE.rf.all <- mean((pred.area.rf - FF.test$area)^2) 
+RMSE.rf.all <- sqrt(mean((pred.area.rf - FF.test$area)^2))
+
+abs.error.rf <- abs(pred.area.rf - FF.test$area)
+abs.error.rf <- abs.error.rf[order(abs.error.rf)]
+MAD.rf.all <- mean(abs.error.rf)
+  
+cat("MSE", MSE.rf.all)
+cat("RMSE", RMSE.rf.all)
+cat("MAD", MAD.rf.all)
+
+plot(FF.test$area, pred.area.rf,
+     main="Pred. área vs real - Random Forest", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.rf, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.rf < abs.error.rf[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Random Forest", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+  Los resultados indican que hay un mayor error con *random forest*. Si observamos la gráfica, se observa que el rango de la variable de salida es menor y que la función de regresión calculada se mueve únicamente entre ciertos valores. 
+  
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+detach("package:randomForest")
+```
+
+## Función de base radial
+
+  Utilizando las funciones de base radial estamos aprendiendo basándonos en la semejanza a los datos disponibles. Ya por los resultados que estamos obteniendo, donde los incendios grandes son difíciles de detectar y predominan claramente los pequeños incendios, podemos intuir que también será complejo que esta familia de funciones nos proporcione buenos resultados, ya que la abundancia de áreas quemadas cercanas a 0 hará que estos valores predominen a la hora de componer la estimación para cada dato. Usaremos $\Phi(z) = e^{\frac{-z^2}{2}}$ para que así disminuya el aporte de cada dato a una nueva predicción conforme nos alejamos del dato.  
+  
+  Definimos las funciones que usaremos.
+
+```{r}
+norm <- function(x){
+  return(t(x)%*%x)
+}
+
+phi <- function(z){
+  exp(-1/2*z^2)
+}
+
+alpha <- function(x,xn,r=10){
+  return(phi(norm(x-xn)/r))
+} 
+```
+
+```{r}
+g <- function(x,data,label,r){
+  vec_alpha <- apply(data, 1, function(xn){
+    return(alpha(x,xn,r))
+    })
+  
+  return(t(vec_alpha)%*%label/sum(vec_alpha))
+}
+```
+
+
+  Realizamos validación cruzada para estimar el parámetro $r$, que nos determine el radio de influencia de cada dato. 
+  
+```{r, message=FALSE}
+k <- 5
+folds <- kfold(FF.train, k = k)
+
+CV.error.r <- sapply( seq(1, 100, by=10),
+      function(r){
+        MSE <- 0
+        for( i in 1:k ){
+          pred.area.radial <- apply(FF.train.data[which(folds==i),], 1,
+                      function(x) g(x,FF.train.data[which(folds!=i),],
+                                    FF.train$area[which(folds!=i)] ,r))
+          MSE <- MSE + mean((pred.area.radial -
+                               FF.train$area[which(folds==i)])^2)
+        }
+        
+        return(MSE/k)
+      }
+      )
+best.r <- seq(1, 100, by=10)[which.min(CV.error.r)]
+```
+
+  Al haber obtenido $r=31$, teniendo 12 variables normalizadas, estamos diciendo que datos relativamente lejanos tienen influencia. Como consecuencia, se espera (de nuevo) una 
+  
+  
+```{r}
+pred.area.radial <- apply(FF.test.data, 1, 
+                          function(x) g(x, FF.train.data,
+                                        FF.train$area, best.r))
+
+MSE.radial.all <- mean((pred.area.radial - FF.test$area)^2) 
+RMSE.radial.all <- sqrt(mean((pred.area.radial - FF.test$area)^2))
+
+abs.error.radial <- abs(pred.area.radial - FF.test$area)
+abs.error.radial <- abs.error.radial[order(abs.error.radial)]
+MAD.radial.all <- mean(abs.error.radial)
+  
+cat("MSE", MSE.radial.all)
+cat("RMSE", RMSE.radial.all)
+cat("MAD", MAD.radial.all)
+
+plot(FF.test$area, pred.area.radial,
+     main="Pred. área vs real - Función de base radial", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.radial, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.radial < abs.error.radial[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Función de base radial", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+  De nuevo se comprueba que los incendios graves no son detectados y que la mayoría de valores asignados se concentran en torno a la media del área quemada, lo que no es muy útil si se pretende preveer el peligro de un incendio. Vemos como el error es similar al de los otros modelos. 
+  
+## Redes neuronales 
+
+  Como última técnica usaremos redes neuronales. El beneficio que puede aportar este modelo es, de manera equivalente a la de *random forest*, encontrar los pesos que nos permitan obtener una buena aproximación.  
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(RSNNS)
+```
+
+  Hacemos ahora validación cruzada para estimar el número de capas y el tamaño de cada capa. Los tamaños de las capas van creciendo conforme añadimos más capas. 
+  
+```{r, message=FALSE, include=FALSE}
+k <- 5
+folds <- kfold(FF.train, k = k)
+sizes <- lapply(seq(1,10,by=3), 
+                function(i) expand.grid(lapply(seq(1,i),
+                                function(j) return(seq(i,10,by=3)))))
+  
+error.by.length <- sapply(sizes, function(x){  
+      errors <- apply(x, 1, function(s){
+                print(s)
+                MSE <- 0
+                for( i in 1:k ){
+                  nnet.model <- mlp(FF.train.data[which(folds!=i),],
+                                    FF.train$area[which(folds!=i)],
+                                    size = s, linOut = T,
+                                    learnFunc="Rprop",maxit = 50)
+                  pred.area.nnet <- predict(nnet.model,
+                          newdata=FF.train.data[which(folds==i),],
+                          type="raw")
+                  MSE <- MSE + mean((pred.area.nnet - 
+                               FF.train$area[which(folds==i)])^2)
+                }
+
+                return(MSE/k)
+            })
+      return(errors)
+      }
+      )
+error.by.length <- sapply(error.by.length, function(x) 
+                        return(list(min(x), which.min(x))))
+best.size <- unlist(sizes[[which.min(error.by.length[1,])]][unlist(error.by.length[2,which.min(error.by.length[1,])]),])
+```
+
+```{r}
+nnet.model <- mlp(FF.train.data, FF.train$area, maxit = 1000,
+                  size = best.size, learnFunc="Rprop",
+                  linOut = T)
+pred.area.nnet <- predict(nnet.model, newdata=FF.test.data, type="raw")
+
+MSE.nnet.all <- mean((pred.area.nnet - FF.test$area)^2) 
+RMSE.nnet.all <- sqrt(mean((pred.area.nnet - FF.test$area)^2))
+
+abs.error.nnet <- abs(pred.area.nnet - FF.test$area)
+abs.error.nnet <- abs.error.nnet[order(abs.error.nnet)]
+MAD.nnet.all <- mean(abs.error.nnet)
+  
+cat("MSE", MSE.nnet.all)
+cat("RMSE", RMSE.nnet.all)
+cat("MAD", MAD.nnet.all)
+
+plot(FF.test$area, pred.area.nnet,
+     main="Pred. área vs real - Red neuronal", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.nnet, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.nnet < abs.error.nnet[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Red neuronal", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+  Para las redes neuronales el problema que vamos arrastrando es aún mayor. Es cierto que ofrece resultados ligeramente mejores, pero por contra, la extensión predicha por el modelo es prácticamente similar para todos los puntos, con lo que no nos resulta de utilidad. 
+  
+  
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+detach("package:RSNNS")
+```
+
+# Primer intento de mejora: Transformación con logaritmo
+
+  Los resultados obtenidos hasta ahora son demasiado pobres, y tienden a concentrar las predicciones, dando valores muy pequeños a incendios de una gran extensión y sobreestimando las extensiones de la mayoría de incendios, que son menores a una hectárea. Esto no es una peculiaridad de esta base de datos concreta, sino que, como es de esperar, los grandes incendios son mucho menos numerosos que los pequeños incendios.  
+  Una transformación habitual en este tipo de distribuciones es $log(x+1)$. De esta manera reducimos la asimetría de la distribución.
+  
+```{r}
+FF.train.log.area <- log(FF.train$area+1)
+FF.test.log.area  <- log(FF.test$area+1)
+
+hist(FF.train$area)
+hist(FF.train.log.area)
+
+FF.train.log <- data.frame(cbind(FF.train.data, FF.train.log.area))
+names(FF.train.log)[13] <- "log.area"
+```
+
+  Repetimos ahora los experimento, pero usando como entrada el logaritmo de las áreas.
+  
+## Regresión lineal con *weight decay*
+  
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(glmnet)
+```
+  
+```{r}
+cv.wdecay <- cv.glmnet(FF.train.data, FF.train.log.area,
+                       family = "gaussian", alpha=0)
+lambda.min <- cv.wdecay$lambda.min
+ridge.mod = glmnet(FF.train.data, FF.train.log.area, alpha=0,
+                   lambda=lambda.min)
+```
+  
+```{r}
+ridge.pred.log = exp(predict(ridge.mod, 
+                             s=lambda.min, 
+                             newx=FF.test.data))-1
+
+MSE.ridge.log <- mean((ridge.pred.log - FF.test$area)^2) 
+RMSE.ridge.log <- sqrt(mean((ridge.pred.log - FF.test$area)^2))
+
+abs.error.ridge.log <- abs(ridge.pred.log - FF.test$area)
+abs.error.ridge.log <- abs.error.ridge.log[order(abs.error.ridge.log)]
+MAD.ridge.log <- mean(abs.error.ridge.log)
+  
+cat("MSE", MSE.ridge.log)
+cat("RMSE", RMSE.ridge.log)
+cat("MAD", MAD.ridge.log)
+
+plot(FF.test$area, ridge.pred.log,
+     main="Pred. área vs real - Regresión lineal", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.ridge.log, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.ridge.log < abs.error.ridge.log[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Regresión lineal", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+  Vemos que ahora hemos introducido el problema en la regresión, donde los valores cubrían un mayor rango.
+  
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+detach("package:glmnet")
+```
+
+## Random Forest
+  
+```{r}
+library(randomForest)
+```
+
+```{r}
+cv.rf <- rfcv(FF.train.data, FF.train.log.area)
+mtray.min <- unname(which.min(cv.rf$error.cv))
+```
+
+
+```{r}
+k <- 5
+folds <- kfold(FF.train, k = k)
+
+MSE.ntree <- sapply( seq(100, 700, by=10),
+        function(x){
+          MSE <- 0
+          for( i in 1:k ){
+            rf.model <- randomForest(log.area ~ ., data=FF.train.log,
+                                    subset=which(folds!=i), 
+                                    importance = TRUE, mtray=mtray.min,
+                                    ntree=x)
+            pred.area.rf <- predict( rf.model,
+                              newdata=FF.train.data[which(folds==i),])
+             MSE <- MSE + mean((pred.area.rf -
+                                  FF.train.log.area[which(folds==i)])^2)
+          }
+          
+          return(MSE/k)
+        }
+      )
+best.ntree <- seq(100, 700, by=10)[which.min(MSE.ntree)]
+```
+
+
+```{r}
+rf.model <- randomForest(log.area ~ ., data=FF.train.log, 
+                         importance = TRUE, mtray=mtray.min,
+                         ntree=best.ntree)
+pred.area.rf.log <- exp(predict( rf.model, newdata=FF.test.data))-1
+
+MSE.rf.log <- mean((pred.area.rf.log - FF.test$area)^2) 
+RMSE.rf.log <- sqrt(mean((pred.area.rf.log - FF.test$area)^2))
+
+abs.error.rf.log <- abs(pred.area.rf.log - FF.test$area)
+abs.error.rf.log <- abs.error.rf.log[order(abs.error.rf.log)]
+MAD.rf.log <- mean(abs.error.rf.log)
+  
+cat("MSE", MSE.rf.log)
+cat("RMSE", RMSE.rf.log)
+cat("MAD", MAD.rf.log)
+
+plot(FF.test$area, pred.area.rf.log,
+     main="Pred. área vs real - Random Forest", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.rf.log, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.rf.log < abs.error.rf.log[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Random Forest", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+detach("package:randomForest")
+```
+
+
+## Función de base radial
+
+```{r, echo=FALSE, message=FALSE}
+k <- 5
+folds <- kfold(FF.train, k = k)
+
+errors.by.r <- sapply( seq(1, 100, by=10),
+      function(r){
+        print(r)
+        MSE <- 0
+        for( i in 1:k ){
+          pred.area.radial <- apply(FF.train.data[which(folds==i),], 1,
+                      function(x) g(x,FF.train.data[which(folds!=i),],
+                                    FF.train.log.area[which(folds!=i)],
+                                    r))
+          MSE <- MSE + mean((exp(pred.area.radial) -1-
+                               FF.train$area[which(folds==i)])^2)
+        }
+        
+        return(MSE/k)
+      }
+      )
+best.r <- seq(1, 100, by=10)[which.min(errors.by.r)]
+```
+
+```{r}
+pred.area.radial.log <- exp(apply(FF.test.data, 1, 
+                          function(x) g(x, FF.train.data,
+                                        FF.train.log.area, best.r)))-1
+
+MSE.radial.log <- mean((pred.area.radial.log - FF.test$area)^2) 
+RMSE.radial.log <- sqrt(mean((pred.area.radial.log - FF.test$area)^2))
+
+abs.error.radial.log <- abs(pred.area.radial.log - FF.test$area)
+abs.error.radial.log <- abs.error.radial.log[order(abs.error.radial.log)]
+MAD.radial.log <- mean(abs.error.radial.log)
+  
+cat("MSE", MSE.radial.log)
+cat("RMSE", RMSE.radial.log)
+cat("MAD", MAD.radial.log)
+
+plot(FF.test$area, pred.area.radial.log,
+     main="Pred. área vs real - Función de base radial", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.radial.log, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.radial.log < abs.error.radial.log[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Función de base radial", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+  Como vemos en los métodos realizados, no se obtienen mejoras, por lo que descartamos la transformación.
+
+# Segundo intento de mejora: clasificación según la magnitud de los incendios.
+
+  Los resultados obtenidos muestran una clara tendencia a obviar los incendios importantes y afirmar que todos los incendios tendrán una extensión pequeña. Esto significa que realmente no estamos haciendo una labor de regresión, sino que estamos afirmando directamente que la extensión quemada es cercana a 0. Por tanto, trataremos de realizar una clasificación previa entre incendios menores (aquellos que se corresponderán con el valor 0) y los que superan los $100m^2$, a los cuales tendrá sentido aplicar la regresión.  
+  
+  Creamos categorías para la clasificación de los incendios. Consideraremos incendios pequeños aquellos cuya extensión quemada sea menor a 10 ha, incendios medios los que estén entre 10 y 50 ha e incendios graves los que superen las 50 ha. 
+  
+```{r}
+FF.train.categ <- FF.train$area > 0
+categ <- FF.train.categ
+FF.train.with.categ <- data.frame(cbind(FF.train.data,categ))
+
+FF.test.categ <- FF.test$area > 0
+categ <- FF.test.categ
+FF.test.with.categ <- data.frame(cbind(FF.test.data,categ))
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(class)
+library(caret)
+library(randomForest)
+```
+
+  Trataremos de realizar la clasificación con *random forest*. La razón de usar este modelo es que intentamos encontrar aquellos valores con una gran extensión quemada, y al ser los valores similares a otros con áreas quemadas nulas o muy pequeñas, no nos serviría utilizar modelos como el perceptron.
+  
+```{r CV random forest -clasificacion}
+cv.rf <- rfcv(FF.train.data, as.factor(FF.train.categ))
+mtray.min <- unname(which.min(cv.rf$error.cv))
+k <- 5
+folds <- kfold(FF.train, k = k)
+
+error.ntree <- sapply( seq(100, 700, by=10),
+        function(x){
+          error <- 0
+          for( i in 1:k ){
+            rf.model <- randomForest(as.factor(categ) ~ .,
+                                     data=FF.train.with.categ,
+                                     subset=which(folds!=i), 
+                                     importance = TRUE, mtray=mtray.min,
+                                     ntree=x)
+            pred.area.rf <- predict( rf.model,
+                                     newdata=FF.train[which(folds==i),])
+            error <- error + sum(pred.area.rf !=  
+                                   FF.train.categ[which(folds==i)])
+          }
+          
+          return(error/k)
+        }
+      )
+best.ntree <- seq(100, 700, by=10)[which.min(error.ntree)]
+rf.model <- randomForest(as.factor(categ) ~ ., data=FF.train.with.categ, 
+                                    importance = TRUE, mtray=mtray.min,
+                                    ntree=best.ntree)
+pred.categ.rf <- predict( rf.model, newdata=FF.test.data)
+```
+
+  Mostramos la matriz de confusión:
+```{r}
+pred.categ.rf <- pred.categ.rf==1
+confusionMatrix(pred.categ.rf, FF.test.categ)
+```
+
+  Usamos las funciones de base radial para realizar la regresión a aquellos valores que hemos predicho que serán mayores que 0, utilizando únicamente aquellos valores de entrenamiento que lo son.
+  
+```{r Test -> Clasificacion - radial}
+pred.area.clas <- sapply(1:length(pred.categ.rf),
+                         function(i){
+                           if(pred.categ.rf[i]==1){
+                             return(g(FF.test.data[i,], 
+                                      FF.train.data[FF.train.categ,],
+                                      FF.train$area[FF.train.categ],
+                                      best.r))
+                           }
+                           else{
+                             return( 0 )
+                           }
+                        })
+```
+
+```{r Evaluacion -> Clasificacion + regresion}
+MSE.radial.clas <- mean((pred.area.clas - FF.test$area)^2) 
+RMSE.radial.clas <- sqrt(mean((pred.area.clas - FF.test$area)^2))
+
+abs.error.clas <- abs(pred.area.clas - FF.test$area)
+abs.error.clas <- abs.error.clas[order(abs.error.clas)]
+MAD.radial.clas <- mean(abs.error.clas)
+  
+cat("MSE", MSE.radial.clas)
+cat("RMSE", RMSE.radial.clas)
+cat("MAD", MAD.radial.clas)
+
+plot(FF.test$area, pred.area.clas,
+     main="Pred. área vs real - Clasif. + Función de base radial", 
+     xlab = "Real", ylab = "Predicted")
+abline(0 ,1, col = 4)
+
+
+plot(abs.error.clas, 
+     sapply(1:length(FF.test$area), 
+            function(i){
+              sum(abs.error.clas < abs.error.clas[i])/
+                length(FF.test$area)
+            }),
+     type="b", main="Variación del error abs. - Clasif. + Función de base radial", 
+     xlab = "Error abs.", ylab = "Porcentaje con menor error abs.")
+```
+
+  Debido a que la clasificación tampoco es buena, los resultados son peores, con lo que descartaríamos realizar esta clasificación previa.
+
+# 6. Referencias
+
+  * [Estudio de FWI][3]
+  * [A Data Mining Approach to Predict Forest Fires
+using Meteorological Data][4]
+  
+  
+[3]:[https://www.frames.gov/files/6014/1576/1411/FWI-history.pdf]
+[4]:[http://www3.dsi.uminho.pt/pcortez/fires.pdf]
