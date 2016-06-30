@@ -8,6 +8,20 @@ output:
   html_document: default
 ---
 
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+require(glmnet)
+require(randomForest)
+require(dismo)
+require(nnet)
+require(RSNNS)
+require(e1071)
+```
+
+
+```{r, cache=FALSE, include=FALSE}
+library(knitr)
+opts_chunk$set(cache=TRUE, autodep=TRUE)
+```
 
 # 1. Definición del problema a resolver y enfoque elegido
 
@@ -85,11 +99,7 @@ rm("index.train")
 # 3. Valoración del interés de las variables para el problema y selección de un subconjunto (en su caso)
 
   En un principio podemos considerar relevantes todas las variables disponibles, puesto que las coordenadas influirán en el tipo de vegetación, accesibilidad para los bomberos que extinguirán el fuego o el tipo de terreno. En el caso del mes, los incendios mayores tendrán lugar en verano, y el día de la semana influirá en que haya mayor afluencia en el parque natural en fin de semana, con lo que habrá un mayor número de incendios. Los índices del sistema FWI tratan sobre la composición del suelo y combinaciones de estos índices con los metereológicos. El viento y las altas temperaturas harán que los incendios sean mayores, por contra la lluvia puede facilitar la extinción. Durante el desarrollo de la actividad, se estudiará la influencia de cada variable según los datos disponibles.   
-
-  Se realizará el estudio también utilizando únicamente las variables metereológicas y los índices del sistema FWI calculados a partir de las variables disponibles.  
-
-  Se propone finalmente usar el índice FWI, calculado a partir de los índices y variables metereológicas de la BD. Este índice no fue considerado  incluirlo quienes realizaron la base de datos debido a que es composición. Se verá si se tiene una diferencia a tener en cuenta con respecto a los valores que agrupa.
-
+  
 # 4. Normalización de las variables (en su caso)
 
   Normalizamos las variables para que las variables tengan la misma influencia. Ya hemos realizado la transformación de las etiquetas con meses y días de la semana y no podemos obviar que esta transformación (pese a ser la más natural) influiría en los resultados si no normalizásemos.
@@ -118,19 +128,7 @@ sapply( 1:12, function(i) cor.test(FF.train.data[,i],
 ```
 
   De hecho, si realizamos un test para rechazar o no rechazar la hipótesis de que la correlación entre cada variable y el área quemada sea 0, la única variable para la que se rechaza esta hipótesis con un nivel de significación de $0.05$ es la temperatura, y queda cerca de ser también rechazada para la humedad relativa.  
-  
-  Antes de continuar, instalamos los paquetes que se usarán en el proyecto si fuera necesario hacerlo:
-  
-```{r, message=FALSE, warning=FALSE}
-list.of.packages <- c("glmnet","randomForest","dismo",
-                      "nnet","RSNNS","e1071")
-new.packages <- list.of.packages[!(list.of.packages %in% 
-                                    installed.packages()[,"Package"])]
 
-if(length(new.packages)) 
-  install.packages(new.packages)
-```
-  
 # 5. Selección de las técnicas y su valoración de la idoneidad de la misma.
 
 ## Modelo paramétrico 
@@ -761,12 +759,33 @@ plot(abs.error.clas,
 
   Debido a que la clasificación tampoco es buena, los resultados son peores, con lo que descartaríamos realizar esta clasificación previa.
 
+# Comparativa:
+
+Mostramos la matriz con los resultados obtenidos.
+
+```{r, echo=FALSE}
+matrix(c(MSE.ridge.all,RMSE.ridge.all, MAD.ridge.all,
+         MSE.ridge.log,RMSE.ridge.log, MAD.ridge.log,
+         MSE.rf.all, RMSE.rf.all, MAD.rf.all,
+         MSE.rf.log, RMSE.rf.log, MAD.rf.log,
+         MSE.radial.all, RMSE.radial.all, MAD.radial.all,
+         MSE.radial.log, RMSE.radial.log, MAD.radial.log,
+         MSE.nnet.all, RMSE.nnet.all, MAD.nnet.all,
+         MSE.radial.clas,RMSE.radial.clas, MAD.radial.clas), 
+       ncol = 3, nrow = 8, byrow = T,
+       dimnames = list(c("ridge", "ridge log transf.",
+                         "RF","RF log transf.",
+                         "FBR", "FBR log transf.",
+                         "NN", "Clasificación + regresión"),
+                       c("MSE","RMSE", "MAD")))
+```
+
+
 # 6. Referencias
 
   * [Estudio de FWI][3]
-  * [A Data Mining Approach to Predict Forest Fires
-using Meteorological Data][4]
+  * [A Data Mining Approach to Predict Forest Fires using Meteorological Data][4]
   
   
-[3]:[https://www.frames.gov/files/6014/1576/1411/FWI-history.pdf]
-[4]:[http://www3.dsi.uminho.pt/pcortez/fires.pdf]
+[3]:https://www.frames.gov/files/6014/1576/1411/FWI-history.pdf
+[4]:http://www3.dsi.uminho.pt/pcortez/fires.pdf
